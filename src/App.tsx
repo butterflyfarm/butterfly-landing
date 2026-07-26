@@ -20,6 +20,7 @@ function Arrow() {
 
 function App() {
   const year = new Date().getFullYear()
+  const contactHref = `mailto:${['hello', 'butterfly.farm'].join('@')}`
 
   return (
     <div className="site-shell">
@@ -31,12 +32,11 @@ function App() {
         <nav className="nav container" aria-label="Main navigation">
           <a className="brand" href="#top" aria-label="Butterfly Farm Studio, home">
             <BrandMark />
-            <span>Butterfly Farm</span>
+            <span>Butterfly Farm Studio</span>
           </a>
 
           <div className="nav-links">
             <a href="#growing">What’s next</a>
-            <a href="mailto:hello@butterfly.farm">Email us <Arrow /></a>
           </div>
         </nav>
       </header>
@@ -50,13 +50,12 @@ function App() {
 
           <div className="hero__copy">
             <h1 className="reveal reveal--two" id="hero-title">
-              We make thoughtful
-              <br />
-              <em>mobile experiences.</em>
+              Thoughtful software for a more <em>meaningful life.</em>
             </h1>
             <p className="hero__intro reveal reveal--three">
-              Butterfly Farm Studio designs and builds useful software for
-              everyday life.
+              We create beautifully simple mobile experiences that encourage
+              reflection, reduce stress, deepen prayer, and help people
+              reconnect with what matters most.
             </p>
           </div>
 
@@ -64,7 +63,6 @@ function App() {
             <a className="text-link" href="#growing">
               Something is growing <span aria-hidden="true">↓</span>
             </a>
-            <a href="mailto:hello@butterfly.farm">hello@butterfly.farm</a>
           </div>
         </section>
 
@@ -81,7 +79,7 @@ function App() {
                 A new mobile app is taking shape. We’re keeping the details
                 close for now.
               </p>
-              <a className="outline-link" href="mailto:hello@butterfly.farm?subject=Keep%20me%20in%20the%20loop">
+              <a className="outline-link" href={`${contactHref}?subject=Keep%20me%20in%20the%20loop`}>
                 Keep me in the loop
                 <Arrow />
               </a>
@@ -111,7 +109,7 @@ function App() {
             <span>Butterfly Farm Studio</span>
           </a>
           <p>
-            © {year} Butterfly Farm Studio Limited. Made with love.
+            © {year} Butterfly Farm Studio Limited. Crafted with care.
           </p>
         </div>
       </footer>
