@@ -895,7 +895,8 @@ export default function Farm() {
       fx: find<HTMLCanvasElement>('.fx'),
       suns: [...el.querySelectorAll<HTMLElement>('.sun')],
       moons: [...el.querySelectorAll<HTMLElement>('.moon')],
-      handle: find('.time-handle'),
+      handles: { sun: find('.time-handle--sun'), moon: find('.time-handle--moon') },
+      ember: find('.ember'),
       rainbow: find('.rainbow'),
       fliers,
       getView: () => viewRef.current,
@@ -993,6 +994,8 @@ export default function Farm() {
         <div className="moon moon--front">
           <i />
         </div>
+        {/* where the sun went down: a warm glow on the ridge, and the place to pull it back up */}
+        <div className="ember" />
         <Land spread={spread} />
 
         <div className="cloud-shadows" style={overLand}>
@@ -1110,17 +1113,24 @@ export default function Farm() {
           onClick={toggleRain}
           style={{ left: U(vaneX), top: U(vaneY - 18) }}
         />
-        <div
-          className="time-handle"
-          data-farm-control
-          role="slider"
-          tabIndex={0}
-          aria-label="Time of day. Drag the sun or moon anywhere in the sky, or move it with the arrow keys. Below the hills it sets."
-          aria-valuemin={0}
-          aria-valuemax={24}
-          aria-valuenow={hour}
-          aria-valuetext={clockText(hour)}
-        />
+        {(['sun', 'moon'] as const).map((b) => (
+          <div
+            key={b}
+            className={`time-handle time-handle--${b}`}
+            data-farm-control
+            role="slider"
+            tabIndex={0}
+            aria-label={
+              b === 'sun'
+                ? 'The sun, and the time of day. Drag it anywhere in the sky; push it behind the hills for night, and take hold of its glow on the ridge to pull it back up. Arrow keys move it too.'
+                : 'The moon. Drag it across the night sky; push it behind the hills and the morning comes.'
+            }
+            aria-valuemin={0}
+            aria-valuemax={24}
+            aria-valuenow={hour}
+            aria-valuetext={clockText(hour)}
+          />
+        ))}
       </div>
       <canvas className="critters" aria-hidden="true" />
       <canvas className="grass" aria-hidden="true" />
