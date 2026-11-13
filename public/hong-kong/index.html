@@ -26,6 +26,7 @@
   #pm i{width:1px;height:34px;background:linear-gradient(rgba(255,206,140,.9),rgba(255,206,140,.15))}
   #pm u{width:7px;height:7px;border-radius:50%;background:#ffc98a;box-shadow:0 0 0 2px rgba(9,20,28,.6),0 0 10px rgba(255,190,110,.9)}
   body.photo #pm{display:none}
+  #pm.on b,.lb.hit b,.lb.hit em{pointer-events:auto}
   #ui .g{display:flex;gap:3px;align-items:center}
   #ui .g+.g{padding-left:10px;border-left:1px solid rgba(255,196,128,.22)}
   #ui button{font:inherit;letter-spacing:inherit;text-transform:inherit;color:#f3d9b4;background:rgba(255,190,110,.07);
@@ -68,7 +69,25 @@
   #fc.focused .foc{display:flex}
   #fc.focused .pre{display:none}
   body.photo #fc{display:none}
+  #nav{position:fixed;z-index:5;transform:translateZ(0);right:max(12px,env(safe-area-inset-right));top:max(12px,env(safe-area-inset-top));display:flex;flex-direction:column;align-items:center;gap:8px;transition:opacity .5s}
+  #cp{width:62px;height:62px;cursor:grab;touch-action:none;outline:none;filter:drop-shadow(0 1px 4px rgba(0,0,0,.45))}
+  #cp.drag{cursor:grabbing}
+  #cp svg{display:block;width:100%;height:100%;overflow:visible}
+  #cp:hover .bz,#cp:focus-visible .bz{stroke:rgba(255,206,140,.75)}
+  #cp text{font:600 8px "Avenir Next Condensed","DIN Condensed","Helvetica Neue",Arial,sans-serif;fill:#ffb27a;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+  #zm{display:flex;flex-direction:column;border:1px solid rgba(255,196,128,.32);border-radius:8px;overflow:hidden;background:rgba(9,20,28,.6);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+  #zm button{width:36px;height:32px;padding:0;border:0;background:none;color:#f3d9b4;font-family:inherit;font-size:19px;line-height:1;cursor:pointer;touch-action:manipulation}
+  #zm button+button{border-top:1px solid rgba(255,196,128,.22)}
+  #zm button:hover{background:rgba(255,190,110,.2)}
+  body.photo #nav,body.photo #hint{opacity:0;pointer-events:none}
+  #hint{position:fixed;left:50%;bottom:calc(max(12px,env(safe-area-inset-bottom)) + 50px);transform:translate(-50%,8px);box-sizing:border-box;max-width:calc(100vw - 32px);width:max-content;
+    padding:7px 6px;border-radius:18px;background:rgba(9,20,28,.72);border:1px solid rgba(255,206,140,.42);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+    color:#fff4df;font-size:11px;letter-spacing:.1em;text-transform:uppercase;line-height:1.6;text-align:center;opacity:0;pointer-events:none;transition:opacity .6s,transform .6s}
+  #hint.show{opacity:1;transform:translate(-50%,0)}
+  #hint span{display:inline-block;white-space:nowrap;margin:0 .75em}
   @media (max-width:760px){
+    body.menu #nav{opacity:0;pointer-events:none}
+    #hint{bottom:calc(max(12px,env(safe-area-inset-bottom)) + 62px);font-size:10px}
     #ui{left:auto;right:max(8px,env(safe-area-inset-right));transform:none;flex-direction:column;align-items:stretch;gap:6px;padding:5px;font-size:10px;opacity:.85;max-height:calc(100vh - 24px);overflow:auto}
     #bMenu{display:block;align-self:flex-end;font-size:15px !important;padding:2px 9px !important}
     #ui .g{display:none;flex-wrap:wrap}
@@ -95,6 +114,12 @@
 <div id="fc" role="dialog" aria-label="Landmark"><button class="x" id="fcX" title="Close (Esc)" aria-label="Close">✕</button><h3 id="fcN"></h3><p id="fcS"></p>
   <div class="r pre"><button id="fcGo" title="Quiet the surroundings (F)">Focus</button></div>
   <div class="r foc"><button id="fcSee" class="on" title="Lower whatever stands in the way and outline anything still hidden">Clear view</button><button id="fcIso" title="Hide the neighbours, leaving their footprints (I)">Isolate</button><button id="fcClay" class="on" title="Neighbours in plain clay (C)">Clay</button><button id="fcBest" title="Fly to the clearest angle (B)">Best view</button><button id="fcOut" title="Back to the full city (Esc)">Exit</button></div></div>
+<div id="nav"><div id="cp" role="button" tabindex="0" aria-label="Compass. Drag to turn and tilt, press to face north" title="Drag to turn and tilt · tap to face north">
+  <svg viewBox="-32 -32 64 64" aria-hidden="true"><circle class="bz" r="30" fill="rgba(9,20,28,.78)" stroke="rgba(255,196,128,.4)"/>
+  <g id="cpR"><circle r="20" fill="none" stroke="rgba(255,206,140,.3)" stroke-dasharray="2 3.2"/><path d="M0-18L5 0H-5Z" fill="#ff8a52"/><path d="M0 18L5 0H-5Z" fill="rgba(243,217,180,.6)"/><circle r="2" fill="#2a1a0c"/></g>
+  <text id="cpN">N</text></svg></div>
+  <div id="zm"><button id="zIn" title="Zoom in" aria-label="Zoom in">+</button><button id="zOut" title="Zoom out" aria-label="Zoom out">−</button></div></div>
+<div id="hint" aria-live="polite"></div>
 <div id="pm" title="Fly to Central"><b>Central</b><i></i><u></u></div>
 <div id="cr">Buildings: Lands Department, HKSAR Government, via <a href="https://data.gov.hk/en-data/dataset/hk-landsd-openmap-landsd-building" target="_blank" rel="noopener">DATA.GOV.HK</a> · map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors · elevation NASA SRTM</div>
 <script>window.__errs=[];addEventListener("error",function(e){window.__errs.push(String(e.message).slice(0,300)+" @"+e.lineno)});(function(){var ce=console.error;console.error=function(){try{window.__errs.push(Array.prototype.join.call(arguments," ").slice(0,900))}catch(e){}ce.apply(console,arguments)}})();</script>
@@ -2883,7 +2908,7 @@ function makeLabels() {
       if (placed.some(q => r[0] < q[2] + 6 && r[2] > q[0] - 6 && r[1] < q[3] + 4 && r[3] > q[1] - 4)) o.want = 0; else placed.push(r); }
     for (const o of LABELS.list) { o.op = lerp(o.op, o.want || 0, 1 - Math.exp(-dt * 7)); const vis = o.op > .02;
       if (vis !== o.vis) { o.d.style.display = vis ? 'flex' : 'none'; o.vis = vis; }
-      if (vis) { o.d.style.opacity = o.op.toFixed(3); o.d.style.pointerEvents = o.op > .6 ? 'auto' : 'none'; o.d.style.transform = `translate(${o.sx.toFixed(1)}px,${o.sy.toFixed(1)}px) translate(-50%,-100%)`; } }
+      if (vis) { o.d.style.opacity = o.op.toFixed(3); o.d.classList.toggle('hit', o.op > .6); o.d.style.transform = `translate(${o.sx.toFixed(1)}px,${o.sy.toFixed(1)}px) translate(-50%,-100%)`; } }
   });
 }
 /* ---------- focus mode: look at one landmark without the city in the way ---------- */
@@ -2958,7 +2983,7 @@ function enterFocus(o) {
   FOCUS.label = o; FOCUS.active = true; FOCUS.t = t;
   U.uFocIds.value = t.ids.concat([-1, -1, -1, -1, -1, -1, -1, -1]).slice(0, 8); U.uFocTags.value = t.tags.concat([0, 0, 0, 0]).slice(0, 4);
   const c = t.box.getCenter(new V3()), sz = t.box.getSize(new V3()); U.uFocC.value.set(c.x, c.z); U.uFocR.value = Math.hypot(sz.x, sz.z) / 2 + 40;
-  buildFocusProxy(t); SH.farDirty = true; focusCard();
+  buildFocusProxy(t); SH.farDirty = true; focusCard(); ctlHint.focus();
 }
 function exitFocus() { const was = FOCUS.active; FOCUS.active = false; FOCUS.label = null; focusCard(); if (was) { SH.farDirty = true; setTimeout(() => { SH.farDirty = true; }, 900); } }
 function setFocusMode(iso) { FOCUS.iso = iso; SH.farDirty = true; focusCard(); }
@@ -3065,27 +3090,83 @@ function pickGround(cx, cy) {
   for (let i = 0; i < 400; i++) { const x = o.x + d.x * t, y = o.y + d.y * t, z = o.z + d.z * t, g = groundY(x, z); if (y <= g) { let a = pt, b = t; for (let k = 0; k < 12; k++) { const m = (a + b) / 2; if (o.y + d.y * m <= groundY(o.x + d.x * m, o.z + d.z * m)) b = m; else a = m; } return new V3(o.x + d.x * b, o.y + d.y * b, o.z + d.z * b); } pt = t; t += Math.max((y - g) * .5, 6); if (t > 150000) break; }
   return null;
 }
-const ptrs = new Map(); let lastPinch = 0, lastAng = 0, userTouched = false, lastMoveT = 0;
+/* ---------- input: map-style. One finger (or left drag) moves the map by holding the ground under it; in Focus mode it circles the
+   landmark instead. Right / middle / Shift / Ctrl / Alt drag swaps the two. Two fingers: pinch to zoom, twist to turn, slide up or down
+   together to tilt. Double-tap zooms in; double-tap, hold and slide zooms smoothly; a two-finger tap zooms out. ---------- */
+const ptrs = new Map(); let userTouched = false, lastMoveT = 0, moveDt = .016;
+const GS = { mode: null, a: null, two: null, lastTap: null, zp: null, panned: 0 };
 function userInput() { cam.fly = null; cam.tour = null; userTouched = true; if (TOUR.on) stopTour(); }
 canvas.addEventListener('contextmenu', e => e.preventDefault());
-canvas.addEventListener('pointerdown', e => { try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* synthetic pointers cannot be captured */ } ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY, b: e.button, sh: e.shiftKey || e.ctrlKey || e.metaKey }); canvas.classList.add('drag'); userInput();
-  if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; lastPinch = Math.hypot(a.x - b.x, a.y - b.y); lastAng = Math.atan2(b.y - a.y, b.x - a.x); } });
 const panBy = (dx, dy) => { const k = cam.dist * 2 * Math.tan(cam.fov * RAD / 2) / canvas.clientHeight, fx = -Math.cos(cam.az), fz = -Math.sin(cam.az), rx = -fz, rz = fx, c = Math.max(Math.cos(cam.pol), .25);
   const mx = (-dx * rx + dy * fx / c) * k, mz = (-dx * rz + dy * fz / c) * k; cam.tx += mx; cam.tz += mz; cam.vx = lerp(cam.vx, mx / moveDt, .4); cam.vz = lerp(cam.vz, mz / moveDt, .4); };
-let moveDt = .016;
+/* the point where the ray through a screen position meets the level y; capped so a pointer near the horizon cannot fling the map */
+function rayAt(cx, cy, y) {
+  const r = canvas.getBoundingClientRect(); _nd.set((cx - r.left) / r.width * 2 - 1, -((cy - r.top) / r.height) * 2 + 1); _ray.setFromCamera(_nd, camera);
+  const o = _ray.ray.origin, d = _ray.ray.direction, maxT = cam.dist * 4 + 600; let t = d.y < -1e-4 ? (y - o.y) / d.y : maxT; if (!(t > 0) || t > maxT) t = maxT;
+  return [o.x + d.x * t, o.z + d.z * t];
+}
+const grabAt = (cx, cy) => { const p = pickGround(cx, cy); return p && p.distanceTo(camera.position) < cam.dist * 4 ? { x: p.x, y: p.y, z: p.z } : null; };
+/* keep the grabbed ground point under the pointer: refresh the camera, see where the pointer now lands, move the target by the miss */
+function grabTo(a, cx, cy) {
+  placeCamera(1e-6); const h = rayAt(cx, cy, a.y), lim = cam.dist * .6, mx = clamp(a.x - h[0], -lim, lim), mz = clamp(a.z - h[1], -lim, lim);
+  cam.tx += mx; cam.tz += mz; cam.vx = lerp(cam.vx, mx / moveDt, .4); cam.vz = lerp(cam.vz, mz / moveDt, .4);
+}
+const orbitBy = (dx, dy, k = .0042) => { cam.az += dx * k; cam.pol -= dy * k; cam.vaz = lerp(cam.vaz, dx * k / moveDt, .4); cam.vpol = lerp(cam.vpol, -dy * k / moveDt, .4); };
+/* zoom about a ground point (it stays put on screen); animated when dur is given */
+function zoomAbout(p, f, dur) {
+  const nd = clamp(cam.dist * f, 30, 42000), rf = nd / cam.dist, tx = p ? cam.tx + (p.x - cam.tx) * (1 - rf) : cam.tx, tz = p ? cam.tz + (p.z - cam.tz) * (1 - rf) : cam.tz;
+  if (dur) { flyTo({ tx, tz, dist: nd, ty: cam.ty, dur }); return; }
+  cam.dist = nd; cam.tx = tx; cam.tz = tz;
+}
+function oneStart(p, e) {
+  const alt = p.b === 2 || p.b === 1 || p.sh, lt = GS.lastTap, now = performance.now();
+  if (!alt && lt && now - lt.t < 330 && Math.hypot(p.x - lt.x, p.y - lt.y) < 40) { GS.mode = 'zoom'; GS.zp = pickGround(p.x, p.y); GS.lastTap = null; return; }
+  GS.mode = alt !== FOCUS.active ? 'orbit' : 'pan'; GS.a = GS.mode === 'pan' ? grabAt(p.x, p.y) : null;
+}
+canvas.addEventListener('pointerdown', e => {
+  try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* synthetic pointers cannot be captured */ }
+  const now = performance.now(), p = { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, t: now, b: e.button, sh: e.shiftKey || e.ctrlKey || e.metaKey || e.altKey };
+  ptrs.set(e.pointerId, p); canvas.classList.add('drag'); userInput(); cam.vaz = cam.vpol = cam.vx = cam.vz = cam.vzoom = 0;
+  if (ptrs.size === 1) oneStart(p, e);
+  else if (ptrs.size === 2) {
+    const [a, b] = [...ptrs.values()]; for (const q of [a, b]) { q.x0 = q.x; q.y0 = q.y; }
+    const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+    GS.mode = 'two'; GS.two = { d: Math.hypot(a.x - b.x, a.y - b.y), ang: Math.atan2(b.y - a.y, b.x - a.x), mx, my, a: grabAt(mx, my), cls: null, rot: 0, rotOn: false, t: now };
+  } else GS.mode = null;
+});
 canvas.addEventListener('pointermove', e => {
   const p = ptrs.get(e.pointerId); if (!p) return; const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
   const now = performance.now(); moveDt = clamp((now - lastMoveT) / 1000, .008, .1); lastMoveT = now;
-  if (ptrs.size === 1) {
-    if (p.b === 2 || p.b === 1 || p.sh) panBy(dx, dy);
-    else { const k = .0042; cam.az += dx * k; cam.pol -= dy * k; cam.vaz = lerp(cam.vaz, dx * k / moveDt, .4); cam.vpol = lerp(cam.vpol, -dy * k / moveDt, .4); }
-  } else if (ptrs.size === 2) {
-    const [a, b] = [...ptrs.values()], d = Math.hypot(a.x - b.x, a.y - b.y), ang = Math.atan2(b.y - a.y, b.x - a.x);
-    if (lastPinch > 0) cam.dist *= lastPinch / d; lastPinch = d; let da = ang - lastAng; if (da > PI) da -= TAU; if (da < -PI) da += TAU; cam.az += da; lastAng = ang; panBy(dx * .5, dy * .5);
+  if (GS.mode === 'pan') { GS.a ? grabTo(GS.a, p.x, p.y) : panBy(dx, dy); GS.panned += Math.hypot(dx, dy); }
+  else if (GS.mode === 'orbit') orbitBy(dx, dy);
+  else if (GS.mode === 'zoom') zoomAbout(GS.zp, Math.exp(-dy * .009));
+  else if (GS.mode === 'two' && ptrs.size === 2) {
+    const [a, b] = [...ptrs.values()], T = GS.two, d = Math.hypot(a.x - b.x, a.y - b.y), ang = Math.atan2(b.y - a.y, b.x - a.x), mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+    if (!T.cls) {   /* decide tilt vs pinch/twist once the fingers have moved a little */
+      const ay = a.y - a.y0, by = b.y - b.y0, ax = a.x - a.x0, bx = b.x - b.x0;
+      if (Math.max(Math.abs(ay), Math.abs(by), Math.abs(ax), Math.abs(bx)) > 10) {
+        T.cls = ay * by > 0 && Math.abs(ay) > 1.6 * Math.abs(ax) && Math.abs(by) > 1.6 * Math.abs(bx) && Math.abs(d - T.d) < 14 ? 'tilt' : 'pinch';
+        if (T.cls === 'pinch') { T.d = d; T.ang = ang; T.mx = mx; T.my = my; T.a = grabAt(mx, my); } else T.my = my;
+      }
+      return;
+    }
+    if (T.cls === 'tilt') { const k = .0055, dm = my - T.my; cam.pol -= dm * k; cam.vpol = lerp(cam.vpol, -dm * k / moveDt, .4); T.my = my; return; }
+    if (d > 1 && T.d > 1) cam.dist = clamp(cam.dist * T.d / d, 30, 42000); T.d = d;
+    let da = ang - T.ang; if (da > PI) da -= TAU; if (da < -PI) da += TAU; T.ang = ang;
+    if (T.rotOn) cam.az += da; else if (Math.abs(T.rot += da) > .16) { T.rotOn = true; cam.az += T.rot; }   /* a small twist during a pinch is ignored */
+    T.a ? grabTo(T.a, mx, my) : panBy(mx - T.mx, my - T.my); T.mx = mx; T.my = my; GS.panned += 1;
   }
 });
-const pUp = e => { ptrs.delete(e.pointerId); if (!ptrs.size) canvas.classList.remove('drag'); lastPinch = 0; if (performance.now() - lastMoveT > 90) cam.vaz = cam.vpol = cam.vx = cam.vz = 0;
-  cam.vaz = clamp(cam.vaz, -2.5, 2.5); cam.vpol = clamp(cam.vpol, -1.2, 1.2); const vm = cam.dist * 1.6, vl = Math.hypot(cam.vx, cam.vz); if (vl > vm) { cam.vx *= vm / vl; cam.vz *= vm / vl; } };
+const pUp = e => {
+  const p = ptrs.get(e.pointerId); if (!p) return; ptrs.delete(e.pointerId); const now = performance.now(), still = Math.hypot(p.x - p.x0, p.y - p.y0) < 9, quick = now - p.t < 280;
+  if (GS.mode === 'zoom') { if (still) zoomAbout(GS.zp, .5, .45); GS.mode = null; }
+  else if (GS.mode === 'two') {
+    const T = GS.two; if (!T.cls && now - T.t < 300) { const [o] = [...ptrs.values()]; zoomAbout(o ? grabAt((o.x + p.x) / 2, (o.y + p.y) / 2) : null, 2, .45); GS.mode = null; }
+    else if (ptrs.size === 1) { const [o] = [...ptrs.values()]; o.x0 = o.x; o.y0 = o.y; o.t = now; o.b = 0; o.sh = false; GS.lastTap = null; oneStart(o, e); }
+  } else if (GS.mode === 'pan' || GS.mode === 'orbit') { GS.lastTap = still && quick && !ptrs.size ? { x: p.x, y: p.y, t: now } : null; }
+  if (!ptrs.size) { canvas.classList.remove('drag'); if (GS.mode !== null && now - lastMoveT > 90) cam.vaz = cam.vpol = cam.vx = cam.vz = 0; GS.mode = null; if (GS.panned > 60) ctlHint.done(); }
+  cam.vaz = clamp(cam.vaz, -2.5, 2.5); cam.vpol = clamp(cam.vpol, -1.2, 1.2); const vm = cam.dist * 1.6, vl = Math.hypot(cam.vx, cam.vz); if (vl > vm) { cam.vx *= vm / vl; cam.vz *= vm / vl; }
+};
 canvas.addEventListener('pointerup', pUp); canvas.addEventListener('pointercancel', pUp);
 canvas.addEventListener('wheel', e => {
   e.preventDefault(); userInput();
@@ -3094,6 +3175,41 @@ canvas.addEventListener('wheel', e => {
   if (p && rf < 1) { cam.tx += (p.x - cam.tx) * (1 - rf); cam.tz += (p.z - cam.tz) * (1 - rf); }
   cam.vzoom = Math.log(f) * 9;
 }, { passive: false });
+/* ---------- compass (drag across it to turn and tilt with one finger, tap for north), zoom buttons, and a one-time hint ---------- */
+const COARSE = matchMedia('(pointer: coarse)').matches;
+const ctlHint = { el: null, tm: 0, first: false, focusShown: false,
+  show(parts, ms) { const el = this.el || (this.el = document.getElementById('hint')); if (!el) return; const ui = document.getElementById('ui'), r = ui && ui.getBoundingClientRect();
+    el.style.bottom = r && innerWidth > 760 ? (innerHeight - r.top + 10) + 'px' : ''; el.innerHTML = parts.map(s => '<span>' + s + '</span>').join(' '); el.classList.add('show'); clearTimeout(this.tm); this.tm = setTimeout(() => el.classList.remove('show'), ms); },
+  hide() { clearTimeout(this.tm); if (this.el) this.el.classList.remove('show'); },
+  intro() { let seen = false; try { seen = localStorage.getItem('hk-controls') === '1'; } catch (e) { /* storage blocked */ } if (seen) return; this.first = true;
+    this.show(COARSE ? ['Drag to move', 'Twist to turn', 'Two fingers up to tilt', 'Double-tap to zoom'] : ['Drag to move', 'Right- or Shift-drag to turn and tilt', 'Scroll to zoom'], 15000); },
+  done() { if (!this.first) return; this.first = false; try { localStorage.setItem('hk-controls', '1'); } catch (e) { /* storage blocked */ } setTimeout(() => this.hide(), 1500); },
+  focus() { if (this.focusShown) return; this.focusShown = true; this.first = false; this.show(COARSE ? ['Drag to circle around it', 'Two fingers to move'] : ['Drag to circle around it', 'Right-drag to move'], 6500); } };
+function faceNorth() { userInput(); flyTo({ tx: cam.tx, tz: cam.tz, az: PI / 2, ty: cam.ty, dur: .7 }); }
+function initNav() {
+  const cp = document.getElementById('cp'), rose = document.getElementById('cpR'), nl = document.getElementById('cpN'); let d = null;
+  cp.addEventListener('pointerdown', e => { e.preventDefault(); try { cp.setPointerCapture(e.pointerId); } catch (err) { /* synthetic pointer */ }
+    d = { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY }; cp.classList.add('drag'); userInput(); cam.vaz = cam.vpol = cam.vx = cam.vz = 0; });
+  cp.addEventListener('pointermove', e => { if (!d) return; const dx = e.clientX - d.x, dy = e.clientY - d.y; d.x = e.clientX; d.y = e.clientY;
+    const now = performance.now(); moveDt = clamp((now - lastMoveT) / 1000, .008, .1); lastMoveT = now;
+    const ka = .011, kp = .008; cam.az -= dx * ka; cam.pol -= dy * kp; cam.vaz = lerp(cam.vaz, -dx * ka / moveDt, .4); cam.vpol = lerp(cam.vpol, -dy * kp / moveDt, .4); });
+  const up = e => { if (!d) return; const still = Math.hypot(e.clientX - d.x0, e.clientY - d.y0) < 6; d = null; cp.classList.remove('drag');
+    if (still) faceNorth(); else if (performance.now() - lastMoveT > 90) cam.vaz = cam.vpol = 0; cam.vaz = clamp(cam.vaz, -2.5, 2.5); cam.vpol = clamp(cam.vpol, -1.2, 1.2); };
+  cp.addEventListener('pointerup', up); cp.addEventListener('pointercancel', up);
+  cp.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); faceNorth(); } });
+  document.getElementById('zIn').onclick = () => { userInput(); zoomAbout(null, .5, .5); };
+  document.getElementById('zOut').onclick = () => { userInput(); zoomAbout(null, 2, .5); };
+  /* the rose lies on the ground: it turns with the view and flattens as the view tilts toward the horizon */
+  hooks.push(() => {
+    const th = PI / 2 - cam.az, c = .28 + .72 * Math.cos(cam.pol); rose.setAttribute('transform', 'scale(1 ' + c.toFixed(3) + ') rotate(' + (th / RAD).toFixed(2) + ')');
+    const vx = Math.sin(th), vy = -Math.cos(th) * c, l = Math.hypot(vx, vy) || 1; nl.setAttribute('x', (25.5 * vx / l).toFixed(2)); nl.setAttribute('y', (25.5 * vy / l).toFixed(2));
+  });
+  setTimeout(() => ctlHint.intro(), 1800);
+}
+/* Safari on a Mac sends trackpad pinch and rotate as gesture events rather than ctrl+wheel */
+let gsc = 1, gro = 0;
+addEventListener('gesturestart', e => { if (e.target !== canvas || ptrs.size) return; e.preventDefault(); userInput(); gsc = e.scale; gro = e.rotation; });
+addEventListener('gesturechange', e => { if (e.target !== canvas) return; e.preventDefault(); if (ptrs.size) return; if (e.scale > 0) cam.dist = clamp(cam.dist * gsc / e.scale, 30, 42000); gsc = e.scale; cam.az += (e.rotation - gro) * RAD; gro = e.rotation; });
 const keys = {};
 addEventListener('keydown', e => { keys[e.code] = 1; if (e.code.startsWith('Digit')) { const i = +e.code.slice(5) - 1; if (i >= 0 && i < 6) goPreset(i); }
   if (e.code === 'KeyR') goPreset(0); if (e.code === 'KeyP' || (e.code === 'Escape' && document.body.classList.contains('photo'))) togglePhoto(); else if (e.code === 'Escape' && FOCUS.label) exitFocus();
@@ -3267,7 +3383,7 @@ async function boot() {
   initTod(); setQuality(2);
   const shared = readHash(); setTime(shared && shared.h != null ? shared.h : presetTime('golden'), true);
   Object.assign(cam, shared ? shared.pose : heroState()); placeCamera(0);
-  makeLabels(); hooks.push(keepHash); initFocus();
+  makeLabels(); hooks.push(keepHash); initFocus(); initNav();
   if (shared && shared.f) { let nm = ''; try { nm = decodeURIComponent(shared.f); } catch (e) { } const o = LABELS.list.find(l => l.focus && l.name === nm); if (o) { FOCUS.iso = shared.iso; FOCUS.clay = shared.clay; enterFocus(o); } }
   T.total = performance.now() - t0; ST.timing = T;
   document.querySelectorAll('#gView button').forEach(b => b.onclick = () => goPreset(+b.dataset.v));
@@ -3284,7 +3400,7 @@ async function boot() {
     pm.onclick = () => goPreset(1);
     hooks.push(dt => { v.set(ax, ay, az); const d = v.distanceTo(camera.position); v.project(camera);
       const on = v.z < 1 && Math.abs(v.x) < .98 && v.y < .97 && v.y > -.9 ? sm(650, 1300, d) : 0; op = lerp(op, on, 1 - Math.exp(-dt * 6));
-      pm.style.opacity = op.toFixed(3); pm.style.pointerEvents = op > .5 ? 'auto' : 'none';
+      pm.style.opacity = op.toFixed(3); pm.classList.toggle('on', op > .5);
       pm.style.transform = `translate(${((v.x * .5 + .5) * innerWidth).toFixed(1)}px,${((-v.y * .5 + .5) * innerHeight).toFixed(1)}px) translate(-50%,-100%)`; }); }
   document.getElementById('bQ').onclick = () => setQuality((qi + 2) % 3, true);
   document.getElementById('sTraf').oninput = e => { ST.traffic = e.target.value / 100; };
@@ -3294,7 +3410,7 @@ async function boot() {
 }
 window.__hk = {
   THREE, TRAMS, TOD, TOUR, LABELS, setTime, startTour, stopTour, viewHash, flyTo, scene, camera, renderer, cam, U, ST, L, ROADS, DAMS, LAKES, LL, SH, STATS, BI, FA, G, SITES, PATHS, CITY, get GEO() { return GEO; },
-  get terr() { return terr; }, QUALS, resize, get composer() { return composer; }, get scenePass() { return scenePass; }, NEAR, hooks, hAt: (x, z) => hAt(x, z), goPreset, setLight, setQuality,
+  get terr() { return terr; }, QUALS, resize, get composer() { return composer; }, get scenePass() { return scenePass; }, NEAR, hooks, hAt: (x, z) => hAt(x, z), pick: (x, y) => pickGround(x, y), GS, goPreset, setLight, setQuality,
   pose(o) { userInput(); Object.assign(cam, o); cam.vaz = cam.vpol = cam.vx = cam.vz = cam.vzoom = 0; placeCamera(0); },
   at(lat, lon, dist, azDeg, polDeg, fov) { const p = LL(lat, lon); this.pose({ tx: p[0], tz: p[1], dist, az: azDeg * RAD, pol: polDeg * RAD, fov: fov || 36, ty: 0 }); },
   step(n = 1, dt = 1 / 60) { for (let i = 0; i < n; i++) frame(dt); },
