@@ -62,30 +62,60 @@ export type Light = {
   flat: boolean
 }
 
-export function lightAt(hour: number, wet: number): Light {
+type Raw = { sky: RGB[]; tint: RGB; cloud: RGB; night: number }
+
+function raw(hour: number, wet: number): Raw {
+  const h = ((hour % 24) + 24) % 24
   let i = 0
-  while (i < KEYS.length - 2 && hour >= KEYS[i + 1].at) i++
+  while (i < KEYS.length - 2 && h >= KEYS[i + 1].at) i++
   const a = KEYS[i]
   const b = KEYS[i + 1]
-  const t = Math.min(1, Math.max(0, (hour - a.at) / (b.at - a.at)))
+  const t = Math.min(1, Math.max(0, (h - a.at) / (b.at - a.at)))
 
   const night = a.night + (b.night - a.night) * t
   const overcast = mix([150, 160, 166], [34, 42, 60], night)
-  const sky = a.sky.map((c, j) => {
-    const clear = mix(c, b.sky[j], t)
-    return css(mix(clear, mix(clear, overcast, 0.8), wet))
-  })
-  const tint = times(mix(a.tint, b.tint, t), mix([255, 255, 255], RAIN_LIGHT, wet))
-  const cloud = times(mix(a.cloud, b.cloud, t), mix([255, 255, 255], RAIN_CLOUD, wet))
-  const lamps = Math.min(1, night * 1.8)
-
   return {
-    sky: `linear-gradient(180deg, ${sky.map((c, j) => `${c} ${STOPS[j]}%`).join(', ')})`,
-    tint: css(tint),
-    cloudTint: css(cloud),
-    // the farm sign hangs under a lantern, so it never gets as dark as the fields
-    signTint: css(mix(tint, LAMP, lamps * 0.75)),
+    sky: a.sky.map((c, j) => {
+      const clear = mix(c, b.sky[j], t)
+      return mix(clear, mix(clear, overcast, 0.8), wet)
+    }),
+    tint: times(mix(a.tint, b.tint, t), mix([255, 255, 255], RAIN_LIGHT, wet)),
+    cloud: times(mix(a.cloud, b.cloud, t), mix([255, 255, 255], RAIN_CLOUD, wet)),
     night,
-    flat: tint.every((c) => c > 253.5),
   }
+}
+
+function finish(r: Raw): Light {
+  const lamps = Math.min(1, r.night * 1.8)
+  return {
+    sky: `linear-gradient(180deg, ${r.sky.map((c, j) => `${css(c)} ${STOPS[j]}%`).join(', ')})`,
+    tint: css(r.tint),
+    cloudTint: css(r.cloud),
+    // the farm sign hangs under a lantern, so it never gets as dark as the fields
+    signTint: css(mix(r.tint, LAMP, lamps * 0.75)),
+    night: r.night,
+    flat: r.tint.every((c) => c > 253.5),
+  }
+}
+
+export function lightAt(hour: number, wet: number): Light {
+  return finish(raw(hour, wet))
+}
+
+/**
+ * The light partway between two hours, mixed colour by colour rather than by
+ * running the clock between them: halfway from dawn to dusk is a warm low
+ * light, never a sudden noon.
+ */
+export function lightBetween(a: number, b: number, w: number, wet: number): Light {
+  if (w <= 0.001) return lightAt(a, wet)
+  if (w >= 0.999) return lightAt(b, wet)
+  const ra = raw(a, wet)
+  const rb = raw(b, wet)
+  return finish({
+    sky: ra.sky.map((c, j) => mix(c, rb.sky[j], w)),
+    tint: mix(ra.tint, rb.tint, w),
+    cloud: mix(ra.cloud, rb.cloud, w),
+    night: ra.night + (rb.night - ra.night) * w,
+  })
 }

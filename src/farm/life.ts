@@ -2,7 +2,7 @@
 // the grass, rain, fireflies, dandelion seeds, and the butterflies.
 // One requestAnimationFrame loop drives all of it.
 
-import { lightAt } from './light'
+import { lightAt, lightBetween } from './light'
 import { makeCritters, type Shade } from './critters'
 import { makeRng, skyline } from './scene'
 
@@ -45,8 +45,10 @@ export type LifeOptions = {
   /** the sun and moon: each drawn behind the clouds, and again in front while held */
   suns: readonly HTMLElement[]
   moons: readonly HTMLElement[]
-  /** the draggable hit area that follows the sun or moon */
-  handle: HTMLElement
+  /** what you take hold of: the sun (or its glow on the ridge once it has set), and the moon */
+  handles: { sun: HTMLElement; moon: HTMLElement }
+  /** the warm glow on the ridge where the sun went down */
+  ember: HTMLElement
   rainbow: HTMLElement
   /** the first flier is the farm's own butterfly; the rest arrive when the seedling is nearly in bloom */
   fliers: readonly Flier[]
@@ -183,72 +185,93 @@ export function startLife(o: LifeOptions): Life {
     return { x: (cx - v.vw / 2) / v.u, y: (cy - (v.vh - (900 + v.lift) * v.u)) / v.u }
   }
 
-  // --- the hour --------------------------------------------------------
-  // The hour drives the light. Left alone, the sun and moon ride their arc as
-  // it passes; dragged, a body goes exactly where it is put, and the hour is
-  // read back from where it sits: height for how full the day is, side for
-  // morning or evening. Below the hills it sets, and the other one rises.
+  // --- the sun, the moon and the hour -----------------------------------
+  // Left alone, the sun and moon keep to their paths for the hour: across the
+  // sky by day (or night), and just below the hills while they are down.
+  //
+  // Picked up, a body goes exactly where the hand takes it, and stays there
+  // when let go: nothing glides or springs back. The time is read from where
+  // it sits. Height is how full the day is, the side is morning or evening, and
+  // below the hills it is twilight deepening into night. A set sun leaves a glow
+  // on the ridge where it went down: take hold of that glow to pull it back up.
   type Body = 'sun' | 'moon'
+  /** how far below the hills a body can go, as a share of the sky's height: about six hours of night */
+  const SINK = 0.4
   let hour = wrap(o.hour)
-  let hourLeft = 0 // hours still to glide through after a tap or key press
   let saidHour = -1
-  let dragging: Body | null = null
-  let press: { x: number; y: number; moved: boolean; dx: number; dy: number } | null = null
-  // where a visitor left the sun or moon; null while it rides its usual arc
-  let placed: { body: Body; p: Point } | null = null
-  // once let go, a body eases from where it was back onto its arc
+  /** a body the visitor has put somewhere. `p` is where it is drawn; it follows `goal`, the hand. */
+  let placed: { body: Body; p: Point; goal: Point } | null = null
+  /** the time as read from the placed body: a morning and an evening reading, and the blend between */
+  let reading = { a: hour, b: hour, w: 0 }
+  /** the other body, easing over from wherever it was when the visitor switched to it */
   let ease: { body: Body; from: Point; k: number } | null = null
-  /** how far below the horizon a body can be pushed, as a share of the arc's height */
-  const SINK = 0.32
+  let dragging: Body | null = null
+  let press: { x: number; y: number; dx: number; dy: number; moved: boolean } | null = null
 
-  // the sun and moon each cross the sky on the same arc, twelve hours apart
-  const arc = (v: View) => {
+  const span = (v: View) => {
     const top = 900 + v.lift - v.tall // world y of the top of the screen
-    return { xL: -v.vis * 0.43, xR: v.vis * 0.43, base: 486, h: clamp(486 - top - 70, 160, 520), top }
+    return { xL: -v.vis * 0.43, xR: v.vis * 0.43, h: clamp(486 - top - 70, 160, 520), top }
   }
-  const along = (v: View, t: number): Point => {
-    const a = arc(v)
-    return { x: a.xL + (a.xR - a.xL) * t, y: a.base - Math.sin(Math.PI * t) * a.h }
+  /** The ridge line a body sets behind, smoothed so the path doesn't follow every bump. */
+  const horizon = (x: number) => (skyline(x - 60) + skyline(x) + skyline(x + 60)) / 3 + 8
+  const lerp = (a: Point, b: Point, k: number): Point => ({ x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k })
+
+  /** Where a body keeps to at a given hour when nobody is holding it. */
+  const pathPos = (b: Body, h: number): Point => {
+    const s = span(o.getView())
+    let t = b === 'sun' ? (wrap(h) - 6) / 12 : ((wrap(h) + 6) % 24) / 12
+    if (t >= 1.5) t -= 2
+    if (t >= 0 && t <= 1) {
+      const x = s.xL + (s.xR - s.xL) * t
+      return { x, y: horizon(x) - Math.sin(Math.PI * t) * s.h }
+    }
+    // down: just under the hills where it set (or will rise), sinking as the night goes on
+    const x = t > 1 ? s.xR : s.xL
+    const d = t > 1 ? (t - 1) / 0.5 : -t / 0.5
+    return { x, y: horizon(x) + d * SINK * s.h }
   }
-  const sunT = () => (hour - 6) / 12
-  const moonT = () => {
-    const m = ((hour + 6) % 24) / 12
-    return m > 1.5 ? m - 2 : m
-  }
-  const posOf = (body: Body): Point => {
-    if (placed?.body === body) return placed.p
-    const p = along(o.getView(), body === 'sun' ? sunT() : moonT())
-    if (ease?.body !== body) return p
+  const posOf = (b: Body): Point => {
+    if (placed?.body === b) return placed.p
+    // the other body sits where the time read from the placed one puts it
+    const p = placed ? lerp(pathPos(b, reading.a), pathPos(b, reading.b), reading.w) : pathPos(b, hour)
+    if (ease?.body !== b) return p
     const k = ease.k * ease.k * (3 - 2 * ease.k)
-    return { x: p.x + (ease.from.x - p.x) * k, y: p.y + (ease.from.y - p.y) * k }
+    return lerp(p, ease.from, k)
   }
-  /** how high a body stands: 1 at the top of its arc, 0 on the horizon, below 0 behind the hills */
-  const elevation = (body: Body) => {
-    const a = arc(o.getView())
-    return (a.base - posOf(body).y) / a.h
+  /** 1 at the top of the sky, 0 on the ridge, below 0 behind the hills */
+  const elevation = (b: Body) => {
+    const p = posOf(b)
+    return (horizon(p.x) - p.y) / span(o.getView()).h
   }
   const sunHeight = () => clamp(elevation('sun'))
-  const body = (): Body => dragging ?? placed?.body ?? (hour >= 6 && hour < 18 ? 'sun' : 'moon')
-  const bodyAt = () => posOf(body())
+  /** Where the sun can be taken hold of: itself, or its glow on the ridge once it has set. */
+  const sunGrip = (): Point => {
+    const p = posOf('sun')
+    return { x: p.x, y: Math.min(p.y, horizon(p.x) - 18) }
+  }
+  /** What the butterfly points out: whichever of them is up, or the glow where the sun went down. */
+  const bodyAt = (): Point =>
+    elevation('sun') > -0.02 ? posOf('sun') : elevation('moon') > 0.04 ? posOf('moon') : sunGrip()
 
-  /** The hour a body standing at `p` would mean. */
-  const hourFor = (b: Body, p: Point) => {
-    const a = arc(o.getView())
-    const e = (a.base - p.y) / a.h
+  /** The time a body at `p` stands for, read as morning and as evening, with the blend between. */
+  const readingsAt = (b: Body, p: Point) => {
+    const s = span(o.getView())
+    const e = (horizon(p.x) - p.y) / s.h
     const start = b === 'sun' ? 6 : 18
-    const side = (left: boolean) => {
-      if (e >= 0) {
-        const up = (Math.asin(clamp(e)) / Math.PI) * 12 // 0 on the horizon, 6 at the top
-        return left ? start + up : start + 12 - up
-      }
-      const down = clamp(-e / SINK)
-      return left ? start - down * 1.5 : start + 12 + down * 3
+    let a: number
+    let z: number
+    if (e >= 0) {
+      const up = (Math.asin(clamp(e)) / Math.PI) * 12 // 0 on the ridge, 6 at the top
+      a = start + up
+      z = start + 12 - up
+    } else {
+      const d = clamp(-e / SINK)
+      a = start - 6 * d
+      z = start + 12 + 6 * d
     }
-    // morning on the left, evening on the right, blended across the middle
-    const mid = (a.xL + a.xR) / 2
-    const k = clamp(0.5 + (p.x - mid) / ((a.xR - a.xL) * 0.16))
-    const blend = k * k * (3 - 2 * k)
-    return wrap(side(true) + (side(false) - side(true)) * blend)
+    // left of the middle is morning, right is evening; the light is mixed across the middle
+    const k = clamp(0.5 + p.x / ((s.xR - s.xL) * 0.16))
+    return { a: wrap(a), b: wrap(z), w: k * k * (3 - 2 * k) }
   }
 
   const sayHour = () => {
@@ -260,82 +283,57 @@ export function startLife(o: LifeOptions): Life {
   }
   function stepHour(dt: number) {
     if (ease) {
-      ease.k -= o.still ? 1 : dt / 1.6
+      ease.k -= o.still ? 1 : dt / 1.2
       if (ease.k <= 0) ease = null
     }
-    if (hourLeft === 0) return
-    const step = o.still || Math.abs(hourLeft) < 0.004 ? hourLeft : hourLeft * Math.min(1, dt * 2.2)
-    hour = wrap(hour + step)
-    hourLeft -= step
+    if (!placed) return
+    // the body catches up with the hand quickly but smoothly, so the light never jumps
+    const f = o.still ? 1 : Math.min(1, dt * 14)
+    placed.p = lerp(placed.p, placed.goal, f)
+    reading = readingsAt(placed.body, placed.p)
+    hour = reading.w < 0.5 ? reading.a : reading.b
     sayHour()
   }
 
-  /** Put a body at a spot in the sky, kept on screen and no deeper than the hills allow. */
+  /** Move a body toward a spot, kept on screen and no deeper than the hills allow. */
   function put(b: Body, x: number, y: number) {
     const v = o.getView()
-    const a = arc(v)
-    placed = {
-      body: b,
-      p: {
-        x: clamp(x, -v.vis / 2 + 36, v.vis / 2 - 36),
-        y: clamp(y, a.top + 44, a.base + a.h * SINK),
-      },
-    }
-    hour = hourFor(b, placed.p)
-    hourLeft = 0
-    sayHour()
-  }
-  /** Let go of a placed body. Behind the hills, it sets and the night (or day) comes on. */
-  function release() {
-    if (!placed) return
-    const { body: b, p } = placed
-    if (elevation(b) < 0.02) {
-      const left = p.x < 0
-      const target = b === 'sun' ? (left ? 3 : 21) : left ? 15 : 9
-      hourLeft = target - hour
-      ease = { body: b, from: p, k: 1 }
-      placed = null
-    }
-  }
-  /** A tap on the sun or moon: let a quarter of the day slip by. */
-  function tap() {
-    if (placed) ease = { body: placed.body, from: placed.p, k: 1 }
-    placed = null
-    hourLeft = 6
+    const s = span(v)
+    const cx = clamp(x, -v.vis / 2 + 36, v.vis / 2 - 36)
+    const goal = { x: cx, y: clamp(y, s.top + 44, horizon(cx) + SINK * s.h) }
+    if (placed?.body !== b) {
+      // the other body was in hand before: it eases over to where this one's time puts it
+      if (placed) ease = { body: placed.body, from: posOf(placed.body), k: 1 }
+      placed = { body: b, p: posOf(b), goal }
+    } else placed.goal = goal
   }
 
-  const onHandleDown = (e: PointerEvent) => {
-    dragging = body()
-    const at = posOf(dragging)
+  const handleOf = (b: Body) => (b === 'sun' ? o.handles.sun : o.handles.moon)
+  const grabbed = (b: Body) => (e: PointerEvent) => {
+    dragging = b
+    const at = posOf(b)
     const hand = toWorld(e.clientX, e.clientY)
-    // keep hold of the sun where it was grabbed, so it never jumps to the finger
-    press = { x: e.clientX, y: e.clientY, moved: false, dx: at.x - hand.x, dy: at.y - hand.y }
-    hourLeft = 0
-    ease = null
-    o.root.toggleAttribute('data-holding', true)
-    o.handle.setPointerCapture(e.pointerId)
+    // keep hold of it where it was grabbed, so it never leaps to the finger; but a sun
+    // that is down comes straight up to the hand that reaches for its glow
+    press = { x: e.clientX, y: e.clientY, dx: at.x - hand.x, dy: Math.min(at.y - hand.y, 24), moved: false }
+    o.root.dataset.holding = b
+    handleOf(b).setPointerCapture(e.pointerId)
   }
   const onHandleMove = (e: PointerEvent) => {
     if (!press || !dragging) return
-    if (Math.hypot(e.clientX - press.x, e.clientY - press.y) > 6) press.moved = true
+    if (Math.hypot(e.clientX - press.x, e.clientY - press.y) > 5) press.moved = true
     if (!press.moved) return
-    const a = arc(o.getView())
     const hand = toWorld(e.clientX, e.clientY)
-    let y = hand.y + press.dy
-    // the hills push back: below the horizon it sinks only half as far as the hand goes
-    if (y > a.base) y = a.base + (y - a.base) * 0.5
-    put(dragging, hand.x + press.dx, y)
+    put(dragging, hand.x + press.dx, hand.y + press.dy)
   }
   const onHandleUp = () => {
     if (!press) return
-    if (press.moved) release()
-    else tap()
+    // let go: it stays exactly where it was left, and so does the time
     press = null
     dragging = null
     o.root.removeAttribute('data-holding')
-    lightKey = ''
   }
-  const onHandleKey = (e: KeyboardEvent) => {
+  const keyed = (b: Body) => (e: KeyboardEvent) => {
     const moves: Record<string, Point> = {
       ArrowLeft: { x: -28, y: 0 },
       ArrowRight: { x: 28, y: 0 },
@@ -343,18 +341,15 @@ export function startLife(o: LifeOptions): Life {
       ArrowDown: { x: 0, y: 28 },
     }
     const m = moves[e.key]
-    if (m) {
-      e.preventDefault()
-      const b = body()
-      const at = posOf(b)
-      ease = null
-      put(b, at.x + m.x, at.y + m.y)
-      release()
-    } else if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault()
-      tap()
-    }
+    if (!m) return
+    e.preventDefault()
+    const at = placed?.body === b ? placed.goal : posOf(b)
+    put(b, at.x + m.x, at.y + m.y)
   }
+  const onSunDown = grabbed('sun')
+  const onMoonDown = grabbed('moon')
+  const onSunKey = keyed('sun')
+  const onMoonKey = keyed('moon')
 
   // --- the weather, and what it does for the seedling --------------------
   let raining = false
@@ -430,11 +425,11 @@ export function startLife(o: LifeOptions): Life {
     const v = o.getView()
     const sp = posOf('sun')
     const mp = posOf('moon')
-    const key = `${hour.toFixed(3)}|${wet.toFixed(3)}|${v.u}|${v.vis}|${v.lift}|${sp.x.toFixed(1)},${sp.y.toFixed(1)}|${mp.x.toFixed(1)},${mp.y.toFixed(1)}`
+    const key = `${hour.toFixed(3)}|${wet.toFixed(3)}|${v.u}|${v.vis}|${v.lift}|${sp.x.toFixed(1)},${sp.y.toFixed(1)}|${mp.x.toFixed(1)},${mp.y.toFixed(1)}|${dragging}`
     if (key === lightKey) return
     lightKey = key
 
-    const light = lightAt(hour, wet)
+    const light = placed ? lightBetween(reading.a, reading.b, reading.w, wet) : lightAt(hour, wet)
     night = light.night
     o.sky.style.background = light.sky
     const s = o.root.style
@@ -446,22 +441,36 @@ export function startLife(o: LifeOptions): Life {
     s.setProperty('--day', (1 - night).toFixed(3))
     o.root.toggleAttribute('data-flat', light.flat)
 
-    const place = (els: readonly HTMLElement[], b: Body, p: Point) => {
-      const t = b === 'sun' ? sunT() : moonT()
-      const shown = placed?.body === b || ease?.body === b || (t > -0.12 && t < 1.12)
-      for (const el of els) {
-        el.style.transform = `translate3d(${(p.x * v.u).toFixed(1)}px, ${(p.y * v.u).toFixed(1)}px, 0)`
-        el.style.opacity = shown ? (1 - wet * 0.85).toFixed(3) : '0'
-      }
+    const at = (el: HTMLElement, p: Point) => {
+      el.style.transform = `translate3d(${(p.x * v.u).toFixed(1)}px, ${(p.y * v.u).toFixed(1)}px, 0)`
     }
-    place(o.suns, 'sun', sp)
-    place(o.moons, 'moon', mp)
+    // the hills hide whichever of them is down, so both are always drawn where they are
+    for (const el of o.suns) {
+      at(el, sp)
+      el.style.opacity = (1 - wet * 0.85).toFixed(3)
+    }
+    for (const el of o.moons) {
+      at(el, mp)
+      el.style.opacity = (1 - wet * 0.85).toFixed(3)
+    }
+
+    // a set sun glows on the ridge where it went down: bright just after, faint by midnight
+    const se = elevation('sun')
+    const depth = clamp(-se / SINK)
+    const ember = clamp(-se * 12) * (0.14 + 0.8 * (1 - depth) ** 1.6) * (1 - 0.6 * wet)
+    at(o.ember, { x: sp.x, y: horizon(sp.x) })
+    o.ember.style.opacity = Math.min(1, ember + (dragging === 'sun' ? 0.25 * clamp(-se * 12) : 0)).toFixed(3)
+
+    // you can always reach the sun; the moon only while it is up
+    at(o.handles.sun, sunGrip())
+    const moonUp = elevation('moon') > -0.04
+    at(o.handles.moon, mp)
+    o.handles.moon.style.visibility = moonUp || dragging === 'moon' ? 'visible' : 'hidden'
 
     // shadows lean away from the light and lengthen as it sinks; clouds are lit on its side
-    const a = arc(v)
     const lit = night < 0.5 ? sp : mp
     const dir = clamp(lit.x / (v.vis * 0.45), -1, 1)
-    const e = clamp((a.base - lit.y) / a.h)
+    const e = clamp((horizon(lit.x) - lit.y) / span(v).h)
     shade.lean = -dir
     shade.stretch = 1 + (1 - e) * 0.9
     shade.strength = Math.max(0.12, (night < 0.5 ? clamp(e * 4) : 0.35 * clamp(e * 4)) * (1 - 0.7 * wet))
@@ -475,8 +484,6 @@ export function startLife(o: LifeOptions): Life {
       '--sun',
       `rgb(${Math.round(244 + 4 * high)}, ${Math.round(170 + 64 * high)}, ${Math.round(116 + 80 * high)})`,
     )
-    const h = bodyAt()
-    o.handle.style.transform = `translate3d(${(h.x * v.u).toFixed(1)}px, ${(h.y * v.u).toFixed(1)}px, 0)`
   }
 
   // --- small wonders: seeds, shooting stars, birds -----------------------
@@ -986,22 +993,31 @@ export function startLife(o: LifeOptions): Life {
 
   window.addEventListener('pointermove', onMove, { passive: true })
   window.addEventListener('pointerdown', onDown, { passive: true })
-  o.handle.addEventListener('pointerdown', onHandleDown)
-  o.handle.addEventListener('pointermove', onHandleMove)
-  o.handle.addEventListener('pointerup', onHandleUp)
-  o.handle.addEventListener('pointercancel', onHandleUp)
-  o.handle.addEventListener('keydown', onHandleKey)
+  const { sun: sunHandle, moon: moonHandle } = o.handles
+  sunHandle.addEventListener('pointerdown', onSunDown)
+  moonHandle.addEventListener('pointerdown', onMoonDown)
+  sunHandle.addEventListener('keydown', onSunKey)
+  moonHandle.addEventListener('keydown', onMoonKey)
+  for (const h of [sunHandle, moonHandle]) {
+    h.addEventListener('pointermove', onHandleMove)
+    h.addEventListener('pointerup', onHandleUp)
+    h.addEventListener('pointercancel', onHandleUp)
+  }
 
   return {
     stop: () => {
       cancelAnimationFrame(raf)
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerdown', onDown)
-      o.handle.removeEventListener('pointerdown', onHandleDown)
-      o.handle.removeEventListener('pointermove', onHandleMove)
-      o.handle.removeEventListener('pointerup', onHandleUp)
-      o.handle.removeEventListener('pointercancel', onHandleUp)
-      o.handle.removeEventListener('keydown', onHandleKey)
+      sunHandle.removeEventListener('pointerdown', onSunDown)
+      moonHandle.removeEventListener('pointerdown', onMoonDown)
+      sunHandle.removeEventListener('keydown', onSunKey)
+      moonHandle.removeEventListener('keydown', onMoonKey)
+      for (const h of [sunHandle, moonHandle]) {
+        h.removeEventListener('pointermove', onHandleMove)
+        h.removeEventListener('pointerup', onHandleUp)
+        h.removeEventListener('pointercancel', onHandleUp)
+      }
     },
     visit: (p) => {
       tour.splice(0, tour.indexOf('leaf') + 1) // no need to point at the seedling now

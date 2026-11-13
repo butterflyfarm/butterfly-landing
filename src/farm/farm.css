@@ -184,9 +184,46 @@
     filter 350ms ease;
 }
 
-.farm[data-holding] .sun--front i,
-.farm[data-holding] .moon--front i {
+.farm[data-holding='sun'] .sun--front i,
+.farm[data-holding='moon'] .moon--front i {
   opacity: 1;
+}
+
+/* a set sun's glow, low on the ridge where it went down */
+.ember {
+  left: 0;
+  top: 0;
+  /* in front of the tree, lightening whatever it is behind: the glow is never hidden */
+  z-index: 6;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  mix-blend-mode: screen;
+  will-change: transform, opacity;
+}
+
+.ember::before {
+  position: absolute;
+  left: calc(-170 * var(--u));
+  top: calc(-74 * var(--u));
+  width: calc(340 * var(--u));
+  height: calc(148 * var(--u));
+  content: '';
+  background: radial-gradient(
+    closest-side,
+    rgba(250, 196, 140, 0.8),
+    rgba(240, 160, 120, 0.32) 52%,
+    rgba(244, 170, 128, 0)
+  );
+  border-radius: 50%;
+  animation: ember-breathe 4.5s ease-in-out infinite;
+}
+
+@keyframes ember-breathe {
+  50% {
+    scale: 1.08 0.94;
+    opacity: 0.8;
+  }
 }
 
 .sun--front::before {
@@ -208,13 +245,13 @@
     filter 350ms ease;
 }
 
-.farm[data-holding] .sun i,
-.farm[data-holding] .moon i {
+.farm[data-holding='sun'] .sun i,
+.farm[data-holding='moon'] .moon i {
   scale: 1.16;
   filter: brightness(1.08) saturate(1.15);
 }
 
-.farm[data-holding] .sun i {
+.farm[data-holding='sun'] .sun i {
   box-shadow:
     0 0 calc(46 * var(--u)) calc(16 * var(--u)) color-mix(in srgb, var(--sun, #f8eac4) 62%, transparent),
     0 0 calc(200 * var(--u)) calc(100 * var(--u)) color-mix(in srgb, var(--sun, #f8eac4) 28%, transparent);
