@@ -3,6 +3,7 @@
 // One requestAnimationFrame loop drives all of it.
 
 import { lightAt } from './light'
+import { makeCritters, type Shade } from './critters'
 import { makeRng, skyline } from './scene'
 
 export type View = {
@@ -39,8 +40,11 @@ export type LifeOptions = {
   sky: HTMLElement
   grass: HTMLCanvasElement
   fx: HTMLCanvasElement
-  sun: HTMLElement
-  moon: HTMLElement
+  /** the animals who wander across the farm */
+  critters: HTMLCanvasElement
+  /** the sun and moon: each drawn behind the clouds, and again in front while held */
+  suns: readonly HTMLElement[]
+  moons: readonly HTMLElement[]
   /** the draggable hit area that follows the sun or moon */
   handle: HTMLElement
   rainbow: HTMLElement
@@ -164,8 +168,10 @@ function plant(vis: number, lift: number) {
 export function startLife(o: LifeOptions): Life {
   const g = o.grass.getContext('2d')
   const f = o.fx.getContext('2d')
-  if (!g || !f) return { stop: () => {}, visit: () => {}, toggleRain: () => {} }
+  const k = o.critters.getContext('2d')
+  if (!g || !f || !k) return { stop: () => {}, visit: () => {}, toggleRain: () => {} }
   const rand = makeRng(Date.now() & 0xffff)
+  const animals = makeCritters(rand)
 
   const first = o.getView()
   let garden = plant(first.vis, first.lift)
@@ -177,17 +183,28 @@ export function startLife(o: LifeOptions): Life {
     return { x: (cx - v.vw / 2) / v.u, y: (cy - (v.vh - (900 + v.lift) * v.u)) / v.u }
   }
 
-  // --- the hour ----------------------------------------------------------
+  // --- the hour --------------------------------------------------------
+  // The hour drives the light. Left alone, the sun and moon ride their arc as
+  // it passes; dragged, a body goes exactly where it is put, and the hour is
+  // read back from where it sits: height for how full the day is, side for
+  // morning or evening. Below the hills it sets, and the other one rises.
+  type Body = 'sun' | 'moon'
   let hour = wrap(o.hour)
   let hourLeft = 0 // hours still to glide through after a tap or key press
   let saidHour = -1
-  let dragging: 'sun' | 'moon' | null = null
-  let press: { x: number; y: number; moved: boolean } | null = null
+  let dragging: Body | null = null
+  let press: { x: number; y: number; moved: boolean; dx: number; dy: number } | null = null
+  // where a visitor left the sun or moon; null while it rides its usual arc
+  let placed: { body: Body; p: Point } | null = null
+  // once let go, a body eases from where it was back onto its arc
+  let ease: { body: Body; from: Point; k: number } | null = null
+  /** how far below the horizon a body can be pushed, as a share of the arc's height */
+  const SINK = 0.32
 
   // the sun and moon each cross the sky on the same arc, twelve hours apart
   const arc = (v: View) => {
     const top = 900 + v.lift - v.tall // world y of the top of the screen
-    return { xL: -v.vis * 0.43, xR: v.vis * 0.43, base: 486, h: clamp(486 - top - 70, 160, 520) }
+    return { xL: -v.vis * 0.43, xR: v.vis * 0.43, base: 486, h: clamp(486 - top - 70, 160, 520), top }
   }
   const along = (v: View, t: number): Point => {
     const a = arc(v)
@@ -198,9 +215,41 @@ export function startLife(o: LifeOptions): Life {
     const m = ((hour + 6) % 24) / 12
     return m > 1.5 ? m - 2 : m
   }
-  const sunHeight = () => Math.max(0, Math.sin(Math.PI * sunT()))
-  const body = () => dragging ?? (hour >= 6 && hour < 18 ? 'sun' : 'moon')
-  const bodyAt = () => along(o.getView(), body() === 'sun' ? sunT() : moonT())
+  const posOf = (body: Body): Point => {
+    if (placed?.body === body) return placed.p
+    const p = along(o.getView(), body === 'sun' ? sunT() : moonT())
+    if (ease?.body !== body) return p
+    const k = ease.k * ease.k * (3 - 2 * ease.k)
+    return { x: p.x + (ease.from.x - p.x) * k, y: p.y + (ease.from.y - p.y) * k }
+  }
+  /** how high a body stands: 1 at the top of its arc, 0 on the horizon, below 0 behind the hills */
+  const elevation = (body: Body) => {
+    const a = arc(o.getView())
+    return (a.base - posOf(body).y) / a.h
+  }
+  const sunHeight = () => clamp(elevation('sun'))
+  const body = (): Body => dragging ?? placed?.body ?? (hour >= 6 && hour < 18 ? 'sun' : 'moon')
+  const bodyAt = () => posOf(body())
+
+  /** The hour a body standing at `p` would mean. */
+  const hourFor = (b: Body, p: Point) => {
+    const a = arc(o.getView())
+    const e = (a.base - p.y) / a.h
+    const start = b === 'sun' ? 6 : 18
+    const side = (left: boolean) => {
+      if (e >= 0) {
+        const up = (Math.asin(clamp(e)) / Math.PI) * 12 // 0 on the horizon, 6 at the top
+        return left ? start + up : start + 12 - up
+      }
+      const down = clamp(-e / SINK)
+      return left ? start - down * 1.5 : start + 12 + down * 3
+    }
+    // morning on the left, evening on the right, blended across the middle
+    const mid = (a.xL + a.xR) / 2
+    const k = clamp(0.5 + (p.x - mid) / ((a.xR - a.xL) * 0.16))
+    const blend = k * k * (3 - 2 * k)
+    return wrap(side(true) + (side(false) - side(true)) * blend)
+  }
 
   const sayHour = () => {
     const h = (Math.round(hour * 2) / 2) % 24
@@ -210,6 +259,10 @@ export function startLife(o: LifeOptions): Life {
     }
   }
   function stepHour(dt: number) {
+    if (ease) {
+      ease.k -= o.still ? 1 : dt / 1.6
+      if (ease.k <= 0) ease = null
+    }
     if (hourLeft === 0) return
     const step = o.still || Math.abs(hourLeft) < 0.004 ? hourLeft : hourLeft * Math.min(1, dt * 2.2)
     hour = wrap(hour + step)
@@ -217,41 +270,90 @@ export function startLife(o: LifeOptions): Life {
     sayHour()
   }
 
+  /** Put a body at a spot in the sky, kept on screen and no deeper than the hills allow. */
+  function put(b: Body, x: number, y: number) {
+    const v = o.getView()
+    const a = arc(v)
+    placed = {
+      body: b,
+      p: {
+        x: clamp(x, -v.vis / 2 + 36, v.vis / 2 - 36),
+        y: clamp(y, a.top + 44, a.base + a.h * SINK),
+      },
+    }
+    hour = hourFor(b, placed.p)
+    hourLeft = 0
+    sayHour()
+  }
+  /** Let go of a placed body. Behind the hills, it sets and the night (or day) comes on. */
+  function release() {
+    if (!placed) return
+    const { body: b, p } = placed
+    if (elevation(b) < 0.02) {
+      const left = p.x < 0
+      const target = b === 'sun' ? (left ? 3 : 21) : left ? 15 : 9
+      hourLeft = target - hour
+      ease = { body: b, from: p, k: 1 }
+      placed = null
+    }
+  }
+  /** A tap on the sun or moon: let a quarter of the day slip by. */
+  function tap() {
+    if (placed) ease = { body: placed.body, from: placed.p, k: 1 }
+    placed = null
+    hourLeft = 6
+  }
+
   const onHandleDown = (e: PointerEvent) => {
     dragging = body()
-    press = { x: e.clientX, y: e.clientY, moved: false }
+    const at = posOf(dragging)
+    const hand = toWorld(e.clientX, e.clientY)
+    // keep hold of the sun where it was grabbed, so it never jumps to the finger
+    press = { x: e.clientX, y: e.clientY, moved: false, dx: at.x - hand.x, dy: at.y - hand.y }
     hourLeft = 0
+    ease = null
+    o.root.toggleAttribute('data-holding', true)
     o.handle.setPointerCapture(e.pointerId)
   }
   const onHandleMove = (e: PointerEvent) => {
-    if (!press) return
+    if (!press || !dragging) return
     if (Math.hypot(e.clientX - press.x, e.clientY - press.y) > 6) press.moved = true
     if (!press.moved) return
     const a = arc(o.getView())
-    const t = clamp((toWorld(e.clientX, e.clientY).x - a.xL) / (a.xR - a.xL), -0.03, 1.03)
-    hour = wrap((dragging === 'sun' ? 6 : 18) + t * 12)
-    sayHour()
+    const hand = toWorld(e.clientX, e.clientY)
+    let y = hand.y + press.dy
+    // the hills push back: below the horizon it sinks only half as far as the hand goes
+    if (y > a.base) y = a.base + (y - a.base) * 0.5
+    put(dragging, hand.x + press.dx, y)
   }
   const onHandleUp = () => {
     if (!press) return
-    // a tap, not a drag: let a quarter of the day slip by
-    if (!press.moved) hourLeft = 6
+    if (press.moved) release()
+    else tap()
     press = null
     dragging = null
+    o.root.removeAttribute('data-holding')
     lightKey = ''
   }
   const onHandleKey = (e: KeyboardEvent) => {
-    const step =
-      e.key === 'ArrowRight' || e.key === 'ArrowUp'
-        ? 0.5
-        : e.key === 'ArrowLeft' || e.key === 'ArrowDown'
-          ? -0.5
-          : e.key === 'Enter' || e.key === ' '
-            ? 6
-            : 0
-    if (!step) return
-    e.preventDefault()
-    hourLeft += step
+    const moves: Record<string, Point> = {
+      ArrowLeft: { x: -28, y: 0 },
+      ArrowRight: { x: 28, y: 0 },
+      ArrowUp: { x: 0, y: -28 },
+      ArrowDown: { x: 0, y: 28 },
+    }
+    const m = moves[e.key]
+    if (m) {
+      e.preventDefault()
+      const b = body()
+      const at = posOf(b)
+      ease = null
+      put(b, at.x + m.x, at.y + m.y)
+      release()
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      tap()
+    }
   }
 
   // --- the weather, and what it does for the seedling --------------------
@@ -279,7 +381,7 @@ export function startLife(o: LifeOptions): Life {
     if (!on && sunHeight() > 0.15 && wet > 0.5) {
       // sun after rain: a rainbow, on the far side of the sky from the sun
       const v = o.getView()
-      const x = along(v, sunT()).x > 0 ? -v.vis * 0.2 : v.vis * 0.2
+      const x = posOf('sun').x > 0 ? -v.vis * 0.2 : v.vis * 0.2
       o.rainbow.style.transform = `translate3d(${(x * v.u).toFixed(1)}px, 0, 0)`
       rainbowUntil = now + 13
     }
@@ -322,10 +424,13 @@ export function startLife(o: LifeOptions): Life {
   // --- the light ---------------------------------------------------------
   let lightKey = ''
   let night = 0
+  const shade: Shade = { lean: 0.6, stretch: 1.2, strength: 1 }
 
   function shine() {
     const v = o.getView()
-    const key = `${hour.toFixed(3)}|${wet.toFixed(3)}|${v.u}|${v.vis}|${v.lift}|${dragging}`
+    const sp = posOf('sun')
+    const mp = posOf('moon')
+    const key = `${hour.toFixed(3)}|${wet.toFixed(3)}|${v.u}|${v.vis}|${v.lift}|${sp.x.toFixed(1)},${sp.y.toFixed(1)}|${mp.x.toFixed(1)},${mp.y.toFixed(1)}`
     if (key === lightKey) return
     lightKey = key
 
@@ -341,13 +446,29 @@ export function startLife(o: LifeOptions): Life {
     s.setProperty('--day', (1 - night).toFixed(3))
     o.root.toggleAttribute('data-flat', light.flat)
 
-    const place = (el: HTMLElement, t: number) => {
-      const p = along(v, t)
-      el.style.transform = `translate3d(${(p.x * v.u).toFixed(1)}px, ${(p.y * v.u).toFixed(1)}px, 0)`
-      el.style.opacity = t > -0.12 && t < 1.12 ? (1 - wet * 0.85).toFixed(3) : '0'
+    const place = (els: readonly HTMLElement[], b: Body, p: Point) => {
+      const t = b === 'sun' ? sunT() : moonT()
+      const shown = placed?.body === b || ease?.body === b || (t > -0.12 && t < 1.12)
+      for (const el of els) {
+        el.style.transform = `translate3d(${(p.x * v.u).toFixed(1)}px, ${(p.y * v.u).toFixed(1)}px, 0)`
+        el.style.opacity = shown ? (1 - wet * 0.85).toFixed(3) : '0'
+      }
     }
-    place(o.sun, sunT())
-    place(o.moon, moonT())
+    place(o.suns, 'sun', sp)
+    place(o.moons, 'moon', mp)
+
+    // shadows lean away from the light and lengthen as it sinks; clouds are lit on its side
+    const a = arc(v)
+    const lit = night < 0.5 ? sp : mp
+    const dir = clamp(lit.x / (v.vis * 0.45), -1, 1)
+    const e = clamp((a.base - lit.y) / a.h)
+    shade.lean = -dir
+    shade.stretch = 1 + (1 - e) * 0.9
+    shade.strength = Math.max(0.12, (night < 0.5 ? clamp(e * 4) : 0.35 * clamp(e * 4)) * (1 - 0.7 * wet))
+    s.setProperty('--sun-dir', dir.toFixed(3))
+    s.setProperty('--lean', shade.lean.toFixed(3))
+    s.setProperty('--stretch', shade.stretch.toFixed(3))
+    s.setProperty('--shadow-a', shade.strength.toFixed(3))
     // a low sun is amber, a high sun pale
     const high = Math.min(1, sunHeight() * 1.7)
     s.setProperty(
@@ -579,7 +700,9 @@ export function startLife(o: LifeOptions): Life {
     // the seedling, sun, clouds and weathervane answer for themselves
     if (e.target instanceof Element && e.target.closest('[data-farm-control]')) return
     const p = toWorld(e.clientX, e.clientY)
-    if (p.y < skyline(p.x) - 4) {
+    if (animals.startle(p)) {
+      // nothing else: it was the animal they meant
+    } else if (p.y < skyline(p.x) - 4) {
       if (night > 0.5) streaks.push({ x: p.x - 130, y: p.y - 66, age: 0 })
       else flock(p)
     } else if (p.y > 792) burst(p)
@@ -831,6 +954,16 @@ export function startLife(o: LifeOptions): Life {
     c.lineCap = 'butt'
   }
 
+  let crittersUsed = false
+  function paintCritters(dt: number) {
+    if (!o.still) animals.step(dt, o.getView().vis, night, wet)
+    const busy = animals.count() > 0
+    if (!busy && !crittersUsed) return
+    fit(o.critters, k!)
+    crittersUsed = busy
+    animals.draw(k!, shade)
+  }
+
   // --- the loop ----------------------------------------------------------
   let raf = 0
   let last = 0
@@ -842,6 +975,7 @@ export function startLife(o: LifeOptions): Life {
     stepHour(dt)
     stepWeather(dt)
     shine()
+    paintCritters(dt)
     paintGrass(t, dt)
     paintFx(t, dt)
     moveButterflies(dt, now)
