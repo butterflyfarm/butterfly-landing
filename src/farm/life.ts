@@ -207,6 +207,16 @@ export function startLife(o: LifeOptions): Life {
   type Body = 'sun' | 'moon'
   /** how far below the hills a body can go, as a share of the sky's height: about six hours of night */
   const SINK = 0.4
+  /**
+   * The sun keeps the day and the moon the night. Pushed down behind the hills,
+   * either one stops once it is just out of sight, and never reads later than
+   * this share of SINK (about an hour and a half into dusk, or into the
+   * morning); the rest of the night is the moon's to move, and of the day the sun's.
+   */
+  const SET = 0.25
+  /** how far below the ridge a body sits once it is just out of sight, in world units */
+  const hidden = (b: Body) => (b === 'sun' ? 46 : 34)
+  let nudging = 0
   let hour = wrap(o.hour)
   let saidHour = -1
   /** a body the visitor has put somewhere. `p` is where it is drawn; it follows `goal`, the hand. */
@@ -275,7 +285,7 @@ export function startLife(o: LifeOptions): Life {
       a = start + up
       z = start + 12 - up
     } else {
-      const d = clamp(-e / SINK)
+      const d = Math.min(clamp(-e / SINK), SET)
       a = start - 6 * d
       z = start + 12 + 6 * d
     }
@@ -310,7 +320,15 @@ export function startLife(o: LifeOptions): Life {
     const v = o.getView()
     const s = span(v)
     const cx = clamp(x, -v.vis / 2 + 36, v.vis / 2 - 36)
-    const goal = { x: cx, y: clamp(y, s.top + 44, horizon(cx) + SINK * s.h) }
+    const floor = horizon(cx) + Math.min(hidden(b), SINK * s.h)
+    const goal = { x: cx, y: clamp(y, s.top + 44, floor) }
+    // pushed on past where it stops: the other one, up in the sky, calls softly
+    const other: Body = b === 'sun' ? 'moon' : 'sun'
+    if (y > floor + 20 && elevation(other) > 0.04) {
+      o.root.dataset.nudge = other
+      window.clearTimeout(nudging)
+      nudging = window.setTimeout(() => o.root.removeAttribute('data-nudge'), 1800)
+    }
     if (placed?.body !== b) {
       // the other body was in hand before: it eases over to where this one's time puts it
       if (placed) ease = { body: placed.body, from: posOf(placed.body), k: 1 }
@@ -1051,6 +1069,7 @@ export function startLife(o: LifeOptions): Life {
   return {
     stop: () => {
       cancelAnimationFrame(raf)
+      window.clearTimeout(nudging)
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerdown', onDown)
       sunHandle.removeEventListener('pointerdown', onSunDown)
