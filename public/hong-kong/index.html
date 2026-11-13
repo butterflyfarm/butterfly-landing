@@ -3235,6 +3235,25 @@ function kerbDist(x, z) { const RH = DRIVE.RH; if (!RH) return 99; let best = 99
 /* the largest crown (its lumpy outline reaches ~1.35x the scale) that stays a metre clear of every road; 0 = no room for a tree here */
 const crownFit = (x, z, sc) => { const k = kerbDist(x, z); if (k >= 30) return sc; const fit = Math.min(sc, (k - 1) / 1.35); return fit >= 1.1 ? fit : 0; };
 /* lower surveyed buildings to the ground (in every level of detail and the shadow pass), and drop their near-tier details */
+/* level the ground under the side streets to their smoothed profiles, as the main roads were levelled when the city was built,
+   then refresh the terrain's height texture and the lighting normals of the cells that moved */
+function carveStreets(E) {
+  const best = new Map(), t0 = performance.now(), main = new Uint8Array(GW * GH);
+  /* cells under a main road (at ground level) keep the levelling they got when the city was built */
+  for (const r of ROADS) { if (r.tram) continue; const R = r.w / 2 + 2, rc = Math.ceil(R / CELL); for (let i = 0; i < r.n; i += 2) { if (r.el[i] >= .8) continue; const x = r.pts[i * 3], z = r.pts[i * 3 + 2], ci = Math.round((x - X0) / CELL), cj = Math.round((z - Z0) / CELL);
+    for (let b = -rc; b <= rc; b++) for (let a = -rc; a <= rc; a++) { const ii = ci + a, jj = cj + b; if (ii < 0 || jj < 0 || ii >= GW || jj >= GH) continue; if (Math.hypot(X0 + ii * CELL - x, Z0 + jj * CELL - z) < R) main[jj * GW + ii] = 1; } } }
+  for (const e of E) { if (e.tun || e.dead || e.br || e.c <= 5) continue; const R = e.hw + 15, rc = Math.ceil(R / CELL);
+    for (let s = 0; s <= e.n; s++) { const x = e.xs[s], y = e.ys[s] - .25, z = e.zs[s], ci = Math.round((x - X0) / CELL), cj = Math.round((z - Z0) / CELL);
+      for (let b = -rc; b <= rc; b++) for (let a = -rc; a <= rc; a++) { const i = ci + a, j = cj + b; if (i < 1 || j < 1 || i >= GW - 1 || j >= GH - 1) continue; const k = j * GW + i; if (SDF[k] <= 0 || LAKE[k] || main[k]) continue;
+        const d = Math.hypot(X0 + i * CELL - x, Z0 + j * CELL - z), w = 1 - sm(e.hw + 8, R, d); if (w <= 0) continue; const o = best.get(k); if (!o || d < o[2]) best.set(k, [w, y, d]); } } }
+  /* each cell follows the street that passes nearest it: fully within ~9 m of the kerb, fading out over the next 11 m */
+  const touched = new Set(); for (const [k, [w, y]] of best) { HGT[k] = lerp(HGT[k], y, w); touched.add(k); }
+  if (!touched.size || !TEX.h) return;
+  const geo = TEX.geo.image.data;
+  for (const k of touched) for (const kk of [k, k - 1, k + 1, k - GW, k + GW]) { const i = kk % GW, j = (kk / GW) | 0; if (i < 1 || j < 1 || i >= GW - 1 || j >= GH - 1) continue;
+    let nx = HGT[kk - 1] - HGT[kk + 1], nz = HGT[kk - GW] - HGT[kk + GW], ny = 2 * CELL; const il = 1 / Math.hypot(nx, ny, nz); geo[kk * 4] = clamp(nx * il * 127.5 + 127.5, 0, 255); geo[kk * 4 + 1] = clamp(nz * il * 127.5 + 127.5, 0, 255); }
+  TEX.h.needsUpdate = true; TEX.geo.needsUpdate = true; DRIVE.carved = touched.size; DRIVE.carveMs = Math.round(performance.now() - t0);
+}
 function flattenRecs(set) {
   if (!set.size) return; const recs = CITY.recs, boxes = [];
   for (const ri of set) { const b = recs[ri]; b.flat = true; let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9; for (const q of b.rings[0]) { x0 = Math.min(x0, q[0]); x1 = Math.max(x1, q[0]); z0 = Math.min(z0, q[1]); z1 = Math.max(z1, q[1]); } boxes.push([x0, z0, x1, z1]); }
@@ -3265,9 +3284,14 @@ function buildDriveGraph(H) {
   for (let i = 0; i < nN; i++) N.push({ x: nb[1 + i * 2] / 10, z: nb[2 + i * 2] / 10, y: 0, adj: [] });
   /* main-road heights already exist (decks, ramps, carved cuttings): index the rendered road samples */
   const RG = new Map(), rc = 16; for (const r of ROADS) { if (r.tram) continue; for (let i = 0; i < r.n; i++) { const k = Math.floor(r.pts[i * 3] / rc) * 65536 + Math.floor(r.pts[i * 3 + 2] / rc); let a = RG.get(k); if (!a) RG.set(k, a = []); a.push(r, i); } }
+  /* the height along road r near its sample i: the point projected onto the neighbouring segment, interpolated */
+  const segY = (r, i, x, z) => { const P = r.pts; let best = P[i * 3 + 1], bd = 1e9;
+    for (const j of [i - 1, i]) { if (j < 0 || j + 1 >= r.n) continue; const ax = P[j * 3], az = P[j * 3 + 2], bx = P[j * 3 + 3], bz = P[j * 3 + 5], dx = bx - ax, dz = bz - az, L2 = dx * dx + dz * dz || 1, t = clamp(((x - ax) * dx + (z - az) * dz) / L2, 0, 1), px = ax + dx * t, pz = az + dz * t, d = Math.hypot(px - x, pz - z);
+      if (d < bd) { bd = d; best = lerp(P[j * 3 + 1], P[j * 3 + 4], t); } }
+    return best; };
   const roadY = (x, z, bridge) => { let best = 1e9, y = null; const gx = Math.floor(x / rc), gz = Math.floor(z / rc);
     for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) { const c = RG.get((gx + a) * 65536 + gz + b); if (!c) continue;
-      for (let j = 0; j < c.length; j += 2) { const r = c[j], i = c[j + 1], d = Math.hypot(r.pts[i * 3] - x, r.pts[i * 3 + 2] - z), el = r.el[i], sc = d + (bridge ? (el < .8 ? 40 : 0) : (el > 2.5 ? 40 : 0)); if (sc < best) { best = sc; y = r.pts[i * 3 + 1]; } } }
+      for (let j = 0; j < c.length; j += 2) { const r = c[j], i = c[j + 1], d = Math.hypot(r.pts[i * 3] - x, r.pts[i * 3 + 2] - z), el = r.el[i], sc = d + (bridge ? (el < .8 ? 40 : 0) : (el > 2.5 ? 40 : 0)); if (sc < best) { best = sc; y = segY(r, i, x, z); } } }
     return best < 9 ? y : null; };
   const E = []; let k = 1; const nE = eb[0];
   for (let q = 0; q < nE; q++) {
@@ -3284,6 +3308,12 @@ function buildDriveGraph(H) {
     for (let i = 0; i <= e.n; i++) { const x = e.xs[i], z = e.zs[i], ry = e.c <= 5 || e.br ? roadY(x, z, e.br) : null; e.ys[i] = ry ?? (e.br ? NaN : dGround(x, z) + .05); }
     if (e.br) { /* an unmatched (minor) bridge spans level between its ends */ const y0 = isNaN(e.ys[0]) ? dGround(e.xs[0], e.zs[0]) : e.ys[0], y1 = isNaN(e.ys[e.n]) ? dGround(e.xs[e.n], e.zs[e.n]) : e.ys[e.n];
       for (let i = 0; i <= e.n; i++) if (isNaN(e.ys[i])) e.ys[i] = lerp(y0, y1, i / e.n); } }
+  /* smooth each road's profile (a few passes of a 1-2-1 filter over 4 m samples, ends held) so the terrain grid and the
+     road model's samples do not show up as bumps */
+  const smoothYs = (e, passes) => { if (e.n < 3) return; for (let p = 0; p < passes; p++) { const q = e.ys.slice(); for (let i = 1; i < e.n; i++) e.ys[i] = (q[i - 1] + 2 * q[i] + q[i + 1]) / 4; } };
+  for (const e of E) { if (e.tun) continue; smoothYs(e, e.c <= 5 ? 6 : 4);
+    /* side streets ride over the uncarved ground: smooth, then keep the surface from dipping under the terrain, and repeat */
+    if (e.c > 5 && !e.br) smoothYs(e, 6); }
   /* a node sits at the mean of its surface roads' ends; every road eases into it over its last 14 m */
   N.forEach((nd, i) => { let s = 0, c = 0; for (const q of nd.adj) { const e = E[q]; if (e.tun) continue; if (e.a === i) { s += e.ys[0]; c++; } if (e.b === i) { s += e.ys[e.n]; c++; } } nd.y = c ? s / c : dGround(nd.x, nd.z); });
   for (const e of E) {
@@ -3291,8 +3321,19 @@ function buildDriveGraph(H) {
     const da = N[e.a].y - e.ys[0], db = N[e.b].y - e.ys[e.n];
     for (let i = 0; i <= e.n; i++) { const s = i * e.st; e.ys[i] += da * (1 - sm(0, 14, s)) + db * (1 - sm(0, 14, e.L - s)); }
     /* a light smoothing so 4 m samples over a 12 m terrain grid ride smoothly */
-    if (e.c > 5 && e.n > 3) { const q = e.ys.slice(); for (let i = 1; i < e.n; i++) e.ys[i] = (q[i - 1] + 2 * q[i] + q[i + 1]) / 4; }
+    smoothYs(e, 2);
   }
+  /* then smooth across the junctions too: the network as one surface, each node averaging with the samples next to it on every road
+     that meets there, so a road meeting another at a slightly different level eases into it instead of kinking at the node */
+  { const gnd = new Map();
+    for (let it = 0; it < 12; it++) {
+      N.forEach((nd, i) => { let s = 0, c = 0; for (const q of nd.adj) { const e = E[q]; if (e.tun || e.dead || e.n < 2) continue; if (e.a === i) { s += e.ys[1]; c++; } if (e.b === i) { s += e.ys[e.n - 1]; c++; } } if (c) nd.y = (nd.y + s / c) / 2; });
+      for (const e of E) { if (e.tun || e.dead) continue; e.ys[0] = N[e.a].y; e.ys[e.n] = N[e.b].y; if (e.n < 2) continue; const q = e.ys.slice(); for (let i = 1; i < e.n; i++) e.ys[i] = (q[i - 1] + 2 * q[i] + q[i + 1]) / 4;
+        const g = gnd.get(e); if (g) for (let i = 0; i <= e.n; i++) if (e.ys[i] < g[i]) e.ys[i] = g[i]; } }
+    for (const e of E) { if (e.tun || e.dead) continue; e.ys[0] = N[e.a].y; e.ys[e.n] = N[e.b].y; }
+    /* tunnels follow their (smoothed) portals */
+    for (const e of E) { if (!e.tun) continue; const y0 = N[e.a].y, y1 = N[e.b].y; for (let i = 0; i <= e.n; i++) { const t = i / e.n; e.ys[i] = lerp(y0, y1, t) - Math.min(18, e.L * .08) * Math.sin(Math.PI * t); } } }
+  carveStreets(E);
   /* streets that run into surveyed buildings: lanes into car parks and under podiums are taken out of the network (you cannot drive
      into a building); main roads that pass beneath one (the bypass under the Convention Centre) become covered stretches */
   { const cs = 32, RG = new Map(); CITY.recs.forEach((b, i) => { let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9; for (const q of b.rings[0]) { x0 = Math.min(x0, q[0]); x1 = Math.max(x1, q[0]); z0 = Math.min(z0, q[1]); z1 = Math.max(z1, q[1]); }
@@ -3422,9 +3463,9 @@ const STARTS = [{ id: 'here', name: 'Where you are' }, { id: 'pier', name: 'Cent
 function dStart(id) {
   const S = STARTS.find(q => q.id === id) || STARTS[0], here = DRIVE.hereXZ || SITE('hsbc'); DRIVE.start = S.id;
   if (S.site && SITE(S.site)) dSpawn(SITE(S.site)[0], SITE(S.site)[1], S.roads); else dSpawn(here[0], here[1]);
-  const c = DRIVE.car, e = DRIVE.E[c.e]; c.yaw = dTan(e, c.u) + (c.d < 0 ? PI : 0); cam.az = c.yaw + PI + .9; DRIVE.joy = null;
+  const c = DRIVE.car, e = DRIVE.E[c.e]; c.yaw = dTan(e, c.u) + (c.d < 0 ? PI : 0); cam.az = c.yaw + PI + .9; DRIVE.joy = null; DRIVE.camY = DRIVE.camG = undefined; DRIVE.camK = 1;
   if (S.id !== 'here') try { localStorage.setItem('hk-start', S.id); } catch (err) { /* storage blocked */ }
-  document.querySelectorAll('#gStart .gs').forEach(b => b.classList.toggle('on', b.dataset.id === S.id)); driveStep(0);
+  document.querySelectorAll('#gStart .gs').forEach(b => b.classList.toggle('on', b.dataset.id === S.id)); driveStep(0); placeCamera(0);
 }
 /* the detailed vehicles: modelled in Blender (vehicles/<id>.glb, Draco-compressed), loaded when first picked and re-built into the
    scene's own prop format so they share its sun, shadows, night lamps and fog; the simple model stands in until they arrive */
@@ -3536,14 +3577,17 @@ function driveStep(dt) {
   /* place the car */
   const p = dPos(e, car.u), hx = Math.cos(h0), hz = Math.sin(h0); car.x = p[0] + hz * car.lat; car.z = p[2] - hx * car.lat; car.y = p[1];
   car.h = h0; const yaw = h0 - Math.atan2(car.latRate * Math.sign(car.v || 1), Math.max(sp, 3)) * .8; car.yaw = car.yaw + wrapA(yaw - car.yaw) * (1 - Math.exp(-dt * 12));
-  const pitch = Math.atan(grade * .9);
-  const M = DRIVE.mesh.matrix; M.makeRotationY(-car.yaw); M.multiply(new THREE.Matrix4().makeRotationZ(pitch)); M.setPosition(car.x, car.y + .02, car.z); DRIVE.mesh.matrixWorldNeedsUpdate = true;
+  const g8 = (() => { const p0 = dPos(e, car.u - 4 * car.d), p1 = dPos(e, car.u + 4 * car.d); return (p1[1] - p0[1]) / 8; })();
+  car.pitch = lerp(car.pitch ?? 0, Math.atan(g8 * .9), 1 - Math.exp(-dt * 8)); const pitch = car.pitch;
+  const M = DRIVE.mesh.matrix; M.makeRotationY(-car.yaw); M.multiply(new THREE.Matrix4().makeRotationZ(pitch)); /* the drawn height follows the road through a short low-pass, so the last of the profile's small bumps do not jolt the view */
+  car.yR = car.yR === undefined || Math.abs(car.y - car.yR) > 2 || !dt ? car.y : car.yR + (car.y - car.yR) * (1 - Math.exp(-dt * 14));
+  M.setPosition(car.x, car.yR + (e.br ? .14 : .32), car.z);   /* road surfaces are drawn just above the height profile (0.3 m, 0.12 m on decks) */ DRIVE.mesh.matrixWorldNeedsUpdate = true;
   if (!G0) crashStep();
   /* the chase camera */
   /* in the garage the camera walks round the vehicle; on the road it follows */
   if (G0) cam.az += dt * .35; else cam.az += wrapA(car.yaw + PI - cam.az) * (1 - Math.exp(-dt * 4));
   const fwd = G0 ? 0 : V.len * .6, big = V.h > 2.4;
-  const shk = (DRIVE.shake = Math.max(0, (DRIVE.shake || 0) - dt * 2.5)) * .6; cam.tx = car.x + hx * fwd + (Math.random() - .5) * shk; cam.tz = car.z + hz * fwd + (Math.random() - .5) * shk; cam.ty = car.y + V.h * (G0 ? .45 : .75) - groundY(cam.tx, cam.tz);
+  const shk = (DRIVE.shake = Math.max(0, (DRIVE.shake || 0) - dt * 2.5)) * .6; cam.tx = car.x + hx * fwd + (Math.random() - .5) * shk; cam.tz = car.z + hz * fwd + (Math.random() - .5) * shk; cam.ty = (car.yR ?? car.y) + V.h * (G0 ? .45 : .75) - groundY(cam.tx, cam.tz);
   cam.dist = lerp(cam.dist, (G0 ? 1.05 : 1) * (7 + V.len * 1.3 + Math.min(V.h, 3) * 1.2) + sp * .32 + DRIVE.zoom, 1 - Math.exp(-dt * 3)); cam.pol = lerp(cam.pol, (G0 ? 72 : big ? 74 : 76) * RAD, 1 - Math.exp(-dt * 3)); cam.fov = lerp(cam.fov, G0 ? 46 : 56 + sp * .35, 1 - Math.exp(-dt * 2));
   cam.vaz = cam.vpol = cam.vx = cam.vz = cam.vzoom = 0;
   /* the next junction, as a nav app would show it */
@@ -3618,6 +3662,18 @@ function crashStep() {
 function uploadHits() { const n = HIT.slots.length; DYN.uHitN.value = n;
   HIT.slots.forEach((s, i) => { DYN.uHitA.value[i].set(s.k, s.t0, s.spin, s.yL); DYN.uHitB.value[i].set(s.px, s.py, s.pz, s.yaw); DYN.uHitC.value[i].set(s.vx, s.vy, s.vz, s.tl); }); }
 /* keep the chase camera out of buildings: if one stands between the vehicle and the camera, bring the camera in front of it */
+/* the chase camera's height eases (hillsides passing under it otherwise bounce it up and down), with a hard floor above the ground */
+function camSmooth(dt) {
+  const p = camera.position, car = DRIVE.car; if (!car) return;
+  /* the ground under the camera is looked up ahead of time along its path and eased too, so a slope arriving under it lifts it gently */
+  const gl = Math.max(groundY(p.x, p.z), groundY(p.x + (p.x - car.x) * .15, p.z + (p.z - car.z) * .15));
+  DRIVE.camG = DRIVE.camG === undefined || !dt ? gl : DRIVE.camG + (gl - DRIVE.camG) * (1 - Math.exp(-dt * 4));
+  const want = Math.max(p.y, DRIVE.camG + 2.5);
+  DRIVE.camY = DRIVE.camY === undefined || !dt || Math.abs(want - DRIVE.camY) > 25 ? want : DRIVE.camY + (want - DRIVE.camY) * (1 - Math.exp(-dt * 4));
+  p.y = Math.max(DRIVE.camY, groundY(p.x, p.z) + .6);
+  if ((DRIVE.camK ?? 1) < .999) camera.lookAt(car.x + Math.cos(car.yaw) * 4, (car.yR ?? car.y) + 1.2, car.z + Math.sin(car.yaw) * 4); else camera.lookAt(cam.tx, cam.tyS, cam.tz);
+  camera.updateMatrixWorld(true);
+}
 function camGuard(dt) {
   const car = DRIVE.car, f = DRIVE.inBld; if (!car || !f) return; const p = camera.position, hx = car.x, hy = car.y + 1.6, hz = car.z; let k = 1;
   for (let i = 1; i <= 24; i++) { const t = i / 24; if (f(hx + (p.x - hx) * t, hy + (p.y - hy) * t, hz + (p.z - hz) * t)) { k = Math.max((i - 1.5) / 24, .03); break; } }
@@ -3883,7 +3939,7 @@ addEventListener('keydown', e => { keys[e.code] = 1; if (DRIVE.on && !['KeyP', '
   if (e.code === 'KeyF' && FOCUS.label) FOCUS.active ? exitFocus() : enterFocus(FOCUS.label); if (e.code === 'KeyI' && FOCUS.active) setFocusMode(!FOCUS.iso); if (e.code === 'KeyC' && FOCUS.active) setFocusClay(!FOCUS.clay); if (e.code === 'KeyB' && FOCUS.active) focusBestView(); if (e.code === 'KeyL') setLight({ golden: 'noon', noon: 'dusk', dusk: 'golden' }[L.name]); if (e.code === 'KeyT') TOUR.on ? stopTour() : startTour(); });
 addEventListener('keyup', e => { keys[e.code] = 0; });
 function stepCamera(dt) {
-  if (DRIVE.on) { driveStep(dt); placeCamera(dt); camGuard(dt); return; }
+  if (DRIVE.on) { driveStep(dt); placeCamera(dt); camGuard(dt); camSmooth(dt); return; }
   if (cam.fly) {
     const f = cam.fly; f.t = Math.min(1, f.t + dt / f.dur); const e = f.t * f.t * f.t * (f.t * (6 * f.t - 15) + 10), a = f.a, b = f.b;
     const arc = Math.sin(e * PI) * f.arc;
