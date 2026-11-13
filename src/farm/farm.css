@@ -157,43 +157,22 @@
   animation: body-breathe 5.5s ease-in-out infinite;
 }
 
+/* The sun sets the light, but the farm is the show: a small, soft disc whose
+   edge melts into the sky, with only a faint haze around it. */
 .sun i {
-  left: calc(-34 * var(--u));
-  top: calc(-34 * var(--u));
-  width: calc(68 * var(--u));
-  height: calc(68 * var(--u));
-  background: var(--sun, #f8eac4);
-  box-shadow:
-    0 0 calc(34 * var(--u)) calc(10 * var(--u)) color-mix(in srgb, var(--sun, #f8eac4) 50%, transparent),
-    0 0 calc(150 * var(--u)) calc(70 * var(--u)) color-mix(in srgb, var(--sun, #f8eac4) 20%, transparent);
-}
-
-/* The sun is a warm disc with slow, soft rays; they fade as it sinks, leaving
-   a plain amber sun on the ridge. */
-.sun:not(.sun--front)::after {
-  position: absolute;
-  left: calc(-120 * var(--u));
-  top: calc(-120 * var(--u));
-  width: calc(240 * var(--u));
-  height: calc(240 * var(--u));
-  content: '';
-  background: repeating-conic-gradient(
-    color-mix(in srgb, var(--sun, #f8eac4) 70%, transparent) 0deg 2.6deg,
-    transparent 2.6deg 11.25deg,
-    color-mix(in srgb, var(--sun, #f8eac4) 40%, transparent) 11.25deg 12.6deg,
-    transparent 12.6deg 22.5deg
+  left: calc(-26 * var(--u));
+  top: calc(-26 * var(--u));
+  width: calc(52 * var(--u));
+  height: calc(52 * var(--u));
+  background: radial-gradient(
+    closest-side,
+    var(--sun, #f8eac4) 84%,
+    color-mix(in srgb, var(--sun, #f8eac4) 0%, transparent) 100%
   );
-  border-radius: 50%;
-  -webkit-mask-image: radial-gradient(closest-side, transparent 27%, #000 31%, rgba(0, 0, 0, 0.35) 62%, transparent 100%);
-  mask-image: radial-gradient(closest-side, transparent 27%, #000 31%, rgba(0, 0, 0, 0.35) 62%, transparent 100%);
-  opacity: var(--rays, 0);
-  animation: rays-turn 160s linear infinite;
-}
-
-@keyframes rays-turn {
-  to {
-    rotate: 1turn;
-  }
+  opacity: 0.9;
+  box-shadow:
+    0 0 calc(16 * var(--u)) calc(2 * var(--u)) color-mix(in srgb, var(--sun, #f8eac4) 26%, transparent),
+    0 0 calc(70 * var(--u)) calc(22 * var(--u)) color-mix(in srgb, var(--sun, #f8eac4) 9%, transparent);
 }
 
 /* The moon is a smaller, cooler crescent. Its lit side always faces the sun
@@ -314,12 +293,12 @@
 
 .sun--front::before {
   position: absolute;
-  left: calc(-130 * var(--u));
-  top: calc(-130 * var(--u));
-  width: calc(260 * var(--u));
-  height: calc(260 * var(--u));
+  left: calc(-90 * var(--u));
+  top: calc(-90 * var(--u));
+  width: calc(180 * var(--u));
+  height: calc(180 * var(--u));
   content: '';
-  background: radial-gradient(closest-side, color-mix(in srgb, var(--sun, #f8eac4) 38%, transparent), transparent);
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--sun, #f8eac4) 20%, transparent), transparent);
   border-radius: 50%;
 }
 
@@ -339,8 +318,8 @@
 
 .farm[data-holding='sun'] .sun i {
   box-shadow:
-    0 0 calc(46 * var(--u)) calc(16 * var(--u)) color-mix(in srgb, var(--sun, #f8eac4) 62%, transparent),
-    0 0 calc(200 * var(--u)) calc(100 * var(--u)) color-mix(in srgb, var(--sun, #f8eac4) 28%, transparent);
+    0 0 calc(24 * var(--u)) calc(5 * var(--u)) color-mix(in srgb, var(--sun, #f8eac4) 40%, transparent),
+    0 0 calc(100 * var(--u)) calc(36 * var(--u)) color-mix(in srgb, var(--sun, #f8eac4) 14%, transparent);
 }
 
 @keyframes body-breathe {

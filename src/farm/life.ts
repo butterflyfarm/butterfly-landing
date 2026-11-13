@@ -508,14 +508,12 @@ export function startLife(o: LifeOptions): Life {
     s.setProperty('--lean', shade.lean.toFixed(3))
     s.setProperty('--stretch', shade.stretch.toFixed(3))
     s.setProperty('--shadow-a', shade.strength.toFixed(3))
-    // a low sun is amber, a high sun pale gold; only a sun well up has rays
-    const sh = sunHeight()
-    const high = Math.min(1, sh * 1.7)
+    // a low sun is amber, a high sun pale
+    const high = Math.min(1, sunHeight() * 1.7)
     s.setProperty(
       '--sun',
-      `rgb(${Math.round(244 + 6 * high)}, ${Math.round(170 + 58 * high)}, ${Math.round(116 + 54 * high)})`,
+      `rgb(${Math.round(244 + 4 * high)}, ${Math.round(170 + 64 * high)}, ${Math.round(116 + 80 * high)})`,
     )
-    s.setProperty('--rays', (clamp((sh - 0.12) * 2.6) * (1 - wet)).toFixed(3))
 
     // the moon's crescent turns its lit side to the sun, wherever the sun is
     s.setProperty('--moon-turn', `${((Math.atan2(sp.y - mp.y, sp.x - mp.x) * 180) / Math.PI).toFixed(1)}deg`)
