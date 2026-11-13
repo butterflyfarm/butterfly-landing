@@ -1090,10 +1090,10 @@ void main(){
   gl_FragColor=vec4(applyFog(col,vWp),1.);
 }`;
 let bldMat, bldMesh;
-function boxGeo() {
+function boxGeo(floor) {
   const p = [], n = [], idx = [], f = (a, b, c, d, nx, ny, nz) => { const i = p.length / 3; p.push(...a, ...b, ...c, ...d); for (let k = 0; k < 4; k++) n.push(nx, ny, nz); idx.push(i, i + 1, i + 2, i, i + 2, i + 3); };
   const A = [-.5, 0, -.5], B = [.5, 0, -.5], Cc = [.5, 0, .5], D = [-.5, 0, .5], E = [-.5, 1, -.5], F = [.5, 1, -.5], G = [.5, 1, .5], H = [-.5, 1, .5];
-  f(E, H, G, F, 0, 1, 0); f(D, Cc, G, H, 0, 0, 1); f(B, A, E, F, 0, 0, -1); f(Cc, B, F, G, 1, 0, 0); f(A, D, H, E, -1, 0, 0);
+  f(E, H, G, F, 0, 1, 0); f(D, Cc, G, H, 0, 0, 1); f(B, A, E, F, 0, 0, -1); f(Cc, B, F, G, 1, 0, 0); f(A, D, H, E, -1, 0, 0); if (floor) f(A, B, Cc, D, 0, -1, 0);
   const g = new THREE.InstancedBufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(n, 3)); g.setIndex(idx); return g;
 }
 function makeCityMeshes() {
@@ -2373,7 +2373,7 @@ function updateShadows(focus, radius) {
 }
 
 /* ═════════════ 7. LIFE: roads, traffic, trams, harbour, air ═════════════ */
-const DYN = { uNoNear: { value: 0 }, uTraffic: { value: .7 }, uPx: { value: .001 }, uRoad: { value: null }, uNearFade: { value: new THREE.Vector2(250, 380) } };
+const DYN = { uHitN: { value: 0 }, uHitA: { value: Array.from({ length: 16 }, () => new THREE.Vector4(-1, 0, 0, 0)) }, uHitB: { value: Array.from({ length: 16 }, () => new THREE.Vector4()) }, uHitC: { value: Array.from({ length: 16 }, () => new THREE.Vector4()) }, uNoNear: { value: 0 }, uTraffic: { value: .7 }, uPx: { value: .001 }, uRoad: { value: null }, uNearFade: { value: new THREE.Vector2(250, 380) } };
 /* ---------- road ribbons: lane markings, tram rails, crossings; cross-faded in near the camera ---------- */
 function makeRibbons() {
   const p = [], a = [], idx = [];
@@ -2412,7 +2412,7 @@ function makeRibbons() {
   m.frustumCulled = false; m.renderOrder = 20; scene.add(m); DYN.ribMat = m.material;
 }
 /* ---------- GPU traffic: vehicles, trams and pedestrians ride the road-sample texture ---------- */
-let trafficMesh;
+let trafficMesh, TRAF = null;
 function makeTraffic() {
   const W = 512, pieces = [];
   for (const r of ROADS) { for (let s = 0; s < r.n - 12; s += W - 1) pieces.push({ r, s, cnt: Math.min(W, r.n - s) }); }
@@ -2431,9 +2431,9 @@ function makeTraffic() {
       if (urb > tot * .5) { const np = Math.round(L / (r.ow ? 8 : 5)); for (let k = 0; k < np; k++) { A.push(j, R(), (.9 + R() * .6) / L, r.w / 2 + .9 + R() * 2.4); B.push(6, R(), r.ow ? 1 : R() < .5 ? 1 : -1, pc.cnt); }
         if (!r.ow) for (let s = 70; s < L - 20; s += 140) for (let k = 0; k < 16; k++) { A.push(j, s / L, R(), r.w / 2 - .6); B.push(7, R(), 1, pc.cnt); } } }
   });
-  const g = boxGeo(); g.setAttribute('aA', new THREE.InstancedBufferAttribute(new Float32Array(A), 4)); g.setAttribute('aB', new THREE.InstancedBufferAttribute(new Float32Array(B), 4)); g.instanceCount = A.length / 4;
+  const g = boxGeo(true); g.setAttribute('aA', new THREE.InstancedBufferAttribute(new Float32Array(A), 4)); g.setAttribute('aB', new THREE.InstancedBufferAttribute(new Float32Array(B), 4)); g.instanceCount = A.length / 4;
   trafficMesh = new THREE.Mesh(g, new THREE.ShaderMaterial({ uniforms: { ...U, ...DYN },
-    vertexShader: `uniform sampler2D uRoad;uniform float uTraffic,uPx,uTime,uNight,uNoNear;attribute vec4 aA,aB;varying vec3 vWp,vN,vL,vNl;varying vec4 vK;varying float vTw;
+    vertexShader: `uniform sampler2D uRoad;uniform float uTraffic,uPx,uTime,uNight,uNoNear,uHitN;uniform vec4 uHitA[16],uHitB[16],uHitC[16];attribute vec4 aA,aB;varying vec3 vWp,vN,vL,vNl;varying vec4 vK;varying float vTw;
       vec4 rp(float i,float row){return texelFetch(uRoad,ivec2(int(i),int(row)),0);}
       float h1(float p){p=fract(p*.1031);p*=p+33.33;p*=p+p;return fract(p);}
       void main(){
@@ -2452,10 +2452,18 @@ function makeTraffic() {
         float dist=distance(p,cameraPosition);
         float vis=type<5?step(seed,uTraffic):1.;
         if(type!=7)vis*=smoothstep(0.,.006,t)*smoothstep(1.,.994,t);
-        vis*=smoothstep(uNoNear,uNoNear*1.5+1.,dist);   /* clear of the driven car */
+        if(type>=6)vis*=smoothstep(uNoNear,uNoNear*1.5+1.,dist);   /* people step clear of the driven car */
         float k=1.;
         if(type<6){k=clamp(dist*uPx*1.25/sz.x,1.,mix(2.2,7.,uNight));}
         else{vis*=1.-smoothstep(380.,620.,dist);sz*=vec3(.9+.3*h1(seed*7.),.86+.2*h1(seed*3.),1.);}
+        /* a car that has been hit flies, tumbling, then lands and slides to rest */
+        int hi=-1;for(int q=0;q<16;q++){if(float(q)<uHitN&&abs(uHitA[q].x-float(gl_InstanceID))<.5)hi=q;}
+        if(hi>=0){vec4 HA=uHitA[hi],HB=uHitB[hi],HC=uHitC[hi];float te=max(uTime-HA.y,0.),tl=HC.w,tf=min(te,tl);
+          vec3 vh=vec3(HC.x,0.,HC.z);vec3 b=HB.xyz+vh*tf+vec3(0.,HC.y*tf-4.9*tf*tf,0.);
+          if(te>tl){float ts=min(te-tl,1.4);b=vec3(b.x,HA.w,b.z)+vh*.3*(ts-ts*ts/2.8);}
+          float ra=HA.z*tf,yw=HB.w+HA.z*.45*tf;fw=vec3(cos(yw),0.,sin(yw));vec3 l0=normalize(vec3(fw.z,0.,-fw.x));vec3 u0=vec3(0.,1.,0.);
+          lf=l0*cos(ra)+u0*sin(ra);up=u0*cos(ra)-l0*sin(ra);
+          float he=abs(cos(ra))*(sz.y*.5+.34)+abs(sin(ra))*sz.x*.5;p=b+vec3(0.,he,0.)-up*(sz.y*.5+.34);vis=1.;k=1.;brake=1.;}
         vec3 lp=position*sz*vis*k;
         vec3 w=p+up*(lp.y+.34)-lf*lp.x+fw*lp.z;
         vWp=w;vN=normalize(up*normal.y-lf*normal.x+fw*normal.z);vL=position;vNl=normal;vK=vec4(float(type),seed,brake,k);vTw=dot(fw,normalize(cameraPosition-p));
@@ -2494,7 +2502,7 @@ function makeTraffic() {
         if(type<6)emis=mix(emis,(vTw>0.?vec3(1.,.9,.7):vec3(1.,.07,.03)*(.6+brake))*uNight*1.5,far);
         gl_FragColor=vec4(applyFog(col+emis,vWp),1.);
       }` }));
-  trafficMesh.frustumCulled = false; scene.add(trafficMesh);
+  trafficMesh.frustumCulled = false; scene.add(trafficMesh); TRAF = { A: g.attributes.aA.array, B: g.attributes.aB.array, data, W, rows: pieces.length };
   STATS.vehicles = A.length / 4;
 }
 /* ---------- generic movers: yaw/pitch boxes on the CPU (tram cars, gondolas, helicopters, jet, kites, boats use meshes) ---------- */
@@ -3217,7 +3225,7 @@ function initLT() {
    reverse, let go to slow down. Keys: ↑/W drive, ↓/S brake, ←/→ or A/D steer, U turn round, Esc leave. */
 /* how far a point stands from the nearest kerb of any drivable street (99 when the streets are not loaded or none is near) */
 function kerbDist(x, z) { const RH = DRIVE.RH; if (!RH) return 99; let best = 99; const gx = Math.floor(x / 16), gz = Math.floor(z / 16);
-  for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) { const c = RH.get((gx + a) * 65536 + gz + b); if (!c) continue; for (let j = 0; j < c.length; j += 3) { const d = Math.hypot(c[j] - x, c[j + 1] - z) - c[j + 2]; if (d < best) best = d; } }
+  for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) { const c = RH.get((gx + a) * 65536 + gz + b); if (!c) continue; for (let j = 0; j < c.length; j += 4) { const d = Math.hypot(c[j] - x, c[j + 1] - z) - c[j + 2]; if (d < best) best = d; } }
   return best; }
 /* the largest crown (its lumpy outline reaches ~1.35x the scale) that stays a metre clear of every road; 0 = no room for a tree here */
 const crownFit = (x, z, sc) => { const k = kerbDist(x, z); if (k >= 30) return sc; const fit = Math.min(sc, (k - 1) / 1.35); return fit >= 1.1 ? fit : 0; };
@@ -3269,17 +3277,28 @@ function buildDriveGraph(H) {
     /* a light smoothing so 4 m samples over a 12 m terrain grid ride smoothly */
     if (e.c > 5 && e.n > 3) { const q = e.ys.slice(); for (let i = 1; i < e.n; i++) e.ys[i] = (q[i - 1] + 2 * q[i] + q[i + 1]) / 4; }
   }
+  /* streets that run into surveyed buildings: lanes into car parks and under podiums are taken out of the network (you cannot drive
+     into a building); main roads that pass beneath one (the bypass under the Convention Centre) become covered stretches */
+  { const cs = 32, RG = new Map(); CITY.recs.forEach((b, i) => { if (b.skip) return; let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9; for (const q of b.rings[0]) { x0 = Math.min(x0, q[0]); x1 = Math.max(x1, q[0]); z0 = Math.min(z0, q[1]); z1 = Math.max(z1, q[1]); }
+      for (let gx = Math.floor(x0 / cs); gx <= Math.floor(x1 / cs); gx++) for (let gz = Math.floor(z0 / cs); gz <= Math.floor(z1 / cs); gz++) { const k = gx * 65536 + gz; let a = RG.get(k); if (!a) RG.set(k, a = []); a.push(i); } });
+    const inside = (x, y, z) => { for (const ri of RG.get(Math.floor(x / cs) * 65536 + Math.floor(z / cs)) || []) { const b = CITY.recs[ri]; if (y > b.base - 3 && y < b.top - 1 && inPoly(x, z, b.rings[0])) return true; } return false; };
+    let dropped = 0, cov = 0;
+    for (const e of E) { if (e.tun) continue; const inn = new Uint8Array(e.n + 1); let run = 0, best = 0; for (let i = 0; i <= e.n; i++) { if (inside(e.xs[i], e.ys[i], e.zs[i])) { inn[i] = 1; run += e.st; best = Math.max(best, run); } else run = 0; }
+      if (best <= 10) continue;
+      if (e.c >= 6) { e.dead = true; dropped++; for (const nd of [N[e.a], N[e.b]]) { const k = nd.adj.indexOf(e.i); if (k >= 0) nd.adj.splice(k, 1); } }
+      else { e.cov = inn; cov++; } }
+    DRIVE.dropped = dropped; DRIVE.covered = cov; }
   DRIVE.N = N; DRIVE.E = E;
   /* every street sample in a spatial hash, so a tree can ask how far it stands from the nearest kerb */
-  const RH = new Map(); for (const e of E) { if (e.tun) continue; for (let i = 0; i <= e.n; i++) { const k = Math.floor(e.xs[i] / 16) * 65536 + Math.floor(e.zs[i] / 16); let a = RH.get(k); if (!a) RH.set(k, a = []); a.push(e.xs[i], e.zs[i], e.hw); } } DRIVE.RH = RH;
+  const RH = new Map(); for (const e of E) { if (e.tun || e.dead) continue; for (let i = 0; i <= e.n; i++) { const k = Math.floor(e.xs[i] / 16) * 65536 + Math.floor(e.zs[i] / 16); let a = RH.get(k); if (!a) RH.set(k, a = []); a.push(e.xs[i], e.zs[i], e.hw, e.ys[i]); } } DRIVE.RH = RH;
   /* every drivable street joins the occupancy map: no trees on it (bit 1), only small ones within a crown's width of it (bit 32) */
-  for (const e of E) { if (e.tun) continue; for (let i = 0; i <= e.n; i++) { if (!e.br) occDisc(e.xs[i], e.zs[i], e.hw + 1.2, 1); occDisc(e.xs[i], e.zs[i], e.hw + 7, 32); } }
+  for (const e of E) { if (e.tun || e.dead) continue; for (let i = 0; i <= e.n; i++) { if (!e.br) occDisc(e.xs[i], e.zs[i], e.hw + 1.2, 1); occDisc(e.xs[i], e.zs[i], e.hw + 7, 32); } }
   NEAR.fx = NEAR.fz = 1e9;   /* re-plant the near trees */
 }
 /* side streets have no ribbons in the city view (only painted lines): give them proper surfaces near the car */
 function buildStreetRibbons() {
   const p = [], a = [], idx = [];
-  for (const e of DRIVE.E) { if (e.c <= 5 || e.tun) continue; const hw = e.hw, one = e.c >= 7 || e.lanes < 2, fl = (one ? 32 : 0) + (one ? 1 : 2) * 64; let base = p.length / 3;
+  for (const e of DRIVE.E) { if (e.c <= 5 || e.tun || e.dead) continue; const hw = e.hw, one = e.c >= 7 || e.lanes < 2, fl = (one ? 32 : 0) + (one ? 1 : 2) * 64; let base = p.length / 3;
     for (let i = 0; i <= e.n; i++) { const j = Math.min(i + 1, e.n), k = Math.max(i - 1, 0); let dx = e.xs[j] - e.xs[k], dz = e.zs[j] - e.zs[k]; const l = Math.hypot(dx, dz) || 1; dx /= l; dz /= l; const y = e.ys[i] + .3;
       p.push(e.xs[i] + dz * hw, y, e.zs[i] - dx * hw, e.xs[i] - dz * hw, y, e.zs[i] + dx * hw); a.push(-1, i * e.st, hw, fl, 1, i * e.st, hw, fl);
       if (i < e.n) { const b = base + i * 2; idx.push(b, b + 1, b + 2, b + 1, b + 3, b + 2); } } }
@@ -3442,7 +3461,7 @@ function dChoose(q, nd, h, intent) {
   return best;
 }
 function dSpawn(x, z, names) {
-  let best = null; for (const e of DRIVE.E) { if (!e.main || e.tun) continue; const pen = names ? (names.includes(DRIVE.names[e.nm]) ? 0 : 900) : (e.c >= 8 ? 120 : e.c >= 6 ? 30 : 0); for (let i = 0; i <= e.n; i += 2) { const d = Math.hypot(e.xs[i] - x, e.zs[i] - z) + pen; if (!best || d < best.d) best = { d, e, u: i * e.st }; } }
+  let best = null; for (const e of DRIVE.E) { if (!e.main || e.tun || e.dead) continue; const pen = names ? (names.includes(DRIVE.names[e.nm]) ? 0 : 900) : (e.c >= 8 ? 120 : e.c >= 6 ? 30 : 0); for (let i = 0; i <= e.n; i += 2) { const d = Math.hypot(e.xs[i] - x, e.zs[i] - z) + pen; if (!best || d < best.d) best = { d, e, u: i * e.st }; } }
   const e = best.e; DRIVE.car = { e: e.i, d: 1, u: clamp(best.u, 2, e.L - 2), lat: e.ow ? 0 : e.hw / 2, latRate: 0, v: 0, yaw: 0, x: 0, y: 0, z: 0, h: 0 };
 }
 function dJunctionAhead() {
@@ -3487,20 +3506,84 @@ function driveStep(dt) {
   car.h = h0; const yaw = h0 - Math.atan2(car.latRate * Math.sign(car.v || 1), Math.max(sp, 3)) * .8; car.yaw = car.yaw + wrapA(yaw - car.yaw) * (1 - Math.exp(-dt * 12));
   const pitch = Math.atan(grade * .9);
   const M = DRIVE.mesh.matrix; M.makeRotationY(-car.yaw); M.multiply(new THREE.Matrix4().makeRotationZ(pitch)); M.setPosition(car.x, car.y + .02, car.z); DRIVE.mesh.matrixWorldNeedsUpdate = true;
+  if (!G0) crashStep();
   /* the chase camera */
   /* in the garage the camera walks round the vehicle; on the road it follows */
   if (G0) cam.az += dt * .35; else cam.az += wrapA(car.yaw + PI - cam.az) * (1 - Math.exp(-dt * 4));
   const fwd = G0 ? 0 : V.len * .6, big = V.h > 2.4;
-  cam.tx = car.x + hx * fwd; cam.tz = car.z + hz * fwd; cam.ty = car.y + V.h * (G0 ? .45 : .75) - groundY(cam.tx, cam.tz);
+  const shk = (DRIVE.shake = Math.max(0, (DRIVE.shake || 0) - dt * 2.5)) * .6; cam.tx = car.x + hx * fwd + (Math.random() - .5) * shk; cam.tz = car.z + hz * fwd + (Math.random() - .5) * shk; cam.ty = car.y + V.h * (G0 ? .45 : .75) - groundY(cam.tx, cam.tz);
   cam.dist = lerp(cam.dist, (G0 ? 1.05 : 1) * (7 + V.len * 1.3 + Math.min(V.h, 3) * 1.2) + sp * .32 + DRIVE.zoom, 1 - Math.exp(-dt * 3)); cam.pol = lerp(cam.pol, (G0 ? 72 : big ? 74 : 76) * RAD, 1 - Math.exp(-dt * 3)); cam.fov = lerp(cam.fov, G0 ? 46 : 56 + sp * .35, 1 - Math.exp(-dt * 2));
   cam.vaz = cam.vpol = cam.vx = cam.vz = cam.vzoom = 0;
   /* the next junction, as a nav app would show it */
   const J = dJunctionAhead(); DRIVE.plan = J.left < 70 && J.opts > 2 ? dChoose(car.e, J.nd, J.h, DRIVE.intent) : null; DRIVE.planLeft = J.left;
   /* the tunnel veil: while the car (or the camera trailing it) is below the hillside */
-  const under = Math.max(e.tun && car.u > 6 && car.u < e.L - 6 ? 1 : 0, clamp((dGround(car.x, car.z) - car.y - .8) / 2.5, 0, 1), clamp((groundY(camera.position.x, camera.position.z) - car.y - 4) / 4, 0, 1) * (e.tun ? 1 : 0));
+  const under = Math.max(e.tun && car.u > 6 && car.u < e.L - 6 ? 1 : 0, e.cov && e.cov[clamp(Math.round(car.u / e.st), 0, e.n)] ? 1 : 0, clamp((dGround(car.x, car.z) - car.y - .8) / 2.5, 0, 1), clamp((groundY(camera.position.x, camera.position.z) - car.y - 4) / 4, 0, 1) * (e.tun ? 1 : 0));
   DRIVE.tun = lerp(DRIVE.tun, under, 1 - Math.exp(-dt * 6));
   dHud(e, sp);
 }
+/* ---------- crashes: the traffic is drawn on the GPU from a formula of time, so the same formula here finds the cars around the
+   driven vehicle; one that is hit gets a slot, and the shader flies it on a ballistic arc, tumbling, until it lands and slides to rest ---------- */
+const HIT = { N: 16, slots: [], hash: null, rowInst: null };
+const _frac = x => x - Math.floor(x);
+const TSZ = [[1.8, 1.5, 4.5], [1.8, 1.45, 4.3], [2.5, 4.4, 11.4], [2.05, 2.6, 7.0], [2.4, 3.2, 8.4]];
+function trafIndex() {
+  if (HIT.hash || !TRAF) return; const { A, B, data, W, rows } = TRAF, cs = 256, H = new Map(), RI = [];
+  for (let j = 0; j < rows; j++) { let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9; for (let i = 0; i < W; i++) { const q = (j * W + i) * 4; x0 = Math.min(x0, data[q]); x1 = Math.max(x1, data[q]); z0 = Math.min(z0, data[q + 2]); z1 = Math.max(z1, data[q + 2]); }
+    for (let gx = Math.floor((x0 - 20) / cs); gx <= Math.floor((x1 + 20) / cs); gx++) for (let gz = Math.floor((z0 - 20) / cs); gz <= Math.floor((z1 + 20) / cs); gz++) { const k = gx * 65536 + gz; let a = H.get(k); if (!a) H.set(k, a = []); a.push(j); } RI.push([]); }
+  for (let k = 0; k < A.length / 4; k++) if (Math.round(B[k * 4]) < 5) RI[A[k * 4]].push(k);
+  HIT.hash = H; HIT.rowInst = RI;
+}
+/* where traffic instance k is at time T (the vertex shader's own sums), or null when it is not on show */
+function trafAt(k, T) {
+  const { A, B, data, W } = TRAF, o = k * 4, row = A[o], cnt = B[o + 3], dir = B[o + 2], type = Math.round(B[o]), L = cnt * 8, tt = A[o + 1] + T * A[o + 2];
+  if (B[o + 1] >= DYN.uTraffic.value) return null;
+  const ph = TAU * (_frac(tt) * L / 240 - T * .045 * dir + row * .37), t = _frac(tt + 8 / L * Math.sin(ph)); if (t < .006 || t > .994) return null;
+  const tp = dir > 0 ? t : 1 - t, s = tp * (cnt - 1), i = Math.min(Math.floor(s), cnt - 2), f = s - i, q0 = (row * W + i) * 4, q1 = q0 + 4;
+  let fx = (data[q1] - data[q0]) * dir, fz = (data[q1 + 2] - data[q0 + 2]) * dir; const l = Math.hypot(fx, fz) || 1; fx /= l; fz /= l;
+  const lat = A[o + 3]; return { x: lerp(data[q0], data[q1], f) + fz * lat, y: lerp(data[q0 + 1], data[q1 + 1], f), z: lerp(data[q0 + 2], data[q1 + 2], f) - fx * lat, fx, fz, type };
+}
+/* separating-axis test for two rectangles on the ground: centre, unit heading, half length, half width */
+function rectsHit(ax, az, ux, uz, al, aw, bx, bz, vx, vz, bl, bw) {
+  const dx = bx - ax, dz = bz - az;
+  for (const [nx, nz] of [[ux, uz], [-uz, ux], [vx, vz], [-vz, vx]]) { const d = Math.abs(dx * nx + dz * nz), r = al * Math.abs(ux * nx + uz * nz) + aw * Math.abs(-uz * nx + ux * nz) + bl * Math.abs(vx * nx + vz * nz) + bw * Math.abs(-vz * nx + vx * nz); if (d > r) return false; }
+  return true;
+}
+/* the ground (or road deck) a flying car comes down on */
+function landY(x, z, fallback) { const RH = DRIVE.RH; if (RH) { let best = 1e9, y = null; const gx = Math.floor(x / 16), gz = Math.floor(z / 16);
+    for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) { const c = RH.get((gx + a) * 65536 + gz + b); if (!c) continue; for (let j = 0; j < c.length; j += 4) { const d = Math.hypot(c[j] - x, c[j + 1] - z) - c[j + 2]; if (d < best) { best = d; y = c[j + 3]; } } }
+    if (y !== null && best < 1) return y; }
+  const g = groundY(x, z); return Number.isFinite(g) ? g : fallback; }
+function hitState(sl, T) { const te = Math.max(T - sl.t0, 0), tf = Math.min(te, sl.tl); let x = sl.px + sl.vx * tf, z = sl.pz + sl.vz * tf;
+  if (te > sl.tl) { const ts = Math.min(te - sl.tl, 1.4), d = .3 * (ts - ts * ts / 2.8); x += sl.vx * d; z += sl.vz * d; } return { x, z, landed: te > sl.tl + 1.4, flying: te < sl.tl }; }
+function launch(k, pos, car, V, T) {
+  const sp = Math.abs(car.v), cfx = Math.cos(car.yaw) * Math.sign(car.v || 1), cfz = Math.sin(car.yaw) * Math.sign(car.v || 1), heavy = pos.type >= 2;
+  let ox = pos.x - car.x, oz = pos.z - car.z; const ol = Math.hypot(ox, oz) || 1; ox /= ol; oz /= ol;
+  let dx = cfx + ox * .7, dz = cfz + oz * .7; const dl = Math.hypot(dx, dz) || 1; dx /= dl; dz /= dl;
+  const hs = (Math.max(sp, 4) * (heavy ? .55 : 1) + 2) * (.9 + Math.random() * .3), vy = Math.min(3 + Math.max(sp, 4) * (heavy ? .22 : .4), 17), vx = dx * hs, vz = dz * hs;
+  /* flight time to the ground below the landing point (two passes, since the landing point depends on it) */
+  let yL = pos.y, tl = (vy + Math.sqrt(vy * vy)) / 9.8; for (let it = 0; it < 2; it++) { yL = Math.min(landY(pos.x + vx * tl, pos.z + vz * tl, pos.y), pos.y + vy * vy / 19.6 - .2); tl = (vy + Math.sqrt(vy * vy + 19.6 * (pos.y - yL))) / 9.8; }
+  /* a roll that ends on wheels, side or roof */
+  const want = (5 + Math.random() * 5) * (Math.random() < .5 ? -1 : 1), q = Math.round(want * tl / (PI / 2)) * (PI / 2), spin = tl > .05 ? q / tl : 0;
+  let si = HIT.slots.findIndex(s => s.k === k); if (si < 0) { si = HIT.slots.length < HIT.N ? HIT.slots.length : HIT.slots.reduce((b, s, i) => s.t0 < HIT.slots[b].t0 ? i : b, 0); }
+  HIT.slots[si] = { k, t0: T, px: pos.x, py: pos.y, pz: pos.z, yaw: Math.atan2(pos.fz, pos.fx), vx, vy, vz, tl, yL, spin, type: pos.type };
+  car.v *= heavy ? .6 : .82; DRIVE.shake = Math.min(1, (DRIVE.shake || 0) + .25 + sp / 40); DRIVE.hits = (DRIVE.hits || 0) + 1;
+  if (navigator.vibrate) try { navigator.vibrate(heavy ? 60 : 30); } catch (e) { /* not allowed */ }
+}
+function crashStep() {
+  if (!TRAF || !DRIVE.car) return; trafIndex(); const car = DRIVE.car, V = DRIVE.V || VEHICLES[0], T = ST.t, ux = Math.cos(car.yaw), uz = Math.sin(car.yaw), al = V.len / 2, aw = V.wid / 2;
+  /* free the slots of wrecks left far behind, so those cars rejoin their lanes out of sight */
+  HIT.slots = HIT.slots.filter(s => { const h = hitState(s, T); return !(h.landed && Math.hypot(h.x - car.x, h.z - car.z) > 350); });
+  const rows = HIT.hash.get(Math.floor(car.x / 256) * 65536 + Math.floor(car.z / 256)); if (!rows) { uploadHits(); return; }
+  for (const j of rows) for (const k of HIT.rowInst[j]) {
+    const sl = HIT.slots.find(s => s.k === k);
+    let p; if (sl) { const h = hitState(sl, T); if (!h.landed) continue; p = { x: h.x, y: sl.yL, z: h.z, fx: Math.cos(sl.yaw), fz: Math.sin(sl.yaw), type: sl.type }; } else p = trafAt(k, T);
+    if (!p || Math.abs(p.x - car.x) > 16 || Math.abs(p.z - car.z) > 16 || Math.abs(p.y - car.y) > 3.5) continue;
+    const s = TSZ[p.type] || TSZ[1]; if (rectsHit(car.x, car.z, ux, uz, al, aw, p.x, p.z, p.fx, p.fz, s[2] / 2, s[0] / 2)) launch(k, p, car, V, T);
+  }
+  uploadHits();
+}
+function uploadHits() { const n = HIT.slots.length; DYN.uHitN.value = n;
+  HIT.slots.forEach((s, i) => { DYN.uHitA.value[i].set(s.k, s.t0, s.spin, s.yL); DYN.uHitB.value[i].set(s.px, s.py, s.pz, s.yaw); DYN.uHitC.value[i].set(s.vx, s.vy, s.vz, s.tl); }); }
 function dMsg(t) { DRIVE.hud.msg.textContent = t; DRIVE.hud.msg.classList.add('show'); DRIVE.msgT = 2.2; }
 function dHud(e, sp) {
   const H = DRIVE.hud, nm = DRIVE.names[e.nm] || ['Motorway', 'Trunk road', 'Main road', 'Main road', 'Road', 'Slip road', 'Street', 'Lane', 'Service road'][e.c] || 'Road';
@@ -3541,10 +3624,10 @@ async function enterDrive0() {
   { const far = cam.dist > 2600; let saved = null; try { saved = localStorage.getItem('hk-start'); } catch (e) { /* storage blocked */ }
     DRIVE.hereXZ = far ? null : [cam.tx, cam.tz]; DRIVE.started = false; dSpawn(cam.tx, cam.tz); DRIVE.on = true; DRIVE.pendingStart = far ? (STARTS.some(q => q.id === saved) ? saved : 'pier') : 'here'; } DRIVE.zoom = 0; DRIVE.labelsWas = LABELS.on; LABELS.on = false; cam.fly = null; cam.tour = null;
 
-  document.body.classList.add('driving'); DYN.uNoNear.value = 40; cam.dist = 30; openGarage(); dStart(DRIVE.pendingStart);
+  document.body.classList.add('driving'); DYN.uNoNear.value = 12; cam.dist = 30; openGarage(); dStart(DRIVE.pendingStart);
 }
 function exitDrive() {
-  if (!DRIVE.on) return; DRIVE.on = false; DRIVE.joy = null; dJoyDraw(); LABELS.on = DRIVE.labelsWas; document.body.classList.remove('driving', 'garage'); DRIVE.garage = false; if (DRIVE.mesh) DRIVE.mesh.visible = false; DYN.uNoNear.value = 0;
+  if (!DRIVE.on) return; DRIVE.on = false; DRIVE.joy = null; dJoyDraw(); LABELS.on = DRIVE.labelsWas; document.body.classList.remove('driving', 'garage'); DRIVE.garage = false; if (DRIVE.mesh) DRIVE.mesh.visible = false; DYN.uNoNear.value = 0; HIT.slots = []; uploadHits();
   const c = DRIVE.car; flyTo({ tx: c.x, tz: c.z, dist: 700, pol: 62 * RAD, az: cam.az, fov: 40, ty: 0, dur: 2.2 });
 }
 function dUturn() { const c = DRIVE.car; if (!c) return; c.d = -c.d; c.lat = -c.lat; c.v = 0; c.yaw += PI; DRIVE.intent = 0; }
@@ -3557,7 +3640,7 @@ function buildMiniBase() {
   g.fillStyle = '#2c2b25'; for (const r of G.coast) { g.beginPath(); r.forEach((p, i) => { const q = P(p[0], p[1]); i ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1]); }); g.closePath(); g.fill(); }
   g.lineCap = g.lineJoin = 'round';
   const pass = (ok, col, w, dash) => { g.strokeStyle = col; g.lineWidth = w; g.setLineDash(dash || []); g.beginPath();
-    for (const e of DRIVE.E) { if (!ok(e)) continue; for (let i = 0; ; i = Math.min(i + 2, e.n)) { const q = P(e.xs[i], e.zs[i]); i ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1]); if (i === e.n) break; } } g.stroke(); };
+    for (const e of DRIVE.E) { if (e.dead || !ok(e)) continue; for (let i = 0; ; i = Math.min(i + 2, e.n)) { const q = P(e.xs[i], e.zs[i]); i ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1]); if (i === e.n) break; } } g.stroke(); };
   pass(e => e.c >= 7 && !e.tun, '#5d5a52', 1.3); pass(e => e.c === 6 && !e.tun, '#8b877c', 1.7);
   pass(e => e.c >= 2 && e.c <= 5 && !e.tun, '#efdcb6', 2.3); pass(e => e.c <= 1 && !e.tun, '#ffad55', 3.2); pass(e => e.tun, 'rgba(255,173,85,.55)', 2.3, [5, 5]);
   MM.base = c; MM.W = W; MM.H = H;
@@ -3956,7 +4039,7 @@ async function boot() {
 }
 window.__hk = {
   THREE, TRAMS, TOD, TOUR, LABELS, setTime, startTour, stopTour, viewHash, flyTo, scene, camera, renderer, cam, U, ST, L, ROADS, DAMS, LAKES, LL, SH, STATS, BI, FA, G, SITES, PATHS, CITY, get GEO() { return GEO; },
-  get terr() { return terr; }, QUALS, resize, get composer() { return composer; }, get scenePass() { return scenePass; }, NEAR, hooks, hAt: (x, z) => hAt(x, z), pick: (x, y) => pickGround(x, y), GS, LT, ltGo, FOCUS, DRIVE, keys, goPreset, setLight, setQuality,
+  get terr() { return terr; }, QUALS, resize, get composer() { return composer; }, get scenePass() { return scenePass; }, NEAR, hooks, hAt: (x, z) => hAt(x, z), pick: (x, y) => pickGround(x, y), GS, LT, ltGo, FOCUS, DRIVE, keys, HIT, get TRAF() { return TRAF; }, trafAt, goPreset, setLight, setQuality,
   pose(o) { userInput(); Object.assign(cam, o); cam.vaz = cam.vpol = cam.vx = cam.vz = cam.vzoom = 0; placeCamera(0); },
   at(lat, lon, dist, azDeg, polDeg, fov) { const p = LL(lat, lon); this.pose({ tx: p[0], tz: p[1], dist, az: azDeg * RAD, pol: polDeg * RAD, fov: fov || 36, ty: 0 }); },
   step(n = 1, dt = 1 / 60) { for (let i = 0; i < n; i++) frame(dt); },
