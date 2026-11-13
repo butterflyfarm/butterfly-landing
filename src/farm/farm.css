@@ -4,11 +4,15 @@
   position: fixed;
   inset: 0;
   overflow: hidden;
+  /* clip, not hidden: focusing the sun must never be able to scroll the painting sideways */
+  overflow: clip;
   background: #c6d6d2;
   animation: farm-dawn 2s ease both;
   -webkit-user-select: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  /* no page to pan, so finger drags reach the farm; pinch-zoom still works */
+  touch-action: pinch-zoom;
 }
 
 .sr-only {
@@ -44,16 +48,6 @@
   );
 }
 
-.sun {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    ellipse 62% 58% at 6% 0%,
-    rgba(246, 224, 180, 0.42),
-    rgba(246, 224, 180, 0) 70%
-  );
-}
-
 /* deeper grass under the farm, where a tall screen lifts it */
 .deep {
   position: absolute;
@@ -74,6 +68,267 @@
 
 .world > * {
   position: absolute;
+  /* the painting itself is not in the way: only the few live things take a touch */
+  pointer-events: none;
+}
+
+.seedling,
+.vane-hit,
+.time-handle,
+.cloud circle {
+  pointer-events: auto;
+}
+
+.cloud circle {
+  cursor: pointer;
+}
+
+/* ---- the hour's light ---- */
+
+/* a multiply wash in the colour of the light: over the land as one veil,
+   and inside anything that stands up into the sky */
+.veil {
+  z-index: 4;
+  background: var(--tint, #fff);
+  mix-blend-mode: multiply;
+}
+
+.farm[data-flat] .veil {
+  display: none;
+}
+
+.tint {
+  fill: var(--tint, #fff);
+  mix-blend-mode: multiply;
+}
+
+.tint--cloud {
+  fill: var(--cloud-tint, #fff);
+}
+
+.tint--sign {
+  fill: var(--sign-tint, #fff);
+}
+
+.cloud,
+.tree,
+.sign {
+  isolation: isolate;
+}
+
+/* ---- sun, moon, stars, rainbow ---- */
+
+.sun,
+.moon {
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  will-change: transform;
+  transition: opacity 500ms ease;
+}
+
+.sun i,
+.moon i {
+  position: absolute;
+  border-radius: 50%;
+  animation: body-breathe 5.5s ease-in-out infinite;
+}
+
+.sun i {
+  left: calc(-34 * var(--u));
+  top: calc(-34 * var(--u));
+  width: calc(68 * var(--u));
+  height: calc(68 * var(--u));
+  background: var(--sun, #f8eac4);
+  box-shadow:
+    0 0 calc(34 * var(--u)) calc(10 * var(--u)) color-mix(in srgb, var(--sun, #f8eac4) 50%, transparent),
+    0 0 calc(150 * var(--u)) calc(70 * var(--u)) color-mix(in srgb, var(--sun, #f8eac4) 20%, transparent);
+}
+
+.moon i {
+  left: calc(-28 * var(--u));
+  top: calc(-28 * var(--u));
+  width: calc(56 * var(--u));
+  height: calc(56 * var(--u));
+  background:
+    radial-gradient(circle at 64% 30%, rgba(160, 162, 152, 0.5) 0 7%, transparent 8.5%),
+    radial-gradient(circle at 38% 62%, rgba(160, 162, 152, 0.42) 0 11%, transparent 12.5%),
+    radial-gradient(circle at 70% 68%, rgba(160, 162, 152, 0.4) 0 5%, transparent 6.5%),
+    radial-gradient(circle at 36% 34%, #efecd9, #d6d4c4 75%);
+  box-shadow:
+    0 0 calc(28 * var(--u)) calc(7 * var(--u)) rgba(214, 222, 240, 0.28),
+    0 0 calc(120 * var(--u)) calc(50 * var(--u)) rgba(180, 196, 230, 0.14);
+}
+
+@keyframes body-breathe {
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* the sun or moon is the farm's clock: drag it, tap it, or use the arrow keys */
+.time-handle {
+  --size: max(calc(116 * var(--u)), 64px);
+  left: 0;
+  top: 0;
+  z-index: 11;
+  width: var(--size);
+  height: var(--size);
+  margin: calc(var(--size) / -2) 0 0 calc(var(--size) / -2);
+  border-radius: 50%;
+  cursor: grab;
+  touch-action: none;
+}
+
+.time-handle:active {
+  cursor: grabbing;
+}
+
+.time-handle:focus-visible,
+.vane-hit:focus-visible {
+  outline: 2px solid rgba(255, 248, 224, 0.9);
+  outline-offset: 2px;
+}
+
+.stars {
+  opacity: var(--stars, 0);
+}
+
+.stars svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.stars i {
+  --size: max(calc(3.4 * var(--u)), 2.5px);
+  position: absolute;
+  width: var(--size);
+  height: var(--size);
+  margin: calc(var(--size) / -2);
+  background: #f6f2dc;
+  border-radius: 50%;
+  box-shadow: 0 0 calc(5 * var(--u)) rgba(246, 242, 220, 0.8);
+  animation: twinkle 4.2s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.rainbow {
+  left: calc(-520 * var(--u));
+  top: calc(-34 * var(--u));
+  width: calc(1040 * var(--u));
+  height: calc(520 * var(--u));
+  background: radial-gradient(
+    circle calc(520 * var(--u)) at 50% 100%,
+    transparent 80%,
+    rgba(184, 150, 200, 0.3) 82%,
+    rgba(140, 170, 214, 0.3) 84.5%,
+    rgba(150, 200, 166, 0.3) 87%,
+    rgba(228, 220, 150, 0.3) 89.5%,
+    rgba(234, 180, 130, 0.3) 92%,
+    rgba(222, 140, 132, 0.3) 94.5%,
+    transparent 96.5%
+  );
+  opacity: 0;
+  transition: opacity 3.5s ease;
+}
+
+/* ---- what glows after dark ---- */
+
+.lamps {
+  left: 0;
+  top: 0;
+  z-index: 6;
+  width: 0;
+  height: 0;
+  opacity: var(--lamps, 0);
+}
+
+.lamp {
+  position: absolute;
+  background: #f3cf8a;
+  border-radius: calc(1 * var(--u));
+  box-shadow: 0 0 calc(9 * var(--u)) calc(2.5 * var(--u)) rgba(244, 200, 120, 0.6);
+}
+
+.lamp--round {
+  border-radius: 50%;
+}
+
+.lamp-glow {
+  position: absolute;
+  width: calc(var(--r) * 2);
+  height: calc(var(--r) * 2);
+  margin: calc(var(--r) * -1) 0 0 calc(var(--r) * -1);
+  background: radial-gradient(closest-side, rgba(250, 206, 134, 0.4), rgba(250, 206, 134, 0));
+  border-radius: 50%;
+}
+
+.lamp-glow--bud {
+  background: radial-gradient(closest-side, rgba(250, 238, 200, 0.34), rgba(250, 238, 200, 0));
+  animation: bud-lamp 5s ease-in-out infinite;
+}
+
+@keyframes bud-lamp {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* ---- the weathervane ---- */
+
+.vane {
+  overflow: visible;
+}
+
+.vane__arrow {
+  animation: vane-rock 7s ease-in-out infinite alternate;
+}
+
+.farm[data-rain] .vane__arrow {
+  animation: vane-spin 1.5s linear infinite;
+}
+
+@keyframes vane-rock {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0.45);
+  }
+}
+
+@keyframes vane-spin {
+  0%,
+  100% {
+    transform: scaleX(1);
+  }
+  50% {
+    transform: scaleX(-1);
+  }
+}
+
+.vane-hit {
+  --size: max(calc(70 * var(--u)), 48px);
+  z-index: 11;
+  width: var(--size);
+  height: var(--size);
+  margin: calc(var(--size) / -2) 0 0 calc(var(--size) / -2);
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
 }
 
 .land {
@@ -100,9 +355,8 @@
 }
 
 .cloud-shadows {
-  top: 0;
   overflow: hidden;
-  pointer-events: none;
+  opacity: var(--day, 1);
 }
 
 .cloud-shadows i {
@@ -130,6 +384,7 @@
 .smoke {
   width: 0;
   height: 0;
+  opacity: calc(0.35 + 0.65 * var(--day, 1));
 }
 
 .smoke i {
@@ -171,6 +426,7 @@
 /* ---- the big tree ---- */
 
 .tree {
+  z-index: 5;
   overflow: visible;
 }
 
@@ -213,7 +469,7 @@
 }
 
 .seedling {
-  z-index: 5;
+  z-index: 11;
   padding: 0;
   background: none;
   border: 0;
@@ -243,11 +499,49 @@
   animation: spark 5.4s ease-in-out 5s infinite;
 }
 
-.sprout__spark:nth-of-type(2) {
+.sprout__spark:nth-of-type(3) {
   animation-delay: 6.8s;
 }
-.sprout__spark:nth-of-type(3) {
+.sprout__spark:nth-of-type(4) {
   animation-delay: 8.6s;
+}
+
+/* growth: each bit of rain or light makes the seedling stand a little taller */
+.sprout__size {
+  transition: transform 2.6s cubic-bezier(0.3, 1.2, 0.5, 1);
+}
+
+.plot[data-stage='1'] .sprout__size {
+  transform: scale(1.16);
+}
+.plot[data-stage='2'] .sprout__size {
+  transform: scale(1.3);
+}
+.plot[data-stage='3'] .sprout__size {
+  transform: scale(1.42);
+}
+
+.sprout__more,
+.sprout__petal {
+  transform: scale(0);
+  transition: transform 2s cubic-bezier(0.3, 1.4, 0.5, 1) 0.6s;
+}
+
+.plot--s1 .sprout__more--1,
+.plot--s2 .sprout__more--2,
+.plot--s3 .sprout__petal {
+  transform: scale(1);
+}
+
+.sprout__budsize {
+  transition: transform 2.2s cubic-bezier(0.3, 1.3, 0.5, 1) 0.4s;
+}
+
+.plot--s2 .sprout__budsize {
+  transform: scale(1.22);
+}
+.plot--s3 .sprout__budsize {
+  transform: scale(1.5);
 }
 
 @keyframes spark {
@@ -267,7 +561,7 @@
 /* ---- the seedling's tag ---- */
 
 .tag {
-  z-index: 7;
+  z-index: 12;
   width: 0;
   height: 0;
   pointer-events: none;
@@ -345,7 +639,7 @@
 /* ---- the farm sign ---- */
 
 .sign {
-  z-index: 3;
+  z-index: 5;
   overflow: visible;
 }
 
@@ -498,13 +792,30 @@
   --size: max(calc(46 * var(--u)), 30px);
   left: 0;
   top: 0;
-  z-index: 4;
+  z-index: 7;
   width: var(--size);
   height: var(--size);
   margin: calc(var(--size) / -2) 0 0 calc(var(--size) / -2);
-  pointer-events: none;
   will-change: transform;
-  filter: drop-shadow(0 2px 2px rgba(30, 60, 40, 0.2));
+  /* butterflies fade with the daylight instead of glowing in the dark */
+  filter: brightness(calc(0.62 + 0.38 * var(--day, 1))) drop-shadow(0 2px 2px rgba(30, 60, 40, 0.2));
+}
+
+/* friends who arrive when the seedling is nearly in bloom */
+.butterfly--friend {
+  --size: max(calc(36 * var(--u)), 24px);
+  opacity: 0;
+  transition: opacity 1.4s ease;
+}
+
+.butterfly--friend-1 {
+  filter: hue-rotate(-40deg) brightness(calc(0.66 + 0.38 * var(--day, 1)));
+}
+.butterfly--friend-2 {
+  filter: hue-rotate(48deg) brightness(calc(0.62 + 0.38 * var(--day, 1)));
+}
+.butterfly--friend-3 {
+  filter: saturate(0.3) brightness(calc(0.7 + 0.42 * var(--day, 1)));
 }
 
 .butterfly svg {
@@ -514,7 +825,8 @@
   overflow: visible;
 }
 
-.grass {
+.grass,
+.fx {
   position: absolute;
   inset: 0;
   z-index: 2;
@@ -523,11 +835,16 @@
   pointer-events: none;
 }
 
+/* rain, fireflies, drifting seeds, shooting stars: in front of everything painted */
+.fx {
+  z-index: 8;
+}
+
 /* fine paper tooth plus a slow, blotchy wash, so flat colour reads as paint */
 .grain {
   position: absolute;
   inset: 0;
-  z-index: 6;
+  z-index: 9;
   pointer-events: none;
   mix-blend-mode: soft-light;
   opacity: 0.45;

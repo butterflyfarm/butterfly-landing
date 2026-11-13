@@ -10,11 +10,12 @@ import {
   meadowFlowers,
   pathRibbon,
   ridges,
+  skyline,
   tuftPaths,
   type Dot,
   type Foliage,
 } from './scene'
-import { startLife, type Life, type View } from './life'
+import { startLife, type Flier, type Life, type Spots, type View } from './life'
 import './farm.css'
 
 /**
@@ -23,12 +24,21 @@ import './farm.css'
  * A seedling says nothing until it is touched; then its tag shows `kind`,
  * `name` and `note`. When an app is grown, its story goes here.
  */
-type Plot = { name?: string; kind?: string; note?: string }
+type Plot = { name?: string; kind?: string; note?: string; thanks?: string }
 const PLOTS: readonly Plot[] = [
   {},
-  { name: 'Nicety', kind: 'First seedling', note: 'Still growing. More when it blooms.' },
+  {
+    name: 'Nicety',
+    kind: 'First seedling',
+    note: 'Still growing. More when it blooms.',
+    // shown once a visitor has brought it rain and light
+    thanks: 'Thank you for the rain and the light. More when it blooms.',
+  },
   {},
 ]
+
+/** How much bigger the seedling stands after each bit of care. */
+const GROWN = [1, 1.16, 1.3, 1.42]
 
 const BED_Y = 752
 
@@ -379,11 +389,14 @@ const Clouds = memo(function Clouds({
   vis,
   spread,
   sky,
+  onTap,
 }: {
   vis: number
   spread: number
   /** extra sky above the 900-unit world, on tall screens */
   sky: number
+  /** a cloud was touched: it rains */
+  onTap: () => void
 }) {
   const size = 0.4 + 0.6 * spread
   return (
@@ -401,6 +414,9 @@ const Clouds = memo(function Clouds({
           <svg
             key={c.seed}
             className="cloud"
+            data-farm-control
+            onClick={onTap}
+            aria-hidden="true"
             viewBox={`${-w / 2 - pad} ${-h - pad} ${w + pad * 2} ${h + pad + 6}`}
             style={
               {
@@ -445,6 +461,14 @@ const Clouds = memo(function Clouds({
               fill={`url(#cloud-shade-${c.seed})`}
               clipPath={`url(#cloud-${c.seed})`}
             />
+            <rect
+              className="tint tint--cloud"
+              x={-w / 2 - pad}
+              y={-h - pad}
+              width={w + pad * 2}
+              height={h + pad + 6}
+              clipPath={`url(#cloud-${c.seed})`}
+            />
           </svg>
         )
       })}
@@ -481,54 +505,96 @@ const Tree = memo(function Tree({ x, y, k }: { x: number; y: number; k: number }
     height: U(544 * k),
   }
   const viewBox = '-290 -520 580 544'
+  const trunk =
+    'M-44 6C-26 -8 -22 -70 -19 -160L-66 -238L-52 -246L-6 -186L-2 -300H10L12 -190L60 -250L72 -242L22 -160C24 -70 30 -8 50 6Z'
   return (
     <>
-      <svg className="tree" viewBox={viewBox} style={box}>
-        <path
-          d="M-44 6C-26 -8 -22 -70 -19 -160L-66 -238L-52 -246L-6 -186L-2 -300H10L12 -190L60 -250L72 -242L22 -160C24 -70 30 -8 50 6Z"
-          fill="#766250"
-        />
-        <path d="M6 6C10 -60 10 -120 12 -190L60 -250L72 -242L22 -160C24 -70 30 -8 50 6Z" fill="#625042" />
-        <path d="M-30 -2C-20 -30 -16 -90 -14 -150" fill="none" stroke="#8f7b66" strokeWidth="4" strokeLinecap="round" opacity="0.7" />
+      <svg className="tree" viewBox={viewBox} style={box} aria-hidden="true">
+        <path d={trunk} fill="#7a6350" />
+        <path d="M6 6C10 -60 10 -120 12 -190L60 -250L72 -242L22 -160C24 -70 30 -8 50 6Z" fill="#655243" />
+        <path d="M-30 -2C-20 -30 -16 -90 -14 -150" fill="none" stroke="#927d67" strokeWidth="4" strokeLinecap="round" opacity="0.7" />
+        <path className="tint" d={trunk} />
       </svg>
-      <svg className="tree tree--sway-a" viewBox={viewBox} style={box}>
+      <svg className="tree tree--sway-a" viewBox={viewBox} style={box} aria-hidden="true">
         {back.map((f, i) => (
           <Leaves key={i} f={f} tones={BIG_TREE} />
         ))}
+        <LeafTint id="tree-back" groups={back} />
       </svg>
-      <svg className="tree tree--sway-b" viewBox={viewBox} style={box}>
+      <svg className="tree tree--sway-b" viewBox={viewBox} style={box} aria-hidden="true">
         {front.map((f, i) => (
           <Leaves key={i} f={f} tones={BIG_TREE} />
         ))}
+        <LeafTint id="tree-front" groups={front} />
       </svg>
     </>
   )
 })
 
-// ---------------------------------------------------------- the farm sign
-
-/** A hanging wooden sign by the lane: the only words on the farm. */
-const FarmSign = memo(function FarmSign({ x, y, k }: { x: number; y: number; k: number }) {
-  const viewBox = '-34 -264 280 284'
-  const box = { left: U(x - 34 * k), top: U(y - 264 * k), width: U(280 * k), height: U(284 * k) }
+/** One multiply-tint over a canopy, clipped to its leaves, so the hour's light falls on it. */
+function LeafTint({ id, groups }: { id: string; groups: Foliage[] }) {
   return (
     <>
-      <svg className="sign" viewBox={viewBox} style={box} aria-hidden="true">
+      <defs>
+        <clipPath id={id}>
+          {groups
+            .flatMap((f) => [...f.dark, ...f.mid])
+            .map((d, i) => (
+              <circle key={i} cx={d.x} cy={d.y} r={d.r} />
+            ))}
+        </clipPath>
+      </defs>
+      <rect className="tint" x="-290" y="-520" width="580" height="544" clipPath={`url(#${id})`} />
+    </>
+  )
+}
+
+// ---------------------------------------------------------- the farm sign
+
+const SIGN_BOX = '-34 -264 284 284'
+
+/** A hanging wooden sign by the lane, under a lantern: the only words on the farm. */
+const FarmSign = memo(function FarmSign({ x, y, k }: { x: number; y: number; k: number }) {
+  const box = { left: U(x - 34 * k), top: U(y - 264 * k), width: U(284 * k), height: U(284 * k) }
+  return (
+    <>
+      <svg className="sign" viewBox={SIGN_BOX} style={box} aria-hidden="true">
+        <defs>
+          <clipPath id="sign-frame">
+            <path d="M-8 4L-7 -252H7L8 4Z" />
+            <path d="M-10 -252H10L7 -260H-7Z" />
+            <rect x="-18" y="-240" width="256" height="12" rx="2" />
+            <path d="M3 -181L55 -233L61 -227L9 -175Z" />
+            <path d="M221 -219H235L232 -224H224ZM222 -219H234V-204H222Z" />
+          </clipPath>
+        </defs>
         <ellipse cx="14" cy="2" rx="46" ry="6" fill="#3f5c45" opacity="0.4" />
         {/* post, arm and brace */}
         <path d="M-8 4L-7 -252H7L8 4Z" fill="#7b6350" />
         <path d="M1 4L1 -252H7L8 4Z" fill="#63503f" />
         <path d="M-10 -252H10L7 -260H-7Z" fill="#8a715c" />
-        <rect x="-18" y="-240" width="238" height="12" rx="2" fill="#7b6350" />
-        <rect x="-18" y="-233" width="238" height="5" rx="2" fill="#63503f" />
-        <path d="M6 -178L58 -230" stroke="#6d5745" strokeWidth="7" strokeLinecap="round" />
+        <rect x="-18" y="-240" width="256" height="12" rx="2" fill="#7b6350" />
+        <rect x="-18" y="-233" width="256" height="5" rx="2" fill="#63503f" />
+        <path d="M3 -181L55 -233L61 -227L9 -175Z" fill="#6d5745" />
+        {/* the lantern */}
+        <path d="M228 -228V-223" stroke="#55483c" strokeWidth="1.4" />
+        <path d="M222 -219H234V-204H222Z" fill="#e3c78e" />
+        <path d="M221 -219H235L232 -224H224Z" fill="#55483c" />
+        <path d="M221 -204H235V-202H221ZM228 -219V-204" stroke="#55483c" strokeWidth="1" fill="#55483c" />
         {/* grass gathered at its foot */}
         <path
           d="M-30 6l5 -24 4 20 5 -30 5 28 6 -22 4 24 6 -32 5 30 6 -20 4 22 6 -26 5 28Z"
           fill="#547758"
         />
+        <path className="tint" d="M-30 6l5 -24 4 20 5 -30 5 28 6 -22 4 24 6 -32 5 30 6 -20 4 22 6 -26 5 28Z" />
+        <rect className="tint tint--sign" x="-34" y="-264" width="284" height="284" clipPath="url(#sign-frame)" />
       </svg>
-      <svg className="sign sign--board" viewBox={viewBox} style={box} aria-hidden="true">
+      <svg className="sign sign--board" viewBox={SIGN_BOX} style={box} aria-hidden="true">
+        <defs>
+          <clipPath id="sign-board">
+            <path d="M25 -206H205A7 7 0 0 1 212 -199V-122A7 7 0 0 1 205 -115H26A7 7 0 0 1 19 -122V-199A7 7 0 0 1 25 -206Z" />
+          </clipPath>
+        </defs>
         <path d="M44 -228V-206M186 -228V-206" stroke="#8d8068" strokeWidth="2.2" />
         <rect x="19" y="-203" width="194" height="88" rx="7" fill="#9b8466" />
         <rect x="18" y="-206" width="194" height="88" rx="7" fill="#d9c9a6" />
@@ -542,6 +608,7 @@ const FarmSign = memo(function FarmSign({ x, y, k }: { x: number; y: number; k: 
         <text x="117" y="-131" textAnchor="middle" className="sign__kind">
           STUDIO
         </text>
+        <rect className="tint tint--sign" x="-34" y="-264" width="284" height="284" clipPath="url(#sign-board)" />
       </svg>
     </>
   )
@@ -552,11 +619,16 @@ const FarmSign = memo(function FarmSign({ x, y, k }: { x: number; y: number; k: 
 const LEAF = 'M0 0C8 -15 30 -19 44 -7C32 5 10 8 0 0Z'
 const SPROUT_Y = BED_Y - 22
 
-/** The seedling. It carries no label: touch it to read its tag. */
-const Sprout = memo(function Sprout() {
+/**
+ * The seedling. It carries no label: touch it to read its tag.
+ * `stage` is how much care it has had (0 to 3); each stage adds a little growth.
+ */
+const Sprout = memo(function Sprout({ stage }: { stage: number }) {
+  const steps = [1, 2, 3].filter((n) => stage >= n).map((n) => ` plot--s${n}`)
   return (
     <svg
-      className="plot"
+      className={`plot${steps.join('')}`}
+      data-stage={stage}
       viewBox="-80 -150 160 180"
       style={{ left: U(-80), top: U(SPROUT_Y - 150), width: U(160), height: U(180) }}
       aria-hidden="true"
@@ -572,50 +644,110 @@ const Sprout = memo(function Sprout() {
         </linearGradient>
       </defs>
       <g className="sprout">
-        <circle className="sprout__glow" cx="1" cy="-98" r="42" fill="url(#g-glow)" />
-        <path
-          className="sprout__stem"
-          d="M0 3C-6 -26 8 -54 1 -88"
-          pathLength="1"
-          fill="none"
-          stroke="#5c8c58"
-          strokeWidth="4.6"
-          strokeLinecap="round"
-        />
-        <g transform="translate(0 -42) scale(-1.12 1.12) rotate(-20)">
-          <g className="sprout__leaf sprout__leaf--1">
-            <path d={LEAF} fill="#6f9a64" />
-            <path d="M2 -1C16 -8 30 -9 42 -7" fill="none" stroke="#5c8c58" strokeWidth="1.2" />
+        <g className="sprout__size">
+          <circle className="sprout__glow" cx="1" cy="-98" r="42" fill="url(#g-glow)" />
+          <path
+            className="sprout__stem"
+            d="M0 3C-6 -26 8 -54 1 -88"
+            pathLength="1"
+            fill="none"
+            stroke="#5c8c58"
+            strokeWidth="4.6"
+            strokeLinecap="round"
+          />
+          {/* leaves that only come with rain and light */}
+          <g transform="translate(-1 -22) rotate(-34) scale(0.7)">
+            <g className="sprout__more sprout__more--1">
+              <path d={LEAF} fill="#7aa66b" />
+            </g>
           </g>
-        </g>
-        <g transform="translate(2 -60) rotate(-26)">
-          <g className="sprout__leaf sprout__leaf--2">
-            <path d={LEAF} fill="#8ab274" />
-            <path d="M2 -1C16 -8 30 -9 42 -7" fill="none" stroke="#6a9a60" strokeWidth="1.2" />
+          <g transform="translate(-1 -24) scale(-0.62 0.62) rotate(-30)">
+            <g className="sprout__more sprout__more--1">
+              <path d={LEAF} fill="#6f9a64" />
+            </g>
           </g>
-        </g>
-        <g transform="translate(1 -86) scale(-0.42 0.42) rotate(-52)">
-          <g className="sprout__leaf sprout__leaf--3">
-            <path d={LEAF} fill="#8ab274" />
+          <g transform="translate(3 -74) scale(-0.7 0.7) rotate(-34)">
+            <g className="sprout__more sprout__more--2">
+              <path d={LEAF} fill="#8ab274" />
+            </g>
           </g>
-        </g>
-        <g transform="translate(1 -86) scale(0.42) rotate(-52)">
-          <g className="sprout__leaf sprout__leaf--3">
-            <path d={LEAF} fill="#9dc184" />
+          <g transform="translate(0 -42) scale(-1.12 1.12) rotate(-20)">
+            <g className="sprout__leaf sprout__leaf--1">
+              <path d={LEAF} fill="#6f9a64" />
+              <path d="M2 -1C16 -8 30 -9 42 -7" fill="none" stroke="#5c8c58" strokeWidth="1.2" />
+            </g>
           </g>
-        </g>
-        <circle className="sprout__spark" cx="-9" cy="-106" r="1.7" fill="#fbf3d6" />
-        <circle className="sprout__spark" cx="12" cy="-112" r="1.3" fill="#fbf3d6" />
-        <circle className="sprout__spark" cx="3" cy="-118" r="1.5" fill="#fbf3d6" />
-        {/* the bud: an app, not yet open */}
-        <g transform="translate(1 -99)">
-          <g className="sprout__bud">
-            <rect x="-9.5" y="-9.5" width="19" height="19" rx="6.2" fill="url(#g-bud)" transform="rotate(8)" />
-            <path d="M-5 -3.5Q-2.5 -7 2 -6.5" fill="none" stroke="#fbf3e0" strokeWidth="1.6" strokeLinecap="round" opacity="0.9" />
+          <g transform="translate(2 -60) rotate(-26)">
+            <g className="sprout__leaf sprout__leaf--2">
+              <path d={LEAF} fill="#8ab274" />
+              <path d="M2 -1C16 -8 30 -9 42 -7" fill="none" stroke="#6a9a60" strokeWidth="1.2" />
+            </g>
+          </g>
+          <g transform="translate(1 -86) scale(-0.42 0.42) rotate(-52)">
+            <g className="sprout__leaf sprout__leaf--3">
+              <path d={LEAF} fill="#8ab274" />
+            </g>
+          </g>
+          <g transform="translate(1 -86) scale(0.42) rotate(-52)">
+            <g className="sprout__leaf sprout__leaf--3">
+              <path d={LEAF} fill="#9dc184" />
+            </g>
+          </g>
+          <circle className="sprout__spark" cx="-9" cy="-106" r="1.7" fill="#fbf3d6" />
+          <circle className="sprout__spark" cx="12" cy="-112" r="1.3" fill="#fbf3d6" />
+          <circle className="sprout__spark" cx="3" cy="-118" r="1.5" fill="#fbf3d6" />
+          {/* the bud: an app, not yet open. Nearly in bloom, its first petals show. */}
+          <g transform="translate(1 -99)">
+            <g className="sprout__budsize">
+              <g transform="rotate(-38)">
+                <path className="sprout__petal" d="M0 0C-9 -6 -9 -17 0 -21C9 -17 9 -6 0 0Z" fill="#e9bfae" />
+              </g>
+              <g transform="rotate(40)">
+                <path className="sprout__petal" d="M0 0C-9 -6 -9 -17 0 -21C9 -17 9 -6 0 0Z" fill="#efcdb8" />
+              </g>
+              <g className="sprout__bud">
+                <rect x="-9.5" y="-9.5" width="19" height="19" rx="6.2" fill="url(#g-bud)" transform="rotate(8)" />
+                <path d="M-5 -3.5Q-2.5 -7 2 -6.5" fill="none" stroke="#fbf3e0" strokeWidth="1.6" strokeLinecap="round" opacity="0.9" />
+              </g>
+            </g>
           </g>
         </g>
       </g>
     </svg>
+  )
+})
+
+// ------------------------------------------------------------ night sky
+
+const Stars = memo(function Stars() {
+  const { still, twinkling } = useMemo(() => {
+    const rand = makeRng(301)
+    const all = Array.from({ length: 170 }, () => ({
+      x: Math.round((rand() - 0.5) * HALF * 2),
+      y: Math.round(-700 + rand() * 1150),
+      r: 0.7 + rand() ** 3 * 1.9,
+      a: 0.45 + rand() * 0.55,
+    }))
+    return { still: all.slice(14), twinkling: all.slice(0, 14) }
+  }, [])
+  return (
+    <div className="stars" style={{ left: U(-HALF), top: U(-700), width: U(HALF * 2), height: U(1170) }}>
+      <svg viewBox={`${-HALF} -700 ${HALF * 2} 1170`} aria-hidden="true">
+        {still.map((s, i) => (
+          <circle key={i} cx={s.x} cy={s.y} r={s.r} fill="#f1eedc" opacity={s.a} />
+        ))}
+      </svg>
+      {twinkling.map((s, i) => (
+        <i
+          key={i}
+          style={{
+            left: U(s.x + HALF),
+            top: U(s.y + 700),
+            animationDelay: `${(-i * 0.83).toFixed(2)}s`,
+          }}
+        />
+      ))}
+    </div>
   )
 })
 
@@ -637,40 +769,92 @@ function Wing() {
   )
 }
 
+/** The farm's butterfly, and the friends who join it when the seedling is nearly in bloom. */
+const Butterflies = memo(function Butterflies() {
+  return (
+    <>
+      {[0, 1, 2, 3].map((n) => (
+        <div key={n} className={`butterfly${n ? ` butterfly--friend butterfly--friend-${n}` : ''}`} aria-hidden="true">
+          <svg viewBox="-23 -23 46 46">
+            {n === 0 && (
+              <defs>
+                <radialGradient id="g-wing" cx="0.1" cy="0.8" r="1">
+                  <stop offset="0" stopColor="#dcecc6" />
+                  <stop offset="0.62" stopColor="#9ccba0" />
+                  <stop offset="1" stopColor="#5d9f86" />
+                </radialGradient>
+                <radialGradient id="g-wing-low" cx="0.1" cy="0.1" r="1">
+                  <stop offset="0" stopColor="#e3efcd" />
+                  <stop offset="1" stopColor="#7fb894" />
+                </radialGradient>
+              </defs>
+            )}
+            <g className="butterfly__wing">
+              <g transform="scale(-1 1)">
+                <Wing />
+              </g>
+            </g>
+            <g className="butterfly__wing">
+              <Wing />
+            </g>
+            <path d="M-0.7 -9.5Q-3 -14 -5.6 -15.6M0.7 -9.5Q3 -14 5.6 -15.6" fill="none" stroke="#2f4238" strokeWidth="0.7" strokeLinecap="round" />
+            <ellipse cx="0" cy="0.6" rx="1.5" ry="7.6" fill="#2f4238" />
+            <circle cx="0" cy="-8" r="1.9" fill="#2f4238" />
+          </svg>
+        </div>
+      ))}
+    </>
+  )
+})
+
+const clockText = (h: number) => {
+  const hh = Math.floor(h) % 24
+  const mm = h % 1 ? '30' : '00'
+  return `${hh % 12 || 12}:${mm} ${hh < 12 ? 'am' : 'pm'}`
+}
+
 export default function Farm() {
   const [view, setView] = useState(measure)
   const [open, setOpen] = useState(false)
+  const [stage, setStage] = useState(0)
+  const [raining, setRaining] = useState(false)
+  const [hour, setHour] = useState(12)
+  const root = useRef<HTMLElement>(null)
+  const life = useRef<Life>(null)
   const viewRef = useRef(view)
   const spread = spreadFor(view.vis)
-  const canvas = useRef<HTMLCanvasElement>(null)
-  const butterfly = useRef<HTMLDivElement>(null)
-  const wingL = useRef<SVGGElement>(null)
-  const wingR = useRef<SVGGElement>(null)
-  const life = useRef<Life>(null)
+  const grown = GROWN[stage]
 
   // where things stand, in world units
   const treeX = 500 * spread
   const treeY = ridges.near(treeX) + 8
   const houseX = -330 * spread
   const houseY = ridges.mid(houseX) + 12
+  const vaneX = houseX + 34 * 1.2
+  const vaneY = houseY - 62 * 1.2
   const signK = 0.95 + 0.25 * ((spread - 0.6) / 0.4)
   const signX = Math.max(-view.vis / 2 + 46, -(300 * spread + 300))
   const signY = 838 + view.lift
-  const perches = useMemo(
-    () => [
-      { x: 24, y: SPROUT_Y - 82 }, // a leaf of the seedling
-      { x: signX + 150 * signK, y: signY - 248 * signK }, // the arm of the farm sign
-      { x: 185 * spread + 14, y: BED_Y - 44 }, // an empty marker
-      { x: -185 * spread + 14, y: BED_Y - 44 },
-    ],
-    [signX, signY, signK, spread],
+  const spots = useMemo<Spots>(
+    () => ({
+      leaf: { x: 24 * grown, y: SPROUT_Y - 82 * grown },
+      bud: { x: 1, y: SPROUT_Y - 99 * grown },
+      vane: { x: vaneX + 2, y: vaneY - 34 },
+      perches: [
+        { x: 24 * grown, y: SPROUT_Y - 82 * grown },
+        { x: signX + 130 * signK, y: signY - 248 * signK }, // the arm of the farm sign
+        { x: 185 * spread + 14, y: BED_Y - 44 }, // the empty markers
+        { x: -185 * spread + 14, y: BED_Y - 44 },
+      ],
+    }),
+    [grown, vaneX, vaneY, signX, signY, signK, spread],
   )
-  const perchRef = useRef(perches)
+  const spotsRef = useRef(spots)
 
   useEffect(() => {
     viewRef.current = view
-    perchRef.current = perches
-  }, [view, perches])
+    spotsRef.current = spots
+  }, [view, spots])
 
   useEffect(() => {
     const onResize = () => setView(measure())
@@ -679,24 +863,50 @@ export default function Farm() {
   }, [])
 
   useEffect(() => {
-    if (!canvas.current || !butterfly.current || !wingL.current || !wingR.current) return
+    const el = root.current
+    if (!el) return
+    const find = <T extends Element = HTMLElement>(q: string) => el.querySelector<T>(q)!
+    const fliers: Flier[] = [...el.querySelectorAll<HTMLElement>('.butterfly')].map((b) => {
+      const wings = b.querySelectorAll<SVGElement>('.butterfly__wing')
+      return { el: b, wings: [wings[0], wings[1]] }
+    })
+    const clock = new Date()
+    let bloom = 0
     const started = startLife({
-      canvas: canvas.current,
-      butterfly: butterfly.current,
-      wings: [wingL.current, wingR.current],
+      root: el,
+      sky: find('.sky'),
+      grass: find<HTMLCanvasElement>('.grass'),
+      fx: find<HTMLCanvasElement>('.fx'),
+      sun: find('.sun'),
+      moon: find('.moon'),
+      handle: find('.time-handle'),
+      rainbow: find('.rainbow'),
+      fliers,
       getView: () => viewRef.current,
-      getPerches: () => perchRef.current,
+      getSpots: () => spotsRef.current,
+      // the farm opens at the visitor's own time of day
+      hour: clock.getHours() + clock.getMinutes() / 60,
       still: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+      onGrow: (n) => {
+        setStage(n)
+        // nearly in bloom: the seedling shows its tag by itself
+        if (n === 3) bloom = window.setTimeout(() => setOpen(true), 2200)
+      },
+      onWeather: setRaining,
+      onHour: setHour,
     })
     life.current = started
-    return started.stop
+    return () => {
+      window.clearTimeout(bloom)
+      started.stop()
+    }
   }, [])
 
   // the tag closes when you touch anywhere else, or press Escape
   useEffect(() => {
     if (!open) return
     const onDown = (e: PointerEvent) => {
-      if (e.target instanceof Element && e.target.closest('[data-farm-control]')) return
+      if (e.target instanceof Element && e.target.closest('.seedling, .tag')) return
       setOpen(false)
     }
     const onKey = (e: KeyboardEvent) => {
@@ -710,48 +920,59 @@ export default function Farm() {
     }
   }, [open])
 
-  const toggle = useCallback(() => {
+  const toggleTag = useCallback(() => {
     setOpen((was) => {
       // the butterfly comes to see what you found
-      if (!was) life.current?.visit(perchRef.current[0])
+      if (!was) life.current?.visit(spotsRef.current.leaf)
       return !was
     })
   }, [])
+  const toggleRain = useCallback(() => life.current?.toggleRain(), [])
 
   const growing = PLOTS.find((p) => p.name)
   const sky = Math.max(0, Math.round(view.tall - H - view.lift))
 
-  const shadowClip = useMemo(() => {
+  // the land's silhouette: cloud shadows and the hour's light fall only inside it
+  const landClip = useMemo(() => {
+    const box = H + view.lift + 12
     const pts: string[] = []
-    for (let x = -HALF; x <= HALF; x += 50) {
-      pts.push(`${(((x + HALF) / (HALF * 2)) * 100).toFixed(2)}% ${((ridges.far(x) / H) * 100).toFixed(2)}%`)
+    for (let x = -HALF; x <= HALF; x += 12) {
+      pts.push(`${(((x + HALF) / (HALF * 2)) * 100).toFixed(2)}% ${(((skyline(x) - 0.8) / box) * 100).toFixed(3)}%`)
     }
     return `polygon(${pts.join(',')},100% 100%,0 100%)`
-  }, [])
+  }, [view.lift])
+  const overLand = { left: U(-HALF), top: 0, width: U(HALF * 2), height: U(H + view.lift + 12), clipPath: landClip }
 
   return (
     <main
+      ref={root}
       className="farm"
+      data-rain={raining || undefined}
       style={{ '--u': `${view.u.toFixed(4)}px`, '--lift': view.lift } as CSSProperties}
     >
       <h1 className="sr-only">Butterfly Farm Studio</h1>
       <p className="sr-only">
-        A quiet painted farm in soft afternoon light: rolling hills, a cottage, a great tree, a
-        hanging wooden sign, and a garden bed where a single seedling is growing while a green
-        butterfly wanders by.
+        A quiet painted farm: rolling hills, a cottage, a great tree, a hanging wooden sign, and a
+        garden bed where a single seedling is growing while a green butterfly wanders by. The sun
+        and moon can be moved to change the hour, the weathervane brings rain, and the seedling
+        grows a little with rain and light.
       </p>
 
       <div className="sky" />
-      <div className="sun" />
       <div className="deep" />
       <div className="world">
-        <Clouds vis={Math.round(view.vis)} spread={spread} sky={sky} />
+        <Stars />
+        <div className="rainbow" />
+        <div className="sun">
+          <i />
+        </div>
+        <div className="moon">
+          <i />
+        </div>
+        <Clouds vis={Math.round(view.vis)} spread={spread} sky={sky} onTap={toggleRain} />
         <Land spread={spread} />
 
-        <div
-          className="cloud-shadows"
-          style={{ left: U(-HALF), width: U(HALF * 2), height: U(H), clipPath: shadowClip }}
-        >
+        <div className="cloud-shadows" style={overLand}>
           <i style={{ top: '60%', animationDuration: '190s', animationDelay: '-40s' }} />
           <i style={{ top: '72%', animationDuration: '240s', animationDelay: '-150s' }} />
           <i style={{ top: '64%', animationDuration: '210s', animationDelay: '-115s' }} />
@@ -764,6 +985,27 @@ export default function Farm() {
           <i />
         </div>
 
+        <svg
+          className="vane"
+          viewBox="-18 -36 36 38"
+          style={{ left: U(vaneX - 18), top: U(vaneY - 36), width: U(36), height: U(38) }}
+          aria-hidden="true"
+        >
+          <path d="M0 2V-28" stroke="#4f463c" strokeWidth="1.6" strokeLinecap="round" />
+          <circle cx="0" cy="-30" r="2" fill="#4f463c" />
+          <path d="M-6 -8H6M0 -14V-2" stroke="#4f463c" strokeWidth="1.1" strokeLinecap="round" />
+          <g transform="translate(0 -21)">
+            <path
+              className="vane__arrow"
+              d="M-14 0H9M9 -4.5L16 0L9 4.5ZM-14 0L-17 -5H-11L-8 0L-11 5H-17Z"
+              fill="#4f463c"
+              stroke="#4f463c"
+              strokeWidth="1.5"
+              strokeLinejoin="round"
+            />
+          </g>
+        </svg>
+
         <Tree x={treeX} y={treeY} k={0.7 + 0.15 * spread} />
 
         {growing?.name && (
@@ -775,21 +1017,26 @@ export default function Farm() {
               aria-expanded={open}
               aria-controls="seedling-tag"
               aria-label={`A seedling. ${open ? 'Put its tag away' : 'Read its tag'}.`}
-              onClick={toggle}
-              style={{ left: U(-52), top: U(SPROUT_Y - 128), width: U(104), height: U(150) }}
+              onClick={toggleTag}
+              style={{
+                left: U(-52),
+                top: U(SPROUT_Y - 128 * grown),
+                width: U(104),
+                height: U(22 + 128 * grown),
+              }}
             />
-            <Sprout />
+            <Sprout stage={stage} />
             <div
               id="seedling-tag"
               className={`tag${open ? ' tag--open' : ''}`}
               data-farm-control
               aria-hidden={!open}
-              style={{ left: U(1), top: U(SPROUT_Y - 118) }}
+              style={{ left: U(1), top: U(SPROUT_Y - 118 * grown) }}
             >
               <div className="tag__card">
                 {growing.kind && <p className="tag__kind">{growing.kind}</p>}
                 <p className="tag__name">{growing.name}</p>
-                {growing.note && <p className="tag__note">{growing.note}</p>}
+                <p className="tag__note">{(stage === 3 && growing.thanks) || growing.note}</p>
               </div>
             </div>
           </>
@@ -797,34 +1044,63 @@ export default function Farm() {
 
         <FarmSign x={signX} y={signY} k={signK} />
 
-        <div className="butterfly" ref={butterfly} aria-hidden="true">
-          <svg viewBox="-23 -23 46 46">
-            <defs>
-              <radialGradient id="g-wing" cx="0.1" cy="0.8" r="1">
-                <stop offset="0" stopColor="#dcecc6" />
-                <stop offset="0.62" stopColor="#9ccba0" />
-                <stop offset="1" stopColor="#5d9f86" />
-              </radialGradient>
-              <radialGradient id="g-wing-low" cx="0.1" cy="0.1" r="1">
-                <stop offset="0" stopColor="#e3efcd" />
-                <stop offset="1" stopColor="#7fb894" />
-              </radialGradient>
-            </defs>
-            <g ref={wingL}>
-              <g transform="scale(-1 1)">
-                <Wing />
-              </g>
-            </g>
-            <g ref={wingR}>
-              <Wing />
-            </g>
-            <path d="M-0.7 -9.5Q-3 -14 -5.6 -15.6M0.7 -9.5Q3 -14 5.6 -15.6" fill="none" stroke="#2f4238" strokeWidth="0.7" strokeLinecap="round" />
-            <ellipse cx="0" cy="0.6" rx="1.5" ry="7.6" fill="#2f4238" />
-            <circle cx="0" cy="-8" r="1.9" fill="#2f4238" />
-          </svg>
+        {/* the hour's light, falling on the land */}
+        <div className="veil" style={overLand} />
+
+        {/* what glows after dark */}
+        <div className="lamps">
+          {[
+            [8, -27, 11, 12],
+            [30, -27, 11, 12],
+            [-32.2, -45.2, 8.4, 8.4],
+          ].map(([x, y, w, h], i) => (
+            <i
+              key={i}
+              className={i === 2 ? 'lamp lamp--round' : 'lamp'}
+              style={{ left: U(houseX + x * 1.2), top: U(houseY + y * 1.2), width: U(w * 1.2), height: U(h * 1.2) }}
+            />
+          ))}
+          <i
+            className="lamp"
+            style={{
+              left: U(signX + 222 * signK),
+              top: U(signY - 219 * signK),
+              width: U(12 * signK),
+              height: U(15 * signK),
+            }}
+          />
+          <i
+            className="lamp-glow"
+            style={{ left: U(signX + 228 * signK), top: U(signY - 208 * signK), '--r': U(170 * signK) } as CSSProperties}
+          />
+          <i className="lamp-glow lamp-glow--bud" style={{ left: U(1), top: U(SPROUT_Y - 99 * grown), '--r': U(46) } as CSSProperties} />
         </div>
+
+        <Butterflies />
+
+        <button
+          type="button"
+          className="vane-hit"
+          data-farm-control
+          aria-pressed={raining}
+          aria-label={raining ? 'Weathervane. It is raining; let it clear.' : 'Weathervane. Bring a little rain.'}
+          onClick={toggleRain}
+          style={{ left: U(vaneX), top: U(vaneY - 18) }}
+        />
+        <div
+          className="time-handle"
+          data-farm-control
+          role="slider"
+          tabIndex={0}
+          aria-label="Time of day. Drag the sun or moon across the sky, or use the arrow keys."
+          aria-valuemin={0}
+          aria-valuemax={24}
+          aria-valuenow={hour}
+          aria-valuetext={clockText(hour)}
+        />
       </div>
-      <canvas className="grass" ref={canvas} aria-hidden="true" />
+      <canvas className="grass" aria-hidden="true" />
+      <canvas className="fx" aria-hidden="true" />
       <div className="grain" />
     </main>
   )

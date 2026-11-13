@@ -222,3 +222,7 @@ export function pathRibbon(
   }
   return `M${left.join('L')}L${right.reverse().join('L')}Z`
 }
+
+/** The top edge of the land at x: everything above it is sky. */
+export const skyline = (x: number) =>
+  Math.min(ridges.peaksBack(x), ridges.peaksFront(x), ridges.far(x), ridges.mid(x))
