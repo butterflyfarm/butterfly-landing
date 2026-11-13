@@ -64,6 +64,9 @@ function measure(): View {
 const spreadFor = (vis: number) =>
   Math.round((0.6 + 0.4 * Math.min(1, Math.max(0, (vis - 600) / 900))) * 50) / 50
 
+/** Where the big tree stands: on a phone it steps in from the edge, so the owl's hollow stays in view. */
+const treeXFor = (spread: number) => 500 * spread - 125 * (1 - spread)
+
 function Dots({
   dots,
   fill,
@@ -126,7 +129,7 @@ const Land = memo(function Land({ spread }: { spread: number }) {
 
     const hx = -330 * s
     const hy = mid(hx) + 12
-    const treeX = 500 * s
+    const treeX = treeXFor(s)
     const treeY = near(treeX) + 8
 
     const trees = [-985, -770, -705, -615, hx - 200, 215, 290, 630, 705, 890, 965]
@@ -452,6 +455,13 @@ const Clouds = memo(function Clouds({
                   <circle key={i} cx={p.x} cy={p.y} r={p.r} />
                 ))}
               </clipPath>
+              {/* the cloud less itself nudged away from the moon: a thin edge on the moon's side */}
+              <mask id={`cloud-rim-${c.seed}`} maskUnits="userSpaceOnUse" x={-w / 2 - pad} y={-h - pad} width={w + pad * 2} height={h + pad + 6}>
+                <Dots dots={puffs} fill="#fff" />
+                <g className="cloud__rim-cut">
+                  <Dots dots={puffs} fill="#000" />
+                </g>
+              </mask>
               <linearGradient id={`cloud-shade-${c.seed}`} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0.45" stopColor="#a7b1be" stopOpacity="0" />
                 <stop offset="1" stopColor="#a7b1be" stopOpacity="0.75" />
@@ -483,6 +493,14 @@ const Clouds = memo(function Clouds({
               width={w + pad * 2}
               height={h + pad + 6}
               clipPath={`url(#cloud-${c.seed})`}
+            />
+            <rect
+              className="cloud__rim"
+              x={-w / 2 - pad}
+              y={-h - pad}
+              width={w + pad * 2}
+              height={h + pad + 6}
+              mask={`url(#cloud-rim-${c.seed})`}
             />
           </svg>
         )
@@ -528,8 +546,20 @@ const Tree = memo(function Tree({ x, y, k }: { x: number; y: number; k: number }
         <path d={trunk} fill="#7a6350" />
         <path d="M6 6C10 -60 10 -120 12 -190L60 -250L72 -242L22 -160C24 -70 30 -8 50 6Z" fill="#655243" />
         <path d="M-30 -2C-20 -30 -16 -90 -14 -150" fill="none" stroke="#927d67" strokeWidth="4" strokeLinecap="round" opacity="0.7" />
+        {/* a hollow in the trunk, where an owl lives */}
+        <g transform={owlScale}>
+          <ellipse cx={OWL.x} cy={OWL.y} rx={OWL.rx} ry={OWL.ry} fill="#3b2f27" />
+          <path
+            d={`M${OWL.x - OWL.rx} ${OWL.y + 3}Q${OWL.x} ${OWL.y + OWL.ry + 7} ${OWL.x + OWL.rx} ${OWL.y + 3}`}
+            fill="none"
+            stroke="#97806a"
+            strokeWidth="2.4"
+            strokeLinecap="round"
+          />
+        </g>
         <path className="tint" d={trunk} />
       </svg>
+      <Owl box={box} k={k} x={x} y={y} />
       <svg className="tree tree--sway-a" viewBox={viewBox} style={box} aria-hidden="true">
         {back.map((f, i) => (
           <Leaves key={i} f={f} tones={BIG_TREE} />
@@ -545,6 +575,69 @@ const Tree = memo(function Tree({ x, y, k }: { x: number; y: number; k: number }
     </>
   )
 })
+
+/** The hollow in the big tree's trunk, in the tree's own units. */
+const OWL = { x: 2, y: -84, rx: 12.5, ry: 17, s: 1.35 }
+/** the hollow and its owl are drawn at a common size, then scaled up about the hollow's centre */
+const owlScale = `translate(${OWL.x} ${OWL.y}) scale(${OWL.s}) translate(${-OWL.x} ${-OWL.y})`
+
+/**
+ * An owl that wakes in the hollow after dark: two amber eyes that blink now and
+ * then. Touched, it turns its head to look at you, and back.
+ */
+function Owl({ box, k, x, y }: { box: CSSProperties; k: number; x: number; y: number }) {
+  const [looks, setLooks] = useState(0)
+  const { x: ox, y: oy, rx, ry } = OWL
+  return (
+    <>
+      <svg className="owl" viewBox="-290 -520 580 544" style={box} aria-hidden="true">
+        <defs>
+          <clipPath id="owl-hollow">
+            <ellipse cx={ox} cy={oy} rx={rx - 0.5} ry={ry - 0.5} />
+          </clipPath>
+        </defs>
+        <g transform={owlScale}>
+          <g clipPath="url(#owl-hollow)">
+            <g className="owl__body">
+              <ellipse cx={ox} cy={oy + 12} rx="10.5" ry="13" fill="#4a4451" />
+              <ellipse cx={ox} cy={oy + 15} rx="6.5" ry="8" fill="#5e5765" />
+              <path
+                d={`M${ox - 3} ${oy + 12}l1 1.6 1-1.6M${ox + 1.5} ${oy + 14.5}l1 1.6 1-1.6M${ox - 2} ${oy + 18}l1 1.6 1-1.6`}
+                fill="none"
+                stroke="#433d49"
+                strokeWidth="0.8"
+              />
+            </g>
+            <g key={looks} className={looks ? 'owl__head owl__head--look' : 'owl__head'}>
+              <path
+                d={`M${ox - 8.5} ${oy - 4}L${ox - 8} ${oy - 15}L${ox - 3} ${oy - 9}H${ox + 3}L${ox + 8} ${oy - 15}L${ox + 8.5} ${oy - 4}Z`}
+                fill="#4a4451"
+              />
+              <circle cx={ox} cy={oy - 2} r="9.5" fill="#4a4451" />
+              <circle cx={ox - 3.6} cy={oy - 2.6} r="4.6" fill="#6b6472" />
+              <circle cx={ox + 3.6} cy={oy - 2.6} r="4.6" fill="#6b6472" />
+              <circle className="owl__eye" cx={ox - 3.6} cy={oy - 2.6} r="2.9" fill="#f0cf7c" />
+              <circle className="owl__eye" cx={ox + 3.6} cy={oy - 2.6} r="2.9" fill="#f0cf7c" />
+              <circle cx={ox - 3.4} cy={oy - 2.5} r="1.4" fill="#231d1a" />
+              <circle cx={ox + 3.8} cy={oy - 2.5} r="1.4" fill="#231d1a" />
+              <ellipse className="owl__lid" cx={ox - 3.6} cy={oy - 2.6} rx="3.3" ry="3.3" fill="#544d5b" />
+              <ellipse className="owl__lid" cx={ox + 3.6} cy={oy - 2.6} rx="3.3" ry="3.3" fill="#544d5b" />
+              <path d={`M${ox - 1.3} ${oy + 0.6}H${ox + 1.3}L${ox} ${oy + 3.4}Z`} fill="#c9a66a" />
+            </g>
+          </g>
+        </g>
+      </svg>
+      <button
+        type="button"
+        className="owl-hit"
+        data-farm-control
+        aria-label="An owl in the hollow of the tree"
+        onClick={() => setLooks((n) => n + 1)}
+        style={{ left: U(x + ox * k), top: U(y + oy * k) }}
+      />
+    </>
+  )
+}
 
 /** One multiply-tint over a canopy, clipped to its leaves, so the hour's light falls on it. */
 function LeafTint({ id, groups }: { id: string; groups: Foliage[] }) {
@@ -841,7 +934,7 @@ export default function Farm() {
   const grown = GROWN[stage]
 
   // where things stand, in world units
-  const treeX = 500 * spread
+  const treeX = treeXFor(spread)
   const treeY = ridges.near(treeX) + 8
   const houseX = -330 * spread
   const houseY = ridges.mid(houseX) + 12
@@ -1073,17 +1166,25 @@ export default function Farm() {
         {/* the hour's light, falling on the land */}
         <div className="veil" style={overLand} />
 
-        {/* what glows after dark */}
+        {/* what glows after dark: the lantern first, then the cottage, one window at a time */}
         <div className="lamps">
           {[
-            [8, -27, 11, 12],
-            [30, -27, 11, 12],
-            [-32.2, -45.2, 8.4, 8.4],
-          ].map(([x, y, w, h], i) => (
+            [8, -27, 11, 12, 0.1],
+            [30, -27, 11, 12, 0.24],
+            [-32.2, -45.2, 8.4, 8.4, 0.38],
+          ].map(([x, y, w, h, at], i) => (
             <i
               key={i}
               className={i === 2 ? 'lamp lamp--round' : 'lamp'}
-              style={{ left: U(houseX + x * 1.2), top: U(houseY + y * 1.2), width: U(w * 1.2), height: U(h * 1.2) }}
+              style={
+                {
+                  left: U(houseX + x * 1.2),
+                  top: U(houseY + y * 1.2),
+                  width: U(w * 1.2),
+                  height: U(h * 1.2),
+                  '--at': at,
+                } as CSSProperties
+              }
             />
           ))}
           <i
