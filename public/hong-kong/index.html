@@ -94,7 +94,7 @@
 <div id="labels"></div>
 <div id="fc" role="dialog" aria-label="Landmark"><button class="x" id="fcX" title="Close (Esc)" aria-label="Close">✕</button><h3 id="fcN"></h3><p id="fcS"></p>
   <div class="r pre"><button id="fcGo" title="Quiet the surroundings (F)">Focus</button></div>
-  <div class="r foc"><button id="fcSee" class="on" title="Fade what stands in front; neighbours in plain clay">See-through</button><button id="fcIso" title="Hide the neighbours, leaving their footprints (I)">Isolate</button><label>Fade<input id="fcAmt" type="range" min="0.2" max="1" step="0.01" value="1" aria-label="Fade strength"></label><button id="fcOut" title="Back to the full city (Esc)">Exit</button></div></div>
+  <div class="r foc"><button id="fcSee" class="on" title="Lower whatever stands in the way and outline anything still hidden">Clear view</button><button id="fcIso" title="Hide the neighbours, leaving their footprints (I)">Isolate</button><button id="fcClay" class="on" title="Neighbours in plain clay (C)">Clay</button><button id="fcBest" title="Fly to the clearest angle (B)">Best view</button><button id="fcOut" title="Back to the full city (Esc)">Exit</button></div></div>
 <div id="pm" title="Fly to Central"><b>Central</b><i></i><u></u></div>
 <div id="cr">Buildings: Lands Department, HKSAR Government, via <a href="https://data.gov.hk/en-data/dataset/hk-landsd-openmap-landsd-building" target="_blank" rel="noopener">DATA.GOV.HK</a> · map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors · elevation NASA SRTM</div>
 <script>window.__errs=[];addEventListener("error",function(e){window.__errs.push(String(e.message).slice(0,300)+" @"+e.lineno)});(function(){var ce=console.error;console.error=function(){try{window.__errs.push(Array.prototype.join.call(arguments," ").slice(0,900))}catch(e){}ce.apply(console,arguments)}})();</script>
@@ -734,13 +734,27 @@ function emitBuilding(P, Bv, I, id, rings, y0, y1) {
   for (const t of tris) { const a = all[t[0]], b = all[t[1]], c = all[t[2]], cr = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
     if (cr < 0) I.push(v0 + t[0], v0 + t[1], v0 + t[2]); else I.push(v0 + t[0], v0 + t[2], v0 + t[1]); }
 }
+/* focus mode, "clear view": buildings standing between the camera and the landmark are lowered below the sight line to the
+   landmark's lower floors, so the view opens without holes; the falloff keeps the cut soft and anything off the corridor whole */
+const SINK_GLSL = /* glsl */`
+uniform float uFocOn,uFocSink,uFocW,uFocTf; uniform vec3 uFocEye,uFocT;
+float focSink(vec3 p,float base){
+  if(uFocOn<.002||uFocSink<.5)return p.y;
+  vec2 d=uFocT.xz-uFocEye.xz;float L2=dot(d,d);if(L2<4.)return p.y;
+  vec2 q=p.xz-uFocEye.xz;float t=dot(q,d)/L2;if(t<=0.||t>=uFocTf+.05)return p.y;
+  float lat=abs(q.x*d.y-q.y*d.x)/sqrt(L2),w=uFocW*t+4.,k=(1.-smoothstep(w,w+6.+26.*t,lat))*(1.-smoothstep(uFocTf-.015,uFocTf+.04,t));
+  float hs=uFocEye.y+(uFocT.y-uFocEye.y)*t-3.;
+  return mix(p.y,max(min(p.y,hs),min(p.y,base+1.5)),k*uFocOn);
+}`;
 const CITY_VS = /* glsl */`
+${SINK_GLSL}
 attribute vec2 aB; uniform sampler2D uBT; uniform float uFocIds[8]; varying vec3 vWp,vN,vCol; varying vec4 vP,vQ; varying float vFoc; varying vec3 vClip;
 vec4 bt(int i){return texelFetch(uBT,ivec2(i%4096,i/4096),0);}
 void main(){int id=int(aB.x+.5)*3;vec4 a=bt(id),b=bt(id+1),c=bt(id+2);
   vN=aB.y>8.?vec3(0.,1.,0.):vec3(cos(aB.y),0.,sin(aB.y));
-  vCol=a.rgb;vP=vec4(b.x,a.w,b.y,b.z);vQ=vec4(b.w,c.x,c.y,c.z);vWp=position;gl_Position=projectionMatrix*viewMatrix*vec4(position,1.);
-  vFoc=0.;for(int i=0;i<8;i++)if(abs(aB.x-uFocIds[i])<.5)vFoc=1.;vClip=gl_Position.xyw;}`;
+  vFoc=0.;for(int i=0;i<8;i++)if(abs(aB.x-uFocIds[i])<.5)vFoc=1.;
+  vec3 P=position;if(vFoc<.5)P.y=focSink(P,b.z);
+  vCol=a.rgb;vP=vec4(b.x,a.w,b.y,b.z);vQ=vec4(b.w,c.x,c.y,c.z);vWp=P;gl_Position=projectionMatrix*viewMatrix*vec4(P,1.);vClip=gl_Position.xyw;}`;
 function buildSurveyedCity() {
   decodeBuildings();
   for (const k in LOOK) LOOKI[k.toLowerCase()] = LOOK[k];
@@ -801,6 +815,7 @@ function updateCityLod() {
 
 /* building material: one shader for every instanced box and every bespoke landmark */
 const BLD_VS = /* glsl */`
+${SINK_GLSL}
 attribute vec3 aCol; attribute vec4 aP,aQ; attribute float aF; uniform float uFocTags[4]; varying vec3 vWp,vN,vCol; varying vec4 vP,vQ; varying float vFoc; varying vec3 vClip;
 void main(){
 #ifdef USE_INSTANCING
@@ -808,21 +823,24 @@ void main(){
 #else
   vec4 w=modelMatrix*vec4(position,1.);vN=normalize(mat3(modelMatrix)*normal);
 #endif
-  vWp=w.xyz;vCol=aCol;vP=aP;vQ=aQ;gl_Position=projectionMatrix*viewMatrix*w;
-  vFoc=aF>.5?-1.:0.;for(int i=0;i<4;i++)if(aF>.5&&abs(aF-uFocTags[i])<.5)vFoc=1.;vClip=gl_Position.xyw;   // -1: part of another landmark
+  vFoc=aF>.5?-1.:0.;for(int i=0;i<4;i++)if(aF>.5&&abs(aF-uFocTags[i])<.5)vFoc=1.;   // -1: part of another landmark
+#ifdef FOC_SINK
+  if(vFoc<.5)w.y=focSink(w.xyz,aP.w);
+#else
+  if(vFoc<-.5)w.y=focSink(w.xyz,-1e4);
+#endif
+  vWp=w.xyz;vCol=aCol;vP=aP;vQ=aQ;gl_Position=projectionMatrix*viewMatrix*w;vClip=gl_Position.xyw;
 }`;
 const BLD_FS = () => /* glsl */`
 ${GL_COMMON}
 varying vec3 vWp,vN,vCol; varying vec4 vP,vQ;
-/* focus mode: the chosen landmark stays as it is; what stands in front of it is screen-door faded, neighbours turn to clay or drop to footprints */
-uniform float uFocOn,uFocIso,uFocLos,uFocNear,uFocR,uFocAmt; uniform vec2 uFocC; uniform vec4 uFocBox; varying float vFoc; varying vec3 vClip;
+/* focus mode: the chosen landmark stays as it is; neighbours can turn to clay or drop to footprints (the clear-view lowering is in the vertex shaders) */
+uniform float uFocOn,uFocIso,uFocR,uFocClay; uniform vec2 uFocC; varying float vFoc;
 float focusFx(float hh,bool bld){
   if(uFocOn<.002||vFoc>.5)return 0.;
   float d=length(vWp.xz-uFocC);
   if(bld&&uFocIso>.5&&d<uFocR+700.&&hh>1.2)discard;
-  if(uFocLos>.5&&vClip.z>0.){vec2 n=vClip.xy/vClip.z;vec2 m=min(n-uFocBox.xy,uFocBox.zw-n);float ins=smoothstep(0.,.03,min(m.x,m.y));
-    if(ins>0.&&distance(cameraPosition,vWp)<uFocNear){float keep=1.-ins*uFocOn*min(uFocAmt*1.25,1.);if(hash21(floor(gl_FragCoord.xy)+vec2(5.,11.))>keep)discard;}}
-  return bld?uFocOn*uFocAmt*(1.-smoothstep(uFocR,uFocR+450.,d)):0.;
+  return bld?uFocOn*uFocClay*(1.-smoothstep(uFocR,uFocR+450.,d)):0.;
 }
 float bx(float x,float a,float b,float w){return smoothstep(a-w,a+w,x)*(1.-smoothstep(b-w,b+w,x));}
 vec3 pal(float t){return .55+.45*cos(6.2832*(t+vec3(0.,.33,.67)));}
@@ -1014,15 +1032,13 @@ class GB {
 const PROP_FS = () => /* glsl */`
 ${GL_COMMON}
 varying vec3 vWp,vN,vCol; varying vec4 vP,vQ;
-/* focus mode: the chosen landmark stays as it is; what stands in front of it is screen-door faded, neighbours turn to clay or drop to footprints */
-uniform float uFocOn,uFocIso,uFocLos,uFocNear,uFocR,uFocAmt; uniform vec2 uFocC; uniform vec4 uFocBox; varying float vFoc; varying vec3 vClip;
+/* focus mode: the chosen landmark stays as it is; neighbours can turn to clay or drop to footprints (the clear-view lowering is in the vertex shaders) */
+uniform float uFocOn,uFocIso,uFocR,uFocClay; uniform vec2 uFocC; varying float vFoc;
 float focusFx(float hh,bool bld){
   if(uFocOn<.002||vFoc>.5)return 0.;
   float d=length(vWp.xz-uFocC);
   if(bld&&uFocIso>.5&&d<uFocR+700.&&hh>1.2)discard;
-  if(uFocLos>.5&&vClip.z>0.){vec2 n=vClip.xy/vClip.z;vec2 m=min(n-uFocBox.xy,uFocBox.zw-n);float ins=smoothstep(0.,.03,min(m.x,m.y));
-    if(ins>0.&&distance(cameraPosition,vWp)<uFocNear){float keep=1.-ins*uFocOn*min(uFocAmt*1.25,1.);if(hash21(floor(gl_FragCoord.xy)+vec2(5.,11.))>keep)discard;}}
-  return bld?uFocOn*uFocAmt*(1.-smoothstep(uFocR,uFocR+450.,d)):0.;
+  return bld?uFocOn*uFocClay*(1.-smoothstep(uFocR,uFocR+450.,d)):0.;
 }
 void main(){
 #ifdef FOC_BLD
@@ -1838,7 +1854,7 @@ function buildLandmarks(R) {
     PB.at(c[0] + bx * r * .9, c[1] + bz * r * .9, Math.atan2(bz, bx), 0); for (let k = 0; k <= 24; k++) { const a = (k / 24 - .5) * 2.4; PB.M(k % 3 ? C(.9, .45, .1) : C(.95, .95, .9)).box(Math.cos(a) * r * .75 - r * .2, -.3, Math.sin(a) * r * .95, 1.5, 1.1, 1.5); }
     PB.M(C(.8, .78, .7)).box(-r * .25, -.4, r * .2, 5, 1.2, 5).box(-r * .3, -.4, -r * .3, 5, 1.2, 5); });
   propMat = new THREE.ShaderMaterial({ uniforms: U, vertexShader: BLD_VS, fragmentShader: PROP_FS(), side: THREE.DoubleSide });
-  bldMat = new THREE.ShaderMaterial({ uniforms: U, vertexShader: BLD_VS, fragmentShader: BLD_FS() });
+  bldMat = new THREE.ShaderMaterial({ uniforms: U, vertexShader: BLD_VS, fragmentShader: BLD_FS(), defines: { FOC_SINK: 1 } });
   for (const m of [propMat, bldMat]) m.defaultAttributeValues = { ...m.defaultAttributeValues, aF: [0] };
   LBm = LB.mesh(bldMat); PBm = PB.mesh(propMat); LBm.layers.enable(1); PBm.layers.enable(1); LBm.layers.enable(2); PBm.layers.enable(2); scene.add(LBm, PBm);
   STATS.lmTris = LB.i.length / 3; STATS.propTris = PB.i.length / 3;
@@ -1968,7 +1984,7 @@ const V3 = THREE.Vector3;
 const U = {
   uSunDir: { value: new V3(-1, .2, .1).normalize() }, uSunCol: { value: new V3() }, uGlow: { value: new V3() }, uZen: { value: new V3() }, uHorW: { value: new V3() }, uHorE: { value: new V3() },
   uAmbS: { value: new V3() }, uAmbG: { value: new V3() }, uFogCol: { value: new V3() }, uWater: { value: new V3() }, uFogDen: { value: 2e-5 }, uNight: { value: 0 }, uIgnite: { value: 0 },
-  uFocOn: { value: 0 }, uFocIso: { value: 0 }, uFocLos: { value: 1 }, uFocNear: { value: 0 }, uFocR: { value: 200 }, uFocAmt: { value: 1 }, uFocC: { value: new THREE.Vector2() }, uFocBox: { value: new THREE.Vector4(2, 2, -2, -2) }, uFocTags: { value: [0, 0, 0, 0] }, uFocIds: { value: [-1, -1, -1, -1, -1, -1, -1, -1] },
+  uFocOn: { value: 0 }, uFocIso: { value: 0 }, uFocLos: { value: 1 }, uFocNear: { value: 0 }, uFocR: { value: 200 }, uFocAmt: { value: 1 }, uFocC: { value: new THREE.Vector2() }, uFocBox: { value: new THREE.Vector4(2, 2, -2, -2) }, uFocTags: { value: [0, 0, 0, 0] }, uFocSink: { value: 0 }, uFocW: { value: 30 }, uFocTf: { value: .9 }, uFocClay: { value: 1 }, uFocEye: { value: new THREE.Vector3() }, uFocT: { value: new THREE.Vector3() }, uFocIds: { value: [-1, -1, -1, -1, -1, -1, -1, -1] },
   uTime: { value: 0 }, uShOn: { value: 1 }, uCloud: { value: .5 }, uDetail: { value: 1 },
   uNoise: { value: null }, uShFar: { value: null }, uShNear: { value: null }, uShFarM: { value: new THREE.Matrix4() }, uShNearM: { value: new THREE.Matrix4() },
   uShNearP: { value: new THREE.Vector4(0, 0, 1, 1) }, uShRes: { value: new THREE.Vector4(4096, 2048, 2048, 2048) },
@@ -2197,9 +2213,14 @@ function renderShadow(rt, cam, um) {
   const ov = scene.overrideMaterial, pr = renderer.getRenderTarget(); scene.overrideMaterial = SH.depthMat;
   /* isolate: the neighbours are gone, so only the focused building's own geometry (a proxy) casts */
   const iso = FOCUS.active && FOCUS.iso && FOCUS.proxy, hid = [];
-  if (iso) { for (const m of focusHideable()) if (m && m.visible) { m.visible = false; hid.push(m); } FOCUS.proxy.visible = true; }
-  renderer.setRenderTarget(rt); renderer.clear(); renderer.render(scene, cam); renderer.setRenderTarget(pr); scene.overrideMaterial = ov;
-  if (iso) { for (const m of hid) m.visible = true; FOCUS.proxy.visible = false; }
+  /* clear view: buildings are drawn in a second pass with a depth material that lowers the same ones the camera sees lowered */
+  const sink = !iso && U.uFocSink.value > .5 && U.uFocOn.value > .002, xv = FOCUS.xray && FOCUS.xray.visible; if (FOCUS.xray) FOCUS.xray.visible = false;
+  if (iso || sink) { for (const m of focusHideable()) if (m && m.visible) { m.visible = false; hid.push(m); } if (iso) FOCUS.proxy.visible = true; }
+  renderer.setRenderTarget(rt); renderer.clear(); renderer.render(scene, cam);
+  if (sink) { scene.overrideMaterial = null; const ac = renderer.autoClear, sm = SINK_DEPTH(); renderer.autoClear = false;
+    for (const m of hid) { const mm = m.material; m.material = sm; m.visible = true; renderer.render(m, cam); m.visible = false; m.material = mm; } renderer.autoClear = ac; }
+  renderer.setRenderTarget(pr); scene.overrideMaterial = ov;
+  if (iso || sink) { for (const m of hid) m.visible = true; if (FOCUS.proxy) FOCUS.proxy.visible = false; } if (FOCUS.xray) FOCUS.xray.visible = xv;
   um.value.multiplyMatrices(_bias, cam.projectionMatrix).multiply(cam.matrixWorldInverse);
 }
 function updateShadows(focus, radius) {
@@ -2643,8 +2664,9 @@ function makeNear() {
   for (const a of [d.am, d.ac, d.ap]) a.setUsage(THREE.DynamicDrawUsage);
   g.setAttribute('aCol', d.ac); g.setAttribute('aP', d.ap); g.setAttribute('aQ', new THREE.InstancedBufferAttribute(new Float32Array(CAP * 4), 4));
   const mat = new THREE.ShaderMaterial({ uniforms: { ...U, ...DYN }, fragmentShader: PROP_FS(), defines: { FOC_BLD: 1 },
-    vertexShader: `attribute vec3 aCol;attribute vec4 aP,aQ;uniform vec2 uNearFade;uniform float uTime;varying vec3 vWp,vN,vCol;varying vec4 vP,vQ;varying float vFoc;varying vec3 vClip;
-      void main(){vec4 c=instanceMatrix*vec4(0.,.5,0.,1.);float f=1.-smoothstep(uNearFade.x,uNearFade.y,distance(c.xyz,cameraPosition));vec3 lp=position;if(aP.w>3.5)lp.z+=sin(uTime*7.+lp.x*4.+c.x)*7.*(lp.x+.5);vec4 w=instanceMatrix*vec4(lp,1.);w.xyz=mix(c.xyz,w.xyz,f);
+    vertexShader: `${SINK_GLSL}
+attribute vec3 aCol;attribute vec4 aP,aQ;uniform vec2 uNearFade;uniform float uTime;varying vec3 vWp,vN,vCol;varying vec4 vP,vQ;varying float vFoc;varying vec3 vClip;
+      void main(){vec4 c=instanceMatrix*vec4(0.,.5,0.,1.);float f=1.-smoothstep(uNearFade.x,uNearFade.y,distance(c.xyz,cameraPosition));vec3 lp=position;if(aP.w>3.5)lp.z+=sin(uTime*7.+lp.x*4.+c.x)*7.*(lp.x+.5);vec4 w=instanceMatrix*vec4(lp,1.);w.xyz=mix(c.xyz,w.xyz,f);w.y=focSink(w.xyz,-1e4);
         vN=normalize(mat3(instanceMatrix)*normal);vWp=w.xyz;vCol=aCol;vP=aP;vQ=aQ;gl_Position=projectionMatrix*viewMatrix*w;vFoc=0.;vClip=gl_Position.xyw;}` });
   d.mesh = new THREE.InstancedMesh(g, mat, CAP); d.mesh.instanceMatrix = d.am; d.mesh.count = 0; d.mesh.frustumCulled = false; d.mesh.layers.enable(1); scene.add(d.mesh);
   /* tree crowns */
@@ -2865,7 +2887,7 @@ function makeLabels() {
   });
 }
 /* ---------- focus mode: look at one landmark without the city in the way ---------- */
-const FOCUS = { label: null, active: false, iso: false, amt: 1, on: 0, t: null, proxy: null };
+const FOCUS = { label: null, active: false, iso: false, clay: true, on: 0, t: null, proxy: null, xray: null, eye: new THREE.Vector3(1e9, 0, 0) };
 const FOCUS_ALIAS = { 'Lippo Centre Tower 1': ['Lippo Centre Tower 2'], 'Exchange Square': ['One Exchange Square', 'Two Exchange Square', 'Three Exchange Square'], 'One Exchange Square': ['Exchange Square', 'Two Exchange Square', 'Three Exchange Square'], 'Times Square Tower One': ['Times Square Tower Two'] };
 const FOCUS_INFO = { 'The Henderson': 'Zaha Hadid Architects · 36 storeys · completed 2024', 'Central Yards': 'Proposed · AL_A, UNStudio and Lead8 for Henderson Land · phase 1 due 2027 · massing after the published renderings' };
 const _fv = new THREE.Vector3();
@@ -2880,45 +2902,84 @@ function focusTargets(o) {
 }
 /* a stand-in holding only the focused building's triangles, so it alone casts shadows in isolate mode */
 function buildFocusProxy(t) {
+  if (FOCUS.xray) { scene.remove(FOCUS.xray); FOCUS.xray.geometry.dispose(); FOCUS.xray = null; }
   if (FOCUS.proxy) { scene.remove(FOCUS.proxy); FOCUS.proxy.geometry.dispose(); FOCUS.proxy = null; }
-  const P = [], ids = new Set(t.ids), tags = new Set(t.tags), push = (pos, I, k) => { for (let j = 0; j < 3; j++) { const v = I[k + j] * 3; P.push(pos[v], pos[v + 1], pos[v + 2]); } };
-  if (tags.size) for (const m of [LBm, PBm]) { const g = m.geometry, pos = g.attributes.position.array, F = g.attributes.aF.array, I = g.index.array; for (let k = 0; k < I.length; k += 3) if (tags.has(F[I[k]])) push(pos, I, k); }
+  const P = [], X = [], ids = new Set(t.ids), tags = new Set(t.tags), push = (pos, I, k, toX) => { for (let j = 0; j < 3; j++) { const v = I[k + j] * 3; P.push(pos[v], pos[v + 1], pos[v + 2]); if (toX) X.push(pos[v], pos[v + 1], pos[v + 2]); } };
+  if (tags.size) for (const m of [LBm, PBm]) { const g = m.geometry, pos = g.attributes.position.array, F = g.attributes.aF.array, I = g.index.array; for (let k = 0; k < I.length; k += 3) if (tags.has(F[I[k]])) push(pos, I, k, m === LBm); }
   if (ids.size) { const sp = new THREE.Sphere(); t.box.getBoundingSphere(sp);
     for (const ch of CITY.chunks) { const m = ch.lods[0] || ch.lods[1]; if (ch.c.distanceTo(sp.center) > ch.r + sp.radius) continue; const g = m.geometry, pos = g.attributes.position.array, B = g.attributes.aB.array, I = g.index.array;
-      for (let k = 0; k < I.length; k += 3) if (ids.has(Math.round(B[I[k] * 2]))) push(pos, I, k); } }
+      for (let k = 0; k < I.length; k += 3) if (ids.has(Math.round(B[I[k] * 2]))) push(pos, I, k, true); } }
   if (!P.length) return; const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3));
   FOCUS.proxy = new THREE.Mesh(g, SH.depthMat); FOCUS.proxy.visible = false; FOCUS.proxy.frustumCulled = false; scene.add(FOCUS.proxy);
+  /* the x-ray: the same triangles drawn only where something nearer hides them, as a warm translucent outline */
+  if (!X.length) return; const gx = new THREE.BufferGeometry(); gx.setAttribute('position', new THREE.Float32BufferAttribute(X, 3)); gx.computeVertexNormals(); FOCUS.xray = new THREE.Mesh(gx, XRAY_MAT); FOCUS.xray.renderOrder = 20; FOCUS.xray.frustumCulled = false; FOCUS.xray.visible = false; scene.add(FOCUS.xray);
+}
+const XRAY_MAT = new THREE.ShaderMaterial({ uniforms: { uA: { value: 0 }, uCol: { value: new THREE.Color(1, .74, .38) } }, transparent: true, depthWrite: false, depthFunc: THREE.GreaterDepth, blending: THREE.AdditiveBlending,
+  vertexShader: `varying vec3 vN,vV;void main(){vec4 w=modelMatrix*vec4(position,1.);vN=normalize(mat3(modelMatrix)*normal);vV=normalize(cameraPosition-w.xyz);gl_Position=projectionMatrix*viewMatrix*w;}`,
+  fragmentShader: `uniform float uA;uniform vec3 uCol;varying vec3 vN,vV;void main(){float r=1.-abs(dot(normalize(vN),normalize(vV)));gl_FragColor=vec4(uCol*(.10+.85*r*r)*uA,1.);}` });
+/* a depth material for the shadow maps that lowers the same buildings, so nothing casts a shadow from a part that has been cleared away */
+const SINK_DEPTH = () => SH.sinkMat || (SH.sinkMat = new THREE.ShaderMaterial({ uniforms: U, side: THREE.DoubleSide, vertexShader: `${SINK_GLSL}
+attribute float aF;attribute vec2 aB;uniform float uFocTags[4],uFocIds[8];
+void main(){
+#ifdef USE_INSTANCING
+  vec4 w=modelMatrix*instanceMatrix*vec4(position,1.);
+#else
+  vec4 w=modelMatrix*vec4(position,1.);
+#endif
+  bool f=false;for(int i=0;i<4;i++)if(aF>.5&&abs(aF-uFocTags[i])<.5)f=true;for(int i=0;i<8;i++)if(abs(aB.x-uFocIds[i])<.5&&uFocIds[i]>=0.)f=true;
+  if(!f)w.y=focSink(w.xyz,-1e4);gl_Position=projectionMatrix*viewMatrix*w;}`, fragmentShader: `void main(){gl_FragColor=vec4(1.);}` }));
+/* "best view": test a ring of camera positions for clear lines of sight to points on the landmark, against the surveyed buildings and the ground */
+function focusGrid() { if (FOCUS.grid) return FOCUS.grid; const G = new Map(), cs = 64;
+  CITY.recs.forEach((b, i) => { let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9; for (const q of b.rings[0]) { x0 = Math.min(x0, q[0]); z0 = Math.min(z0, q[1]); x1 = Math.max(x1, q[0]); z1 = Math.max(z1, q[1]); } b.bb = [x0, z0, x1, z1];
+    for (let gx = Math.floor(x0 / cs); gx <= Math.floor(x1 / cs); gx++) for (let gz = Math.floor(z0 / cs); gz <= Math.floor(z1 / cs); gz++) { const k = gx * 100003 + gz; let a = G.get(k); if (!a) G.set(k, a = []); a.push(i); } });
+  return FOCUS.grid = { G, cs }; }
+function sightClear(e, p, ex) { const { G, cs } = focusGrid(), dx = p[0] - e[0], dy = p[1] - e[1], dz = p[2] - e[2], n = Math.ceil(Math.hypot(dx, dz) / 5);
+  for (let k = 1; k < n - 1; k++) { const t = k / n, x = e[0] + dx * t, y = e[1] + dy * t, z = e[2] + dz * t; if (inDom(x, z) && y < hAt(x, z) - 1) return false;
+    const cell = G.get(Math.floor(x / cs) * 100003 + Math.floor(z / cs)); if (!cell) continue;
+    for (const i of cell) { if (ex.has(i)) continue; const b = CITY.recs[i]; if (y > b.top || y < b.base - 6) continue; const bb = b.bb; if (x < bb[0] || x > bb[2] || z < bb[1] || z > bb[3]) continue; if (inPoly(x, z, b.rings[0])) return false; } }
+  return true; }
+function focusBestView() {
+  const t = FOCUS.t; if (!t) return null; const b = t.box, c = b.getCenter(new V3()), sz = b.getSize(new V3()), R = Math.max(Math.hypot(sz.x, sz.z) / 2, 8), H = sz.y, g = groundY(c.x, c.z);
+  /* not obstacles: the landmark's own records, and records cleared for it (skipped, inside its box, not another landmark's) */
+  const own = new Set(FOCUS.label.focus.names.map(n => n.toLowerCase())), ex = new Set(t.ids);
+  CITY.recs.forEach((r, i) => { const nm = r.nm.toLowerCase(); if (own.has(nm)) { ex.add(i); return; } if (r.skip && r.cx > b.min.x - 2 && r.cx < b.max.x + 2 && r.cz > b.min.z - 2 && r.cz < b.max.z + 2 && !(nm && TAGS.has(nm))) ex.add(i); });
+  const dist = clamp(Math.max(H * 1.8, R * 3.4, 220), 220, 1500), ty = Math.max(b.min.y - g, 0) + H * .42; let best = null;
+  for (const pd of [62, 70, 77]) for (let a = 0; a < 24; a++) { const az = a / 24 * TAU, pol = pd * RAD, sp = Math.sin(pol), e = [c.x + dist * sp * Math.cos(az), g + ty + dist * Math.cos(pol), c.z + dist * sp * Math.sin(az)], lx = -Math.sin(az), lz = Math.cos(az);
+    let vis = 0, tot = 0; for (const fy of [.12, .45, .8]) for (const fl of [-.55, 0, .55]) { tot++; if (sightClear(e, [c.x + lx * R * fl, b.min.y + H * fy, c.z + lz * R * fl], ex)) vis++; }
+    const daz = Math.abs(((az - cam.az) % TAU + TAU + PI) % TAU - PI), score = vis / tot - daz * .02 - Math.abs(pd - 70) * .002; if (!best || score > best.s) best = { s: score, az, pol, vis: vis / tot }; }
+  if (TOUR.on) stopTour(); flyTo({ tx: c.x, tz: c.z, dist, az: best.az, pol: best.pol, ty }); return best;
 }
 const fcEl = id => document.getElementById(id);
 function focusCard() { const c = fcEl('fc'), o = FOCUS.label; c.classList.toggle('show', !!o); if (!o) return; c.classList.toggle('focused', FOCUS.active);
-  fcEl('fcN').textContent = o.name; fcEl('fcS').textContent = o.focus.info || ''; fcEl('fcSee').classList.toggle('on', !FOCUS.iso); fcEl('fcIso').classList.toggle('on', FOCUS.iso); }
+  fcEl('fcN').textContent = o.name; fcEl('fcS').textContent = o.focus.info || ''; fcEl('fcSee').classList.toggle('on', !FOCUS.iso); fcEl('fcIso').classList.toggle('on', FOCUS.iso); fcEl('fcClay').classList.toggle('on', FOCUS.clay); }
 function focusOffer(o) { if (FOCUS.active && FOCUS.label !== o) exitFocus(); FOCUS.label = o; focusCard(); }
 function enterFocus(o) {
-  const t = focusTargets(o); if (t.box.isEmpty()) return;
+  const t = focusTargets(o); if (t.box.isEmpty()) return; FOCUS.eye.set(1e9, 0, 0);
   FOCUS.label = o; FOCUS.active = true; FOCUS.t = t;
   U.uFocIds.value = t.ids.concat([-1, -1, -1, -1, -1, -1, -1, -1]).slice(0, 8); U.uFocTags.value = t.tags.concat([0, 0, 0, 0]).slice(0, 4);
   const c = t.box.getCenter(new V3()), sz = t.box.getSize(new V3()); U.uFocC.value.set(c.x, c.z); U.uFocR.value = Math.hypot(sz.x, sz.z) / 2 + 40;
   buildFocusProxy(t); SH.farDirty = true; focusCard();
 }
-function exitFocus() { const was = FOCUS.active; FOCUS.active = false; FOCUS.label = null; focusCard(); if (was) SH.farDirty = true; }
+function exitFocus() { const was = FOCUS.active; FOCUS.active = false; FOCUS.label = null; focusCard(); if (was) { SH.farDirty = true; setTimeout(() => { SH.farDirty = true; }, 900); } }
 function setFocusMode(iso) { FOCUS.iso = iso; SH.farDirty = true; focusCard(); }
+function setFocusClay(on) { FOCUS.clay = on; focusCard(); }
 function initFocus() {
   fcEl('fcGo').onclick = () => FOCUS.label && enterFocus(FOCUS.label);
   fcEl('fcX').onclick = fcEl('fcOut').onclick = exitFocus;
   fcEl('fcSee').onclick = () => setFocusMode(false); fcEl('fcIso').onclick = () => setFocusMode(true);
-  fcEl('fcAmt').oninput = e => { FOCUS.amt = +e.target.value; };
+  fcEl('fcClay').onclick = () => setFocusClay(!FOCUS.clay); fcEl('fcBest').onclick = () => focusBestView();
   hooks.push(dt => {
     const want = FOCUS.active ? 1 : 0; FOCUS.on += (want - FOCUS.on) * (1 - Math.exp(-dt * 5)); if (Math.abs(want - FOCUS.on) < .003) FOCUS.on = want;
-    U.uFocOn.value = FOCUS.on; U.uFocIso.value = FOCUS.active && FOCUS.iso ? 1 : 0; U.uFocAmt.value = FOCUS.amt;
+    const sinking = FOCUS.active && !FOCUS.iso; U.uFocOn.value = FOCUS.on; U.uFocIso.value = FOCUS.active && FOCUS.iso ? 1 : 0; U.uFocClay.value = FOCUS.clay ? 1 : 0; U.uFocSink.value = sinking || (!FOCUS.active && FOCUS.on > 0 && !FOCUS.iso) ? 1 : 0;
+    if (FOCUS.xray) { FOCUS.xray.visible = FOCUS.on > .01 && !FOCUS.iso; XRAY_MAT.uniforms.uA.value = FOCUS.on * .55; }
     if (!FOCUS.on || !FOCUS.t) return;
     /* wandering far from the landmark (a preset, the tour, a long pan) ends the focus */
     if (FOCUS.active && !cam.fly && Math.hypot(cam.tx - U.uFocC.value.x, cam.tz - U.uFocC.value.y) > U.uFocR.value + 1600) { exitFocus(); return; }
-    /* the landmark's screen-space box and its nearest distance: anything nearer and inside the box is in the way */
-    const b = FOCUS.t.box; camera.updateMatrixWorld(); let x0 = 9, y0 = 9, x1 = -9, y1 = -9, behind = false;
-    for (let i = 0; i < 8; i++) { _fv.set(i & 1 ? b.max.x : b.min.x, i & 2 ? b.max.y : b.min.y, i & 4 ? b.max.z : b.min.z).applyMatrix4(camera.matrixWorldInverse); if (_fv.z > -1) { behind = true; break; }
-      _fv.applyMatrix4(camera.projectionMatrix); x0 = Math.min(x0, _fv.x); y0 = Math.min(y0, _fv.y); x1 = Math.max(x1, _fv.x); y1 = Math.max(y1, _fv.y); }
-    if (behind) U.uFocBox.value.set(-9, -9, 9, 9); else U.uFocBox.value.set(x0 - .05, y0 - .05, x1 + .05, y1 + .05);
-    U.uFocNear.value = Math.max(b.distanceToPoint(camera.position) - 2, 0);
+    /* the sight line: from the eye to the landmark's lower floors; everything standing in that corridor is lowered beneath it */
+    const b = FOCUS.t.box, sz = b.getSize(_fv), R = Math.hypot(sz.x, sz.z) / 2, H = sz.y, cx = (b.min.x + b.max.x) / 2, cz = (b.min.z + b.max.z) / 2, E = camera.position;
+    U.uFocEye.value.copy(E); U.uFocT.value.set(cx, b.min.y + H * .12, cz); U.uFocW.value = R + 6; const Lxz = Math.hypot(cx - E.x, cz - E.z); U.uFocTf.value = Lxz > 1 ? clamp(1 - (R + 4) / Lxz, .2, .97) : .97;
+    /* shadows follow the lowered buildings: refresh the near map as the eye moves */
+    if (sinking && FOCUS.on > .5 && FOCUS.eye.distanceTo(E) > 6) { FOCUS.eye.copy(E); SH.nearDirty = true; }
   });
 }
 /* fly the camera to a pose, keeping the current heading unless one is given */
@@ -2931,10 +2992,10 @@ function flyTo(b, then) {
   cam.fly = { a, b: tgt, daz, t: 0, dur: b.dur || 2.2 + arc * 1.4, arc, then };
 }
 /* shareable views: the URL hash keeps the camera and the time of day */
-function viewHash() { return '#v=' + [cam.tx, cam.tz, cam.dist].map(x => Math.round(x)).join(',') + ',' + [cam.az / RAD, cam.pol / RAD].map(x => x.toFixed(1)).join(',') + ',' + Math.round(cam.fov) + ',' + TOD.h.toFixed(2) + (FOCUS.active ? '&f=' + encodeURIComponent(FOCUS.label.name) + (FOCUS.iso ? '&i=1' : '') : ''); }
+function viewHash() { return '#v=' + [cam.tx, cam.tz, cam.dist].map(x => Math.round(x)).join(',') + ',' + [cam.az / RAD, cam.pol / RAD].map(x => x.toFixed(1)).join(',') + ',' + Math.round(cam.fov) + ',' + TOD.h.toFixed(2) + (FOCUS.active ? '&f=' + encodeURIComponent(FOCUS.label.name) + (FOCUS.iso ? '&i=1' : '') + (FOCUS.clay ? '' : '&c=0') : ''); }
 function readHash() {
   const m = /#v=([-\d.,]+)/.exec(location.hash); if (!m) return null; const v = m[1].split(',').map(Number); if (v.length < 6 || v.some(x => !isFinite(x))) return null;
-  return { pose: { tx: clamp(v[0], -12000, 11500), tz: clamp(v[1], -9000, 10000), dist: clamp(v[2], 30, 42000), az: v[3] * RAD, pol: clamp(v[4], 2, 88.5) * RAD, fov: clamp(v[5], 20, 70), ty: 0 }, h: v.length > 6 ? clamp(v[6], 5, 21) : null, f: (/[#&]f=([^&]+)/.exec(location.hash) || [])[1], iso: /[#&]i=1/.test(location.hash) };
+  return { pose: { tx: clamp(v[0], -12000, 11500), tz: clamp(v[1], -9000, 10000), dist: clamp(v[2], 30, 42000), az: v[3] * RAD, pol: clamp(v[4], 2, 88.5) * RAD, fov: clamp(v[5], 20, 70), ty: 0 }, h: v.length > 6 ? clamp(v[6], 5, 21) : null, f: (/[#&]f=([^&]+)/.exec(location.hash) || [])[1], iso: /[#&]i=1/.test(location.hash), clay: !/[#&]c=0/.test(location.hash) };
 }
 let hashT = 0;
 function keepHash(dt) { hashT += dt; if (hashT < 1.5) return; hashT = 0; if (cam.fly || TOUR.on || ptrs.size || Math.abs(cam.vaz) + Math.abs(cam.vx) + Math.abs(cam.vz) > .01) return; const h = viewHash(); if (h !== location.hash) try { history.replaceState(null, '', h); } catch (e) { } }
@@ -3036,7 +3097,7 @@ canvas.addEventListener('wheel', e => {
 const keys = {};
 addEventListener('keydown', e => { keys[e.code] = 1; if (e.code.startsWith('Digit')) { const i = +e.code.slice(5) - 1; if (i >= 0 && i < 6) goPreset(i); }
   if (e.code === 'KeyR') goPreset(0); if (e.code === 'KeyP' || (e.code === 'Escape' && document.body.classList.contains('photo'))) togglePhoto(); else if (e.code === 'Escape' && FOCUS.label) exitFocus();
-  if (e.code === 'KeyF' && FOCUS.label) FOCUS.active ? exitFocus() : enterFocus(FOCUS.label); if (e.code === 'KeyI' && FOCUS.active) setFocusMode(!FOCUS.iso); if (e.code === 'KeyL') setLight({ golden: 'noon', noon: 'dusk', dusk: 'golden' }[L.name]); if (e.code === 'KeyT') TOUR.on ? stopTour() : startTour(); });
+  if (e.code === 'KeyF' && FOCUS.label) FOCUS.active ? exitFocus() : enterFocus(FOCUS.label); if (e.code === 'KeyI' && FOCUS.active) setFocusMode(!FOCUS.iso); if (e.code === 'KeyC' && FOCUS.active) setFocusClay(!FOCUS.clay); if (e.code === 'KeyB' && FOCUS.active) focusBestView(); if (e.code === 'KeyL') setLight({ golden: 'noon', noon: 'dusk', dusk: 'golden' }[L.name]); if (e.code === 'KeyT') TOUR.on ? stopTour() : startTour(); });
 addEventListener('keyup', e => { keys[e.code] = 0; });
 function stepCamera(dt) {
   if (cam.fly) {
@@ -3207,7 +3268,7 @@ async function boot() {
   const shared = readHash(); setTime(shared && shared.h != null ? shared.h : presetTime('golden'), true);
   Object.assign(cam, shared ? shared.pose : heroState()); placeCamera(0);
   makeLabels(); hooks.push(keepHash); initFocus();
-  if (shared && shared.f) { let nm = ''; try { nm = decodeURIComponent(shared.f); } catch (e) { } const o = LABELS.list.find(l => l.focus && l.name === nm); if (o) { FOCUS.iso = shared.iso; enterFocus(o); } }
+  if (shared && shared.f) { let nm = ''; try { nm = decodeURIComponent(shared.f); } catch (e) { } const o = LABELS.list.find(l => l.focus && l.name === nm); if (o) { FOCUS.iso = shared.iso; FOCUS.clay = shared.clay; enterFocus(o); } }
   T.total = performance.now() - t0; ST.timing = T;
   document.querySelectorAll('#gView button').forEach(b => b.onclick = () => goPreset(+b.dataset.v));
   document.querySelectorAll('#gLight button').forEach(b => b.onclick = () => setLight(b.dataset.l));
