@@ -315,16 +315,26 @@ export function startLife(o: LifeOptions): Life {
     sayHour()
   }
 
-  /** Move a body toward a spot, kept on screen and no deeper than the hills allow. */
-  function put(b: Body, x: number, y: number) {
+  /** How deep a body goes behind the hills at `x` before it is out of reach. */
+  const floorAt = (b: Body, x: number) => horizon(x) + Math.min(hidden(b), SINK * span(o.getView()).h)
+
+  /**
+   * Move a body toward a spot, kept on screen and no deeper than the hills allow.
+   * Returns true when this sets it: behind the hills it stays put until taken up again.
+   */
+  function put(b: Body, x: number, y: number): boolean {
     const v = o.getView()
     const s = span(v)
     const cx = clamp(x, -v.vis / 2 + 36, v.vis / 2 - 36)
-    const floor = horizon(cx) + Math.min(hidden(b), SINK * s.h)
+    const floor = floorAt(b, cx)
+    const sets = y >= floor
+    // already down: pushing it further, or along under the hills, does nothing
+    const was = placed?.body === b ? placed.goal : posOf(b)
+    if (sets && was.y >= floorAt(b, was.x) - 0.5) return true
     const goal = { x: cx, y: clamp(y, s.top + 44, floor) }
-    // pushed on past where it stops: the other one, up in the sky, calls softly
+    // as it goes down, the other one, up in the sky, calls softly
     const other: Body = b === 'sun' ? 'moon' : 'sun'
-    if (y > floor + 20 && elevation(other) > 0.04) {
+    if (sets && elevation(other) > 0.04) {
       o.root.dataset.nudge = other
       window.clearTimeout(nudging)
       nudging = window.setTimeout(() => o.root.removeAttribute('data-nudge'), 1800)
@@ -334,6 +344,7 @@ export function startLife(o: LifeOptions): Life {
       if (placed) ease = { body: placed.body, from: posOf(placed.body), k: 1 }
       placed = { body: b, p: posOf(b), goal }
     } else placed.goal = goal
+    return sets
   }
 
   const handleOf = (b: Body) => (b === 'sun' ? o.handles.sun : o.handles.moon)
@@ -352,7 +363,12 @@ export function startLife(o: LifeOptions): Life {
     if (Math.hypot(e.clientX - press.x, e.clientY - press.y) > 5) press.moved = true
     if (!press.moved) return
     const hand = toWorld(e.clientX, e.clientY)
-    put(dragging, hand.x + press.dx, hand.y + press.dy)
+    // once it has gone down behind the hills it slips out of the hand
+    if (put(dragging, hand.x + press.dx, hand.y + press.dy)) {
+      const h = handleOf(dragging)
+      if (h.hasPointerCapture(e.pointerId)) h.releasePointerCapture(e.pointerId)
+      onHandleUp()
+    }
   }
   const onHandleUp = () => {
     if (!press) return
