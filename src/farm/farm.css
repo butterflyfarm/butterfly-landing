@@ -1,0 +1,537 @@
+/* The painted farm. Sizes are in world units via --u (px per unit), set by Farm.tsx. */
+
+.farm {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #c6d6d2;
+  animation: farm-dawn 2s ease both;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@keyframes farm-dawn {
+  from {
+    opacity: 0;
+  }
+}
+
+.sky {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: min(0px, calc(100% - (900 + var(--lift)) * var(--u)));
+  bottom: calc((390 + var(--lift)) * var(--u));
+  /* a dusty afternoon sky, warming toward the horizon: easy on the eyes */
+  background: linear-gradient(
+    180deg,
+    #86a7bd 0%,
+    #9dbac9 32%,
+    #bccfcf 64%,
+    #d9dcc8 88%,
+    #e8dcc0 100%
+  );
+}
+
+.sun {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 62% 58% at 6% 0%,
+    rgba(246, 224, 180, 0.42),
+    rgba(246, 224, 180, 0) 70%
+  );
+}
+
+/* deeper grass under the farm, where a tall screen lifts it */
+.deep {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc((var(--lift) + 4) * var(--u));
+  background: linear-gradient(#49694d, #3a5641);
+}
+
+.world {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--lift) * var(--u));
+  width: 0;
+  height: calc(900 * var(--u));
+}
+
+.world > * {
+  position: absolute;
+}
+
+.land {
+  display: block;
+}
+
+/* ---- clouds ---- */
+
+.cloud {
+  overflow: hidden;
+  will-change: transform;
+  animation: cloud-drift linear infinite;
+  -webkit-mask-image: linear-gradient(#000 70%, transparent 99%);
+  mask-image: linear-gradient(#000 70%, transparent 99%);
+}
+
+@keyframes cloud-drift {
+  from {
+    transform: translateX(var(--from));
+  }
+  to {
+    transform: translateX(var(--to));
+  }
+}
+
+.cloud-shadows {
+  top: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.cloud-shadows i {
+  position: absolute;
+  left: 0;
+  width: calc(820 * var(--u));
+  height: calc(170 * var(--u));
+  margin-top: calc(-85 * var(--u));
+  background: radial-gradient(closest-side, rgba(40, 70, 66, 0.2), rgba(40, 70, 66, 0));
+  will-change: transform;
+  animation: shadow-drift linear infinite;
+}
+
+@keyframes shadow-drift {
+  from {
+    transform: translateX(calc(-820 * var(--u)));
+  }
+  to {
+    transform: translateX(calc(2300 * var(--u)));
+  }
+}
+
+/* ---- chimney smoke ---- */
+
+.smoke {
+  width: 0;
+  height: 0;
+}
+
+.smoke i {
+  position: absolute;
+  left: calc(-6 * var(--u));
+  top: calc(-6 * var(--u));
+  width: calc(12 * var(--u));
+  height: calc(12 * var(--u));
+  border-radius: 50%;
+  background: #efe9da;
+  opacity: 0;
+  animation: smoke 10s linear infinite;
+}
+
+.smoke i:nth-child(2) {
+  animation-delay: -2.5s;
+}
+.smoke i:nth-child(3) {
+  animation-delay: -5s;
+}
+.smoke i:nth-child(4) {
+  animation-delay: -7.5s;
+}
+
+@keyframes smoke {
+  0% {
+    transform: translate(0, 0) scale(0.5);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.65;
+  }
+  100% {
+    transform: translate(calc(52 * var(--u)), calc(-84 * var(--u))) scale(2.6);
+    opacity: 0;
+  }
+}
+
+/* ---- the big tree ---- */
+
+.tree {
+  overflow: visible;
+}
+
+.tree--sway-a,
+.tree--sway-b {
+  transform-origin: 50% 70%;
+  will-change: transform;
+}
+
+.tree--sway-a {
+  animation: sway-a 9s ease-in-out infinite alternate;
+}
+
+.tree--sway-b {
+  animation: sway-b 7s ease-in-out infinite alternate;
+}
+
+@keyframes sway-a {
+  from {
+    transform: rotate(-0.7deg) skewX(-0.5deg);
+  }
+  to {
+    transform: rotate(0.9deg) skewX(0.9deg);
+  }
+}
+
+@keyframes sway-b {
+  from {
+    transform: rotate(0.6deg) skewX(0.5deg);
+  }
+  to {
+    transform: rotate(-0.9deg) skewX(-1deg);
+  }
+}
+
+/* ---- the growing plot ---- */
+
+.plot {
+  overflow: visible;
+}
+
+.seedling {
+  z-index: 5;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 46% 46% 40% 40%;
+  cursor: pointer;
+}
+
+.seedling:focus-visible {
+  outline: 2px solid rgba(255, 248, 224, 0.9);
+  outline-offset: 2px;
+}
+
+/* the seedling leans toward a hand that comes near */
+.seedling + .plot {
+  transform-origin: 50% 84%;
+  transition: transform 600ms cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+
+.seedling:hover + .plot,
+.seedling[aria-expanded='true'] + .plot {
+  transform: scale(1.07);
+}
+
+/* slow motes rising from the bud: the only hint that it can be touched */
+.sprout__spark {
+  opacity: 0;
+  animation: spark 5.4s ease-in-out 5s infinite;
+}
+
+.sprout__spark:nth-of-type(2) {
+  animation-delay: 6.8s;
+}
+.sprout__spark:nth-of-type(3) {
+  animation-delay: 8.6s;
+}
+
+@keyframes spark {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(-34px);
+    opacity: 0;
+  }
+}
+
+/* ---- the seedling's tag ---- */
+
+.tag {
+  z-index: 7;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.tag__card {
+  position: absolute;
+  left: 0;
+  bottom: 16px;
+  width: max-content;
+  max-width: min(13.5rem, 80vw);
+  padding: 0.85rem 1.3rem 1rem;
+  color: #3d3a2f;
+  text-align: center;
+  background: #eee5cf;
+  border-radius: 10px;
+  box-shadow:
+    0 12px 30px rgba(40, 50, 35, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(-50%, 10px) rotate(-1.5deg) scale(0.94);
+  transform-origin: 50% 100%;
+  transition:
+    opacity 300ms ease,
+    transform 500ms cubic-bezier(0.3, 1.3, 0.5, 1),
+    visibility 0s 300ms;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* the twine it hangs by */
+.tag__card::after {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 1.5px;
+  height: 16px;
+  content: '';
+  background: #8d8068;
+}
+
+.tag--open .tag__card {
+  pointer-events: auto;
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0) rotate(-1.5deg) scale(1);
+  transition-delay: 0s;
+}
+
+.tag__card p {
+  margin: 0;
+}
+
+.tag__kind {
+  margin-bottom: 0.2rem;
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.tag__name {
+  font: italic 400 2rem/1.05 'Newsreader', Georgia, serif;
+}
+
+.tag__card .tag__note {
+  margin-top: 0.45rem;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  opacity: 0.85;
+}
+
+/* ---- the farm sign ---- */
+
+.sign {
+  z-index: 3;
+  overflow: visible;
+}
+
+.sign--board {
+  transform-origin: 53% 12.5%;
+  will-change: transform;
+  animation: sign-swing 6.5s ease-in-out infinite alternate;
+}
+
+@keyframes sign-swing {
+  from {
+    transform: rotate(-1.2deg);
+  }
+  to {
+    transform: rotate(1.6deg);
+  }
+}
+
+.sign__name {
+  font: italic 400 31px 'Newsreader', Georgia, serif;
+  fill: #4b3b2d;
+}
+
+.sign__kind {
+  font: 500 10.5px 'DM Sans', sans-serif;
+  letter-spacing: 0.44em;
+  fill: #5d4a39;
+}
+
+.sprout {
+  animation: sprout-sway 6.5s ease-in-out 5.5s infinite;
+}
+
+@keyframes sprout-sway {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  30% {
+    transform: rotate(2.4deg);
+  }
+  72% {
+    transform: rotate(-1.6deg);
+  }
+}
+
+.sprout__stem {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: stem-grow 2.6s cubic-bezier(0.3, 0.7, 0.2, 1) 1.6s both;
+}
+
+@keyframes stem-grow {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.sprout__leaf {
+  animation:
+    leaf-open 1.5s cubic-bezier(0.3, 1.4, 0.5, 1) both,
+    leaf-flutter 5s ease-in-out infinite;
+}
+
+.sprout__leaf--1 {
+  animation-delay: 2.4s, 6s;
+}
+.sprout__leaf--2 {
+  animation-delay: 2.9s, 6.7s;
+}
+.sprout__leaf--3 {
+  animation-delay: 3.5s, 7.3s;
+}
+
+@keyframes leaf-open {
+  from {
+    transform: scale(0) rotate(34deg);
+  }
+  to {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes leaf-flutter {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  35% {
+    transform: rotate(4deg);
+  }
+  70% {
+    transform: rotate(-3deg);
+  }
+}
+
+.sprout__bud {
+  animation:
+    bud-in 1.6s cubic-bezier(0.3, 1.5, 0.5, 1) 4.1s both,
+    bud-breathe 5s ease-in-out 6.2s infinite;
+}
+
+@keyframes bud-in {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes bud-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.09);
+  }
+}
+
+.sprout__glow {
+  animation:
+    glow-in 2.2s ease 4.3s both,
+    glow-breathe 5s ease-in-out 6.5s infinite;
+}
+
+@keyframes glow-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.75;
+  }
+}
+
+@keyframes glow-breathe {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* ---- butterfly, grass, paper ---- */
+
+.butterfly {
+  --size: max(calc(46 * var(--u)), 30px);
+  left: 0;
+  top: 0;
+  z-index: 4;
+  width: var(--size);
+  height: var(--size);
+  margin: calc(var(--size) / -2) 0 0 calc(var(--size) / -2);
+  pointer-events: none;
+  will-change: transform;
+  filter: drop-shadow(0 2px 2px rgba(30, 60, 40, 0.2));
+}
+
+.butterfly svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.grass {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* fine paper tooth plus a slow, blotchy wash, so flat colour reads as paint */
+.grain {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  mix-blend-mode: soft-light;
+  opacity: 0.45;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='700' height='700'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.009' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23w)' opacity='.5'/%3E%3C/svg%3E");
+}
