@@ -1,7 +1,9 @@
-// Everything that moves on its own clock: wind through the foreground grass,
-// drifting motes of light, and the butterfly. One requestAnimationFrame loop.
+// Everything that moves on its own clock: the hour and the weather, wind in
+// the grass, rain, fireflies, dandelion seeds, and the butterflies.
+// One requestAnimationFrame loop drives all of it.
 
-import { makeRng } from './scene'
+import { lightAt } from './light'
+import { makeRng, skyline } from './scene'
 
 export type View = {
   vw: number
@@ -16,29 +18,59 @@ export type View = {
   lift: number
 }
 
-type Point = { x: number; y: number }
+export type Point = { x: number; y: number }
+export type Flier = { el: HTMLElement; wings: readonly [SVGElement, SVGElement] }
+
+/** Named places on the farm, in world units. */
+export type Spots = {
+  /** a leaf of the seedling, where a butterfly can sit */
+  leaf: Point
+  /** the seedling's bud */
+  bud: Point
+  /** the weathervane on the cottage roof */
+  vane: Point
+  /** anywhere else the butterfly may settle */
+  perches: Point[]
+}
 
 export type LifeOptions = {
-  canvas: HTMLCanvasElement
-  butterfly: HTMLElement
-  wings: readonly [SVGElement, SVGElement]
+  /** the farm element: receives the light as CSS variables */
+  root: HTMLElement
+  sky: HTMLElement
+  grass: HTMLCanvasElement
+  fx: HTMLCanvasElement
+  sun: HTMLElement
+  moon: HTMLElement
+  /** the draggable hit area that follows the sun or moon */
+  handle: HTMLElement
+  rainbow: HTMLElement
+  /** the first flier is the farm's own butterfly; the rest arrive when the seedling is nearly in bloom */
+  fliers: readonly Flier[]
   getView: () => View
-  /** places the butterfly may settle, in world units */
-  getPerches: () => Point[]
-  /** true when the visitor prefers reduced motion: draw one calm frame */
+  getSpots: () => Spots
+  /** the hour to open at, 0 to 24 */
+  hour: number
+  /** true when the visitor prefers reduced motion */
   still: boolean
+  onGrow: (stage: number) => void
+  onWeather: (raining: boolean) => void
+  onHour: (hour: number) => void
 }
 
 export type Life = {
   stop: () => void
   /** send the butterfly to settle on a particular spot */
   visit: (p: Point) => void
+  toggleRain: () => void
 }
 
 type Row = { y: number; hMin: number; hMax: number; gap: number; colors: readonly string[] }
 type Blade = { x: number; y: number; h: number; w: number; lean: number; phase: number }
-type Flower = Point & { h: number; r: number; color: string; phase: number; after: number }
+type Flower = Point & { h: number; r: number; color: string; phase: number; after: number; puff: boolean }
 type Mote = Point & { r: number; vx: number; vy: number; phase: number }
+type Seed = Point & { vx: number; vy: number; age: number; life: number; phase: number }
+type Streak = Point & { age: number }
+type Bird = Point & { vx: number; vy: number; age: number; phase: number; size: number }
 
 const ROWS: readonly Row[] = [
   { y: 824, hMin: 30, hMax: 58, gap: 6.5, colors: ['#658a61', '#6f9568', '#7aa36c', '#99b677'] },
@@ -47,8 +79,10 @@ const ROWS: readonly Row[] = [
 ]
 // tall screens get more rows of deeper, nearer grass beneath the farm
 const DEEP = ['#3c5a43', '#43634a', '#4a6b4f', '#5a7b58'] as const
-
 const PETALS = ['#eee6c5', '#e2d598', '#dfacb5', '#c1b1d5', '#eee6c5']
+
+const clamp = (n: number, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, n))
+const wrap = (h: number) => ((h % 24) + 24) % 24
 
 function wind(x: number, t: number) {
   const gust = Math.max(0, Math.sin(x * 0.0016 - t * 0.33)) ** 6
@@ -86,7 +120,7 @@ function plant(vis: number, lift: number) {
   })
 
   const flowers: Flower[] = []
-  for (let i = 0, n = Math.round((vis / 60) * (1 + lift / 120)); i < n; i++) {
+  for (let i = 0, n = Math.round((vis / 52) * (1 + lift / 120)); i < n; i++) {
     // each flower stands just in front of one row, and behind the next
     const after = Math.min(meta.length - 2, Math.floor(rand() * (meta.length - 1)))
     const row = meta[after]
@@ -98,6 +132,8 @@ function plant(vis: number, lift: number) {
       color: PETALS[Math.floor(rand() * PETALS.length)],
       phase: rand() * Math.PI * 2,
       after,
+      // some have gone to seed: dandelion clocks, waiting for a breath
+      puff: rand() < 0.3,
     })
   }
 
@@ -112,19 +148,257 @@ function plant(vis: number, lift: number) {
       phase: rand() * Math.PI * 2,
     })
   }
-  return { meta, rows, flowers, motes, half }
+
+  const flies = Array.from({ length: Math.round(vis / 70) }, () => ({
+    x: (rand() - 0.5) * vis,
+    y: 610 + rand() * 210,
+    a: 0.3 + rand() * 0.5,
+    b: 0.4 + rand() * 0.6,
+    c: 0.7 + rand() * 0.9,
+    phase: rand() * Math.PI * 2,
+  }))
+
+  return { meta, rows, flowers, motes, flies, half }
 }
 
 export function startLife(o: LifeOptions): Life {
-  const ctx = o.canvas.getContext('2d')
-  if (!ctx) return { stop: () => {}, visit: () => {} }
+  const g = o.grass.getContext('2d')
+  const f = o.fx.getContext('2d')
+  if (!g || !f) return { stop: () => {}, visit: () => {}, toggleRain: () => {} }
   const rand = makeRng(Date.now() & 0xffff)
 
   const first = o.getView()
   let garden = plant(first.vis, first.lift)
   let plantedFor = `${first.vis}/${first.lift}`
+  let now = 0
 
-  // --- butterfly ---------------------------------------------------------
+  const toWorld = (cx: number, cy: number): Point => {
+    const v = o.getView()
+    return { x: (cx - v.vw / 2) / v.u, y: (cy - (v.vh - (900 + v.lift) * v.u)) / v.u }
+  }
+
+  // --- the hour ----------------------------------------------------------
+  let hour = wrap(o.hour)
+  let hourLeft = 0 // hours still to glide through after a tap or key press
+  let saidHour = -1
+  let dragging: 'sun' | 'moon' | null = null
+  let press: { x: number; y: number; moved: boolean } | null = null
+
+  // the sun and moon each cross the sky on the same arc, twelve hours apart
+  const arc = (v: View) => {
+    const top = 900 + v.lift - v.tall // world y of the top of the screen
+    return { xL: -v.vis * 0.43, xR: v.vis * 0.43, base: 486, h: clamp(486 - top - 70, 160, 520) }
+  }
+  const along = (v: View, t: number): Point => {
+    const a = arc(v)
+    return { x: a.xL + (a.xR - a.xL) * t, y: a.base - Math.sin(Math.PI * t) * a.h }
+  }
+  const sunT = () => (hour - 6) / 12
+  const moonT = () => {
+    const m = ((hour + 6) % 24) / 12
+    return m > 1.5 ? m - 2 : m
+  }
+  const sunHeight = () => Math.max(0, Math.sin(Math.PI * sunT()))
+  const body = () => dragging ?? (hour >= 6 && hour < 18 ? 'sun' : 'moon')
+  const bodyAt = () => along(o.getView(), body() === 'sun' ? sunT() : moonT())
+
+  const sayHour = () => {
+    const h = (Math.round(hour * 2) / 2) % 24
+    if (h !== saidHour) {
+      saidHour = h
+      o.onHour(h)
+    }
+  }
+  function stepHour(dt: number) {
+    if (hourLeft === 0) return
+    const step = o.still || Math.abs(hourLeft) < 0.004 ? hourLeft : hourLeft * Math.min(1, dt * 2.2)
+    hour = wrap(hour + step)
+    hourLeft -= step
+    sayHour()
+  }
+
+  const onHandleDown = (e: PointerEvent) => {
+    dragging = body()
+    press = { x: e.clientX, y: e.clientY, moved: false }
+    hourLeft = 0
+    o.handle.setPointerCapture(e.pointerId)
+  }
+  const onHandleMove = (e: PointerEvent) => {
+    if (!press) return
+    if (Math.hypot(e.clientX - press.x, e.clientY - press.y) > 6) press.moved = true
+    if (!press.moved) return
+    const a = arc(o.getView())
+    const t = clamp((toWorld(e.clientX, e.clientY).x - a.xL) / (a.xR - a.xL), -0.03, 1.03)
+    hour = wrap((dragging === 'sun' ? 6 : 18) + t * 12)
+    sayHour()
+  }
+  const onHandleUp = () => {
+    if (!press) return
+    // a tap, not a drag: let a quarter of the day slip by
+    if (!press.moved) hourLeft = 6
+    press = null
+    dragging = null
+    lightKey = ''
+  }
+  const onHandleKey = (e: KeyboardEvent) => {
+    const step =
+      e.key === 'ArrowRight' || e.key === 'ArrowUp'
+        ? 0.5
+        : e.key === 'ArrowLeft' || e.key === 'ArrowDown'
+          ? -0.5
+          : e.key === 'Enter' || e.key === ' '
+            ? 6
+            : 0
+    if (!step) return
+    e.preventDefault()
+    hourLeft += step
+  }
+
+  // --- the weather, and what it does for the seedling --------------------
+  let raining = false
+  let wet = 0
+  let rainbowUntil = -1
+  let rainbowShown = false
+  const care = { stage: 0, rainFor: 0, counted: false, damp: false, sunFor: 0 }
+  let drops: { x: number; y: number; l: number; s: number }[] = []
+
+  function grow() {
+    if (care.stage >= 3) return
+    care.stage++
+    o.onGrow(care.stage)
+    if (care.stage === 3) {
+      gather()
+      // nearly in bloom: let the shower pass so the light comes back for it
+      if (raining) care.rainFor = Math.max(care.rainFor, 9.4)
+    }
+  }
+  function setRain(on: boolean) {
+    if (raining === on) return
+    raining = on
+    o.onWeather(on)
+    if (!on && sunHeight() > 0.15 && wet > 0.5) {
+      // sun after rain: a rainbow, on the far side of the sky from the sun
+      const v = o.getView()
+      const x = along(v, sunT()).x > 0 ? -v.vis * 0.2 : v.vis * 0.2
+      o.rainbow.style.transform = `translate3d(${(x * v.u).toFixed(1)}px, 0, 0)`
+      rainbowUntil = now + 13
+    }
+  }
+  function stepWeather(dt: number) {
+    const goal = raining ? 1 : 0
+    wet += (goal - wet) * (o.still ? 1 : Math.min(1, dt * 0.9))
+    if (Math.abs(goal - wet) < 0.004) wet = goal
+
+    if (raining) {
+      care.rainFor += dt
+      if (care.rainFor > 3 && !care.counted) {
+        care.counted = true
+        care.damp = true
+        grow()
+      }
+      // a shower, not a storm: it passes on its own
+      if (care.rainFor > 11) setRain(false)
+    } else {
+      care.rainFor = 0
+      care.counted = false
+      // sunshine on damp ground is the other thing a seedling needs
+      if (care.damp && wet < 0.25 && sunHeight() > 0.2) {
+        care.sunFor += dt
+        if (care.sunFor > 2.5) {
+          care.damp = false
+          care.sunFor = 0
+          grow()
+        }
+      } else care.sunFor = 0
+    }
+
+    const show = !raining && now < rainbowUntil && sunHeight() > 0.1
+    if (show !== rainbowShown) {
+      rainbowShown = show
+      o.rainbow.style.opacity = show ? '1' : '0'
+    }
+  }
+
+  // --- the light ---------------------------------------------------------
+  let lightKey = ''
+  let night = 0
+
+  function shine() {
+    const v = o.getView()
+    const key = `${hour.toFixed(3)}|${wet.toFixed(3)}|${v.u}|${v.vis}|${v.lift}|${dragging}`
+    if (key === lightKey) return
+    lightKey = key
+
+    const light = lightAt(hour, wet)
+    night = light.night
+    o.sky.style.background = light.sky
+    const s = o.root.style
+    s.setProperty('--tint', light.tint)
+    s.setProperty('--cloud-tint', light.cloudTint)
+    s.setProperty('--sign-tint', light.signTint)
+    s.setProperty('--stars', (night * (1 - wet)).toFixed(3))
+    s.setProperty('--lamps', Math.min(1, night * 1.8).toFixed(3))
+    s.setProperty('--day', (1 - night).toFixed(3))
+    o.root.toggleAttribute('data-flat', light.flat)
+
+    const place = (el: HTMLElement, t: number) => {
+      const p = along(v, t)
+      el.style.transform = `translate3d(${(p.x * v.u).toFixed(1)}px, ${(p.y * v.u).toFixed(1)}px, 0)`
+      el.style.opacity = t > -0.12 && t < 1.12 ? (1 - wet * 0.85).toFixed(3) : '0'
+    }
+    place(o.sun, sunT())
+    place(o.moon, moonT())
+    // a low sun is amber, a high sun pale
+    const high = Math.min(1, sunHeight() * 1.7)
+    s.setProperty(
+      '--sun',
+      `rgb(${Math.round(244 + 4 * high)}, ${Math.round(170 + 64 * high)}, ${Math.round(116 + 80 * high)})`,
+    )
+    const h = bodyAt()
+    o.handle.style.transform = `translate3d(${(h.x * v.u).toFixed(1)}px, ${(h.y * v.u).toFixed(1)}px, 0)`
+  }
+
+  // --- small wonders: seeds, shooting stars, birds -----------------------
+  const seeds: Seed[] = []
+  const streaks: Streak[] = []
+  const birds: Bird[] = []
+
+  const seed = (x: number, y: number) =>
+    seeds.push({
+      x,
+      y,
+      vx: (rand() - 0.3) * 50,
+      vy: -(24 + rand() * 46),
+      age: 0,
+      life: 7 + rand() * 4,
+      phase: rand() * Math.PI * 2,
+    })
+  function burst(p: Point) {
+    // every dandelion clock near the touch lets go
+    for (const fl of garden.flowers) {
+      if (!fl.puff || Math.hypot(fl.x - p.x, fl.y - fl.h - p.y) > 90) continue
+      fl.puff = false
+      for (let i = 0; i < 7; i++) seed(fl.x + (rand() - 0.5) * 8, fl.y - fl.h + (rand() - 0.5) * 8)
+    }
+    for (let i = 0; i < 9; i++) seed(p.x + (rand() - 0.5) * 30, Math.min(p.y, 860) - 30 - rand() * 40)
+    if (seeds.length > 260) seeds.splice(0, seeds.length - 260)
+  }
+  function flock(p: Point) {
+    for (let i = 0, n = 3 + Math.floor(rand() * 3); i < n; i++) {
+      birds.push({
+        x: p.x - i * 26 + (rand() - 0.5) * 20,
+        y: p.y + i * 12 + (rand() - 0.5) * 16,
+        vx: 62 + rand() * 30,
+        vy: -(16 + rand() * 18),
+        age: 0,
+        phase: rand() * Math.PI * 2,
+        size: 7 + rand() * 4,
+      })
+    }
+  }
+
+  // --- the butterflies ---------------------------------------------------
+  const me = o.fliers[0]
   const b = {
     x: -first.vis / 2 - 70,
     y: 540,
@@ -132,19 +406,46 @@ export function startLife(o: LifeOptions): Life {
     vy: 0,
     tx: -first.vis * 0.12,
     ty: 600,
-    mode: 'wander' as 'wander' | 'land' | 'rest',
-    until: 9, // seconds until it next looks for somewhere to sit
-    perch: { x: 0, y: 0 },
+    mode: 'wander' as 'wander' | 'land' | 'rest' | 'orbit',
+    until: 6, // seconds until it next looks for somewhere to go
+    spot: (): Point => o.getSpots().leaf,
+    orbit: false,
     angle: 0.5,
     flap: 0,
   }
+  // with no words on the page, the butterfly shows what can be touched:
+  // the seedling, then the sun or moon, then the weathervane
+  const tour: ('leaf' | 'body' | 'vane')[] = ['leaf', 'body', 'vane']
   const pointer = { x: 0, y: 0, at: -100 }
-  let now = 0
 
-  const toWorld = (cx: number, cy: number): Point => {
+  const friends = o.fliers.slice(1).map((fl, i) => ({
+    fl,
+    here: false,
+    x: 0,
+    y: 0,
+    a: i * 2.1,
+    r: 58 + i * 26,
+    speed: 0.7 + i * 0.17,
+    flap: i * 1.3,
+    angle: 0,
+  }))
+  function gather() {
     const v = o.getView()
-    return { x: (cx - v.vw / 2) / v.u, y: (cy - (v.vh - (900 + v.lift) * v.u)) / v.u }
+    friends.forEach((fr, i) => {
+      fr.here = true
+      fr.x = (i % 2 ? 1 : -1) * (v.vis / 2 + 60)
+      fr.y = 320 + i * 110
+      fr.fl.el.style.opacity = '1'
+    })
   }
+
+  function pose(fl: Flier, x: number, y: number, angle: number, wing: number) {
+    const v = o.getView()
+    const scale = 0.82 + 0.34 * clamp((y - 420) / 380)
+    fl.el.style.transform = `translate3d(${(x * v.u).toFixed(1)}px, ${(y * v.u).toFixed(1)}px, 0) rotate(${angle.toFixed(3)}rad) scale(${scale.toFixed(3)})`
+    fl.wings[0].style.transform = fl.wings[1].style.transform = `scaleX(${wing.toFixed(3)})`
+  }
+
   const roam = () => {
     const v = o.getView()
     // on a tall screen there is a lot more sky to explore
@@ -152,39 +453,45 @@ export function startLife(o: LifeOptions): Life {
     b.tx = (rand() - 0.5) * v.vis * 0.82
     b.ty = rand() < 0.3 ? skyTop + rand() * (440 - skyTop) : 470 + rand() * 290
   }
-  const onMove = (e: PointerEvent) => {
-    if (e.pointerType !== 'mouse') return
-    Object.assign(pointer, toWorld(e.clientX, e.clientY), { at: now })
-  }
-  const onDown = (e: PointerEvent) => {
-    // the seedling asks for the butterfly itself, through visit()
-    if (e.target instanceof Element && e.target.closest('[data-farm-control]')) return
-    // anywhere else, a tap or click invites the butterfly over
-    Object.assign(pointer, toWorld(e.clientX, e.clientY), { at: now + 1.5 })
-    if (b.mode !== 'wander') {
-      b.mode = 'wander'
-      b.until = now + 14 + rand() * 8
+  const choose = () => {
+    const next = tour.shift()
+    b.orbit = next === 'body'
+    if (next === 'body') b.spot = bodyAt
+    else if (next) b.spot = () => o.getSpots()[next]
+    else {
+      const i = Math.floor(rand() * o.getSpots().perches.length)
+      b.spot = () => o.getSpots().perches[i] ?? o.getSpots().leaf
     }
+    b.mode = 'land'
+  }
+  const leave = (t: number) => {
+    b.mode = 'wander'
+    b.until = t + (tour.length ? 4 : 16 + rand() * 12)
+    roam()
   }
 
-  function moveButterfly(dt: number, t: number) {
-    const v = o.getView()
+  function moveButterflies(dt: number, t: number) {
     let wing: number
     let ox = 0
     let oy = 0
 
-    if (b.mode === 'rest') {
-      b.x = b.perch.x
-      b.y = b.perch.y
+    if (o.still) {
+      const p = b.spot()
+      b.x = p.x
+      b.y = p.y
+      b.angle = -0.3
+      wing = 0.85
+    } else if (b.mode === 'rest') {
+      const p = b.spot()
+      b.x = p.x
+      b.y = p.y
       // slow, sun-warming wingbeats
       wing = 0.3 + 0.62 * (0.5 + 0.5 * Math.sin(t * 1.4))
       b.angle += (-0.3 - b.angle) * Math.min(1, dt * 3)
       if (t > b.until) {
-        b.mode = 'wander'
-        b.until = t + 16 + rand() * 12
         b.vx = (rand() - 0.5) * 40
         b.vy = -50
-        roam()
+        leave(t)
       }
     } else {
       const curious = b.mode === 'wander' && t - pointer.at < 2.5
@@ -192,180 +499,383 @@ export function startLife(o: LifeOptions): Life {
         b.tx = pointer.x + Math.cos(t * 0.9) * 46
         b.ty = pointer.y - 26 + Math.sin(t * 1.3) * 22
       }
-      if (b.mode === 'wander' && t > b.until && !curious) {
-        const perches = o.getPerches()
-        b.perch = perches[Math.floor(rand() * perches.length)]
-        b.mode = 'land'
-      }
+      if (b.mode === 'wander' && t > b.until && !curious) choose()
       if (b.mode === 'land') {
-        b.tx = b.perch.x
-        b.ty = b.perch.y
+        const p = b.spot()
+        b.tx = p.x
+        b.ty = p.y
+      }
+      if (b.mode === 'orbit') {
+        // circle the sun or moon for a while, as if to say: this one moves
+        const p = b.spot()
+        b.tx = p.x + Math.cos(t * 1.5) * 46
+        b.ty = p.y + Math.sin(t * 2.1) * 28
+        if (t > b.until) leave(t)
       }
       const dx = b.tx - b.x
       const dy = b.ty - b.y
       const d = Math.hypot(dx, dy) || 1
       if (b.mode === 'wander' && d < 36 && !curious) roam()
 
-      const speed =
-        b.mode === 'land' ? Math.min(96, 14 + d * 1.3) : 78 * (0.8 + 0.3 * Math.sin(t * 0.7))
-      const ease = Math.min(1, dt * (b.mode === 'land' ? 3 : 1.7))
+      const landing = b.mode === 'land' && !b.orbit
+      const speed = landing ? Math.min(96, 14 + d * 1.3) : 78 * (0.8 + 0.3 * Math.sin(t * 0.7))
+      const ease = Math.min(1, dt * (landing ? 3 : 1.7))
       b.vx += ((dx / d) * speed - b.vx) * ease
       b.vy += ((dy / d) * speed - b.vy) * ease
       b.x += b.vx * dt
       b.y += b.vy * dt
 
-      if (b.mode === 'land' && d < 2.5) {
+      if (b.mode === 'land' && b.orbit && d < 56) {
+        b.mode = 'orbit'
+        b.until = t + 7
+      } else if (landing && d < 2.5) {
         b.mode = 'rest'
-        b.until = t + 7 + rand() * 5
+        b.until = t + 6 + rand() * 4
       }
 
       // the wobble that makes it a butterfly rather than a bird
-      const amp = b.mode === 'land' ? Math.min(1, d / 90) : 1
+      const amp = landing ? Math.min(1, d / 90) : 1
       ox = Math.sin(t * 2.3 + 1) * 7 * amp
       oy = (Math.sin(t * 6.4) * 4 + Math.sin(t * 1.7) * 6) * amp
 
       // lean into the direction of travel, but always stay roughly upright
-      const lean = Math.atan2(b.vx, 115 - b.vy)
-      b.angle += (lean - b.angle) * Math.min(1, dt * 4)
-
+      b.angle += (Math.atan2(b.vx, 115 - b.vy) - b.angle) * Math.min(1, dt * 4)
       b.flap += dt * Math.PI * 2 * (3.1 + 0.9 * Math.sin(t * 0.9))
       wing = 0.57 + 0.43 * Math.cos(b.flap)
     }
+    pose(me, b.x + ox, b.y + oy, b.angle, wing)
 
-    const depth = Math.min(1, Math.max(0, (b.y - 420) / 380))
-    const scale = 0.82 + 0.34 * depth
-    const px = (b.x + ox) * v.u
-    const py = (b.y + oy) * v.u
-    o.butterfly.style.transform = `translate3d(${px.toFixed(1)}px, ${py.toFixed(1)}px, 0) rotate(${b.angle.toFixed(3)}rad) scale(${scale.toFixed(3)})`
-    o.wings[0].style.transform = `scaleX(${wing.toFixed(3)})`
-    o.wings[1].style.transform = `scaleX(${wing.toFixed(3)})`
+    // friends who come when the seedling is nearly in bloom
+    const bud = o.getSpots().bud
+    for (const fr of friends) {
+      if (!fr.here) continue
+      fr.a += dt * fr.speed
+      const tx = bud.x + Math.cos(fr.a) * fr.r
+      const ty = bud.y - 24 + Math.sin(fr.a * 1.4) * fr.r * 0.45
+      if (o.still) {
+        pose(fr.fl, tx, ty, 0.2, 0.85)
+        continue
+      }
+      const px = fr.x
+      const py = fr.y
+      fr.x += (tx - fr.x) * Math.min(1, dt * 0.9)
+      fr.y += (ty - fr.y) * Math.min(1, dt * 0.9)
+      const vx = dt ? (fr.x - px) / dt : 0
+      const vy = dt ? (fr.y - py) / dt : 0
+      fr.angle += (Math.atan2(vx, 115 - vy) - fr.angle) * Math.min(1, dt * 4)
+      fr.flap += dt * Math.PI * 2 * 3.3
+      pose(fr.fl, fr.x, fr.y + Math.sin(t * 6 + fr.a) * 3, fr.angle, 0.57 + 0.43 * Math.cos(fr.flap))
+    }
   }
 
-  // --- grass, flowers, motes --------------------------------------------
-  function paint(t: number, dt: number) {
+  // --- touching the farm -------------------------------------------------
+  const onMove = (e: PointerEvent) => {
+    const p = toWorld(e.clientX, e.clientY)
+    // a hand brushed through the grass shakes a few seeds loose
+    if ((e.buttons || e.pointerType === 'touch') && p.y > 792 && rand() < 0.35) seed(p.x, p.y - 30)
+    if (e.pointerType === 'mouse') Object.assign(pointer, p, { at: now })
+  }
+  const onDown = (e: PointerEvent) => {
+    // the seedling, sun, clouds and weathervane answer for themselves
+    if (e.target instanceof Element && e.target.closest('[data-farm-control]')) return
+    const p = toWorld(e.clientX, e.clientY)
+    if (p.y < skyline(p.x) - 4) {
+      if (night > 0.5) streaks.push({ x: p.x - 130, y: p.y - 66, age: 0 })
+      else flock(p)
+    } else if (p.y > 792) burst(p)
+    // and wherever it was, the butterfly comes to look
+    Object.assign(pointer, p, { at: now + 1.5 })
+    if (b.mode !== 'wander') leave(now)
+  }
+
+  // --- painting ----------------------------------------------------------
+  function fit(canvas: HTMLCanvasElement, c: CanvasRenderingContext2D) {
     const v = o.getView()
     const dpr = Math.min(window.devicePixelRatio || 1, 2)
     const pw = Math.round(v.vw * dpr)
     const ph = Math.round(v.vh * dpr)
-    if (o.canvas.width !== pw || o.canvas.height !== ph) {
-      o.canvas.width = pw
-      o.canvas.height = ph
+    if (canvas.width !== pw || canvas.height !== ph) {
+      canvas.width = pw
+      canvas.height = ph
     }
+    c.setTransform(1, 0, 0, 1, 0, 0)
+    c.clearRect(0, 0, pw, ph)
+    c.setTransform(dpr * v.u, 0, 0, dpr * v.u, (dpr * v.vw) / 2, dpr * (v.vh - (900 + v.lift) * v.u))
+  }
+
+  function paintGrass(t: number, dt: number) {
+    const v = o.getView()
     const key = `${v.vis}/${v.lift}`
     if (key !== plantedFor) {
       garden = plant(v.vis, v.lift)
       plantedFor = key
+      drops = []
     }
-    const c = ctx!
-    c.setTransform(1, 0, 0, 1, 0, 0)
-    c.clearRect(0, 0, pw, ph)
-    c.setTransform(dpr * v.u, 0, 0, dpr * v.u, (dpr * v.vw) / 2, dpr * (v.vh - (900 + v.lift) * v.u))
+    const c = g!
+    fit(o.grass, c)
+    // rain flattens the grass a little and hurries the wind
+    const gusty = 1 + wet * 0.5
 
     garden.rows.forEach((buckets, r) => {
       buckets.forEach((blades, ci) => {
         c.fillStyle = garden.meta[r].colors[ci]
         c.beginPath()
-        for (const g of blades) {
-          const bend = g.lean + wind(g.x, t) + 0.035 * Math.sin(t * 3.1 + g.phase)
-          const tipX = g.x + bend * g.h * 0.55
-          const tipY = g.y - g.h * (1 - 0.22 * bend * bend)
-          const midX = g.x + bend * g.h * 0.14
-          const midY = g.y - g.h * 0.58
-          c.moveTo(g.x - g.w / 2, g.y)
-          c.quadraticCurveTo(midX - g.w * 0.35, midY, tipX, tipY)
-          c.quadraticCurveTo(midX + g.w * 0.35, midY, g.x + g.w / 2, g.y)
+        for (const bl of blades) {
+          const bend = bl.lean + wind(bl.x, t) * gusty + 0.035 * Math.sin(t * 3.1 + bl.phase)
+          const tipX = bl.x + bend * bl.h * 0.55
+          const tipY = bl.y - bl.h * (1 - 0.22 * bend * bend)
+          const midX = bl.x + bend * bl.h * 0.14
+          const midY = bl.y - bl.h * 0.58
+          c.moveTo(bl.x - bl.w / 2, bl.y)
+          c.quadraticCurveTo(midX - bl.w * 0.35, midY, tipX, tipY)
+          c.quadraticCurveTo(midX + bl.w * 0.35, midY, bl.x + bl.w / 2, bl.y)
         }
         c.fill()
       })
 
-      for (const f of garden.flowers) {
-        if (f.after !== r) continue
-        const bend = wind(f.x, t) + 0.04 * Math.sin(t * 2.2 + f.phase)
-        const hx = f.x + bend * f.h * 0.5
-        const hy = f.y - f.h * (1 - 0.2 * bend * bend)
+      for (const fl of garden.flowers) {
+        if (fl.after !== r) continue
+        const bend = wind(fl.x, t) * gusty + 0.04 * Math.sin(t * 2.2 + fl.phase)
+        const hx = fl.x + bend * fl.h * 0.5
+        const hy = fl.y - fl.h * (1 - 0.2 * bend * bend)
         c.strokeStyle = '#527b55'
         c.lineWidth = 1.3
         c.beginPath()
-        c.moveTo(f.x, f.y)
-        c.quadraticCurveTo(f.x + bend * f.h * 0.12, f.y - f.h * 0.6, hx, hy)
+        c.moveTo(fl.x, fl.y)
+        c.quadraticCurveTo(fl.x + bend * fl.h * 0.12, fl.y - fl.h * 0.6, hx, hy)
         c.stroke()
-        c.fillStyle = f.color
+        if (fl.puff) {
+          // a dandelion clock: a soft ball of seeds
+          c.fillStyle = 'rgba(244, 240, 222, 0.5)'
+          c.beginPath()
+          c.arc(hx, hy, fl.r * 1.9, 0, 7)
+          c.fill()
+          c.fillStyle = 'rgba(250, 247, 232, 0.9)'
+          c.beginPath()
+          for (let p = 0; p < 9; p++) {
+            const a = (p / 9) * Math.PI * 2 + fl.phase
+            const px = hx + Math.cos(a) * fl.r * 1.35
+            const py = hy + Math.sin(a) * fl.r * 1.35
+            c.moveTo(px + 0.9, py)
+            c.arc(px, py, 0.9, 0, 7)
+          }
+          c.fill()
+          c.fillStyle = '#a89a6c'
+          c.beginPath()
+          c.arc(hx, hy, fl.r * 0.4, 0, 7)
+          c.fill()
+          continue
+        }
+        c.fillStyle = fl.color
         c.beginPath()
         for (let p = 0; p < 5; p++) {
-          const a = (p / 5) * Math.PI * 2 + f.phase
-          const px = hx + Math.cos(a) * f.r * 0.8
-          const py = hy + Math.sin(a) * f.r * 0.8
-          c.moveTo(px + f.r * 0.72, py)
-          c.arc(px, py, f.r * 0.72, 0, 7)
+          const a = (p / 5) * Math.PI * 2 + fl.phase
+          const px = hx + Math.cos(a) * fl.r * 0.8
+          const py = hy + Math.sin(a) * fl.r * 0.8
+          c.moveTo(px + fl.r * 0.72, py)
+          c.arc(px, py, fl.r * 0.72, 0, 7)
         }
         c.fill()
         c.fillStyle = '#d2a955'
         c.beginPath()
-        c.arc(hx, hy, f.r * 0.5, 0, 7)
+        c.arc(hx, hy, fl.r * 0.5, 0, 7)
         c.fill()
       }
     })
 
-    if (!o.still) {
-      for (const m of garden.motes) {
-        m.x += (m.vx + wind(m.x, t) * 26) * dt
-        m.y += (m.vy + Math.sin(t * 0.8 + m.phase) * 5) * dt
-        if (m.x > garden.half) m.x = -garden.half
-        if (m.y < 380) m.y = 840
-        const glow = 0.14 + 0.34 * Math.sin(t * 0.9 + m.phase) ** 2
-        c.fillStyle = `rgba(250, 240, 208, ${glow.toFixed(3)})`
+    if (o.still) return
+    for (const m of garden.motes) {
+      m.x += (m.vx + wind(m.x, t) * 26) * dt
+      m.y += (m.vy + Math.sin(t * 0.8 + m.phase) * 5) * dt
+      if (m.x > garden.half) m.x = -garden.half
+      if (m.y < 380) m.y = 840
+      const glow = (0.14 + 0.34 * Math.sin(t * 0.9 + m.phase) ** 2) * (1 - wet)
+      c.fillStyle = `rgba(250, 240, 208, ${glow.toFixed(3)})`
+      c.beginPath()
+      c.arc(m.x, m.y, m.r, 0, 7)
+      c.fill()
+    }
+  }
+
+  let fxUsed = false
+  function paintFx(t: number, dt: number) {
+    const glowing = night * (1 - wet)
+    const busy = wet > 0.01 || glowing > 0.03 || seeds.length + streaks.length + birds.length > 0
+    if (!busy && !fxUsed) return
+    const v = o.getView()
+    const c = f!
+    fit(o.fx, c)
+    fxUsed = busy
+    if (!busy) return
+    const top = 900 + v.lift - v.tall
+
+    if (wet > 0.01) {
+      if (!drops.length) {
+        const n = Math.min(260, Math.round((v.vis * v.tall) / 5200))
+        drops = Array.from({ length: n }, () => ({
+          x: (rand() - 0.5) * (v.vis + 200),
+          y: top + rand() * v.tall,
+          l: 16 + rand() * 20,
+          s: 560 + rand() * 300,
+        }))
+      }
+      c.strokeStyle = `rgba(212, 223, 234, ${(0.36 * wet).toFixed(3)})`
+      c.lineWidth = 1.3
+      c.beginPath()
+      for (const d of drops) {
+        if (!o.still) {
+          d.y += d.s * dt
+          d.x += d.s * 0.2 * dt
+          if (d.y > 900 + v.lift) {
+            d.y = top - d.l
+            d.x = (rand() - 0.5) * (v.vis + 200) - 60
+          }
+        }
+        c.moveTo(d.x, d.y)
+        c.lineTo(d.x - d.l * 0.2, d.y - d.l)
+      }
+      c.stroke()
+    }
+
+    if (glowing > 0.03 && !o.still) {
+      for (const fy of garden.flies) {
+        const x = fy.x + Math.sin(t * fy.a + fy.phase) * 46 + Math.sin(t * fy.c) * 12
+        const y = fy.y + Math.cos(t * fy.b + fy.phase) * 20
+        const pulse = Math.max(0, Math.sin(t * fy.c + fy.phase)) ** 3
+        const alpha = glowing * (0.12 + 0.88 * pulse)
+        c.fillStyle = `rgba(232, 238, 150, ${(alpha * 0.22).toFixed(3)})`
         c.beginPath()
-        c.arc(m.x, m.y, m.r, 0, 7)
+        c.arc(x, y, 6.5, 0, 7)
+        c.fill()
+        c.fillStyle = `rgba(244, 246, 190, ${alpha.toFixed(3)})`
+        c.beginPath()
+        c.arc(x, y, 1.9, 0, 7)
         c.fill()
       }
     }
+
+    // dandelion seeds: a little parachute over a hanging seed
+    const pale = 0.55 + 0.45 * (1 - night)
+    for (let i = seeds.length - 1; i >= 0; i--) {
+      const sd = seeds[i]
+      sd.age += dt
+      if (sd.age > sd.life) {
+        seeds.splice(i, 1)
+        continue
+      }
+      sd.vx += (14 + wind(sd.x, t) * 70 - sd.vx) * Math.min(1, dt * 0.8)
+      sd.vy += (-12 + Math.sin(t * 1.3 + sd.phase) * 9 + wet * 60 - sd.vy) * Math.min(1, dt * 0.9)
+      sd.x += sd.vx * dt
+      sd.y += sd.vy * dt
+      const alpha = Math.min(1, sd.age * 4, (sd.life - sd.age) / 2) * pale
+      const tilt = Math.sin(t * 1.7 + sd.phase) * 0.3 + sd.vx * 0.006
+      c.strokeStyle = `rgba(250, 247, 232, ${(alpha * 0.9).toFixed(3)})`
+      c.lineWidth = 0.7
+      c.beginPath()
+      for (let k = -2; k <= 2; k++) {
+        const a = -Math.PI / 2 + tilt + k * 0.42
+        c.moveTo(sd.x, sd.y)
+        c.lineTo(sd.x + Math.cos(a) * 5.2, sd.y + Math.sin(a) * 5.2)
+      }
+      c.moveTo(sd.x, sd.y)
+      c.lineTo(sd.x - Math.sin(tilt) * 5.5, sd.y + Math.cos(tilt) * 5.5)
+      c.stroke()
+    }
+
+    // shooting stars
+    for (let i = streaks.length - 1; i >= 0; i--) {
+      const st = streaks[i]
+      st.age += dt
+      if (st.age > 1) {
+        streaks.splice(i, 1)
+        continue
+      }
+      const hx = st.x + st.age * 420
+      const hy = st.y + st.age * 210
+      const alpha = Math.sin(Math.PI * st.age)
+      const tail = c.createLinearGradient(hx, hy, hx - 110, hy - 55)
+      tail.addColorStop(0, `rgba(255, 250, 230, ${alpha.toFixed(3)})`)
+      tail.addColorStop(1, 'rgba(255, 250, 230, 0)')
+      c.strokeStyle = tail
+      c.lineWidth = 2
+      c.lineCap = 'round'
+      c.beginPath()
+      c.moveTo(hx, hy)
+      c.lineTo(hx - 110, hy - 55)
+      c.stroke()
+      c.lineCap = 'butt'
+    }
+
+    // birds
+    c.lineWidth = 1.6
+    c.lineCap = 'round'
+    for (let i = birds.length - 1; i >= 0; i--) {
+      const bd = birds[i]
+      bd.age += dt
+      if (bd.age > 9) {
+        birds.splice(i, 1)
+        continue
+      }
+      bd.x += bd.vx * dt
+      bd.y += bd.vy * dt
+      const size = bd.size * (1 - bd.age * 0.06)
+      const lift = Math.sin(t * 8 + bd.phase) * size * 0.55
+      const alpha = Math.min(1, bd.age * 3, (9 - bd.age) / 3) * 0.7
+      c.strokeStyle = `rgba(62, 70, 80, ${alpha.toFixed(3)})`
+      c.beginPath()
+      c.moveTo(bd.x - size, bd.y - lift)
+      c.quadraticCurveTo(bd.x - size * 0.4, bd.y - size * 0.5 - lift * 0.4, bd.x, bd.y)
+      c.quadraticCurveTo(bd.x + size * 0.4, bd.y - size * 0.5 - lift * 0.4, bd.x + size, bd.y - lift)
+      c.stroke()
+    }
+    c.lineCap = 'butt'
   }
 
   // --- the loop ----------------------------------------------------------
-  if (o.still) {
-    const settle = () => {
-      if (b.mode !== 'rest') b.perch = o.getPerches()[0]
-      Object.assign(b, { mode: 'rest', until: Infinity, angle: -0.3 })
-      paint(0, 0)
-      moveButterfly(0, 1.1)
-    }
-    settle()
-    // wait a frame so the view has been re-measured before repainting
-    const later = () => requestAnimationFrame(settle)
-    window.addEventListener('resize', later)
-    return {
-      stop: () => window.removeEventListener('resize', later),
-      visit: (p) => {
-        b.perch = p
-        settle()
-      },
-    }
-  }
-
   let raf = 0
   let last = 0
   const frame = (ms: number) => {
     const dt = last ? Math.min(0.05, (ms - last) / 1000) : 0
     last = ms
     now += dt
-    paint(now, dt)
-    moveButterfly(dt, now)
+    const t = o.still ? 0 : now
+    stepHour(dt)
+    stepWeather(dt)
+    shine()
+    paintGrass(t, dt)
+    paintFx(t, dt)
+    moveButterflies(dt, now)
     raf = requestAnimationFrame(frame)
   }
+  sayHour()
   raf = requestAnimationFrame(frame)
+
   window.addEventListener('pointermove', onMove, { passive: true })
   window.addEventListener('pointerdown', onDown, { passive: true })
+  o.handle.addEventListener('pointerdown', onHandleDown)
+  o.handle.addEventListener('pointermove', onHandleMove)
+  o.handle.addEventListener('pointerup', onHandleUp)
+  o.handle.addEventListener('pointercancel', onHandleUp)
+  o.handle.addEventListener('keydown', onHandleKey)
 
   return {
     stop: () => {
       cancelAnimationFrame(raf)
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerdown', onDown)
+      o.handle.removeEventListener('pointerdown', onHandleDown)
+      o.handle.removeEventListener('pointermove', onHandleMove)
+      o.handle.removeEventListener('pointerup', onHandleUp)
+      o.handle.removeEventListener('pointercancel', onHandleUp)
+      o.handle.removeEventListener('keydown', onHandleKey)
     },
     visit: (p) => {
-      b.perch = p
+      tour.splice(0, tour.indexOf('leaf') + 1) // no need to point at the seedling now
+      b.spot = () => p
+      b.orbit = false
       b.mode = 'land'
       pointer.at = -100
     },
+    toggleRain: () => setRain(!raining),
   }
 }
