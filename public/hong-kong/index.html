@@ -136,8 +136,17 @@
   .gc .st i{font-style:normal;width:58px}
   .gc .st u{flex:1;height:4px;border-radius:2px;background:rgba(255,196,128,.18);overflow:hidden;text-decoration:none}
   .gc .st s{display:block;height:100%;background:#ffc98a;text-decoration:none}
+  #gStart{display:flex;gap:6px;overflow-x:auto;max-width:min(100%,940px);padding:2px 4px;scrollbar-width:none;-webkit-overflow-scrolling:touch;touch-action:pan-x}
+  #gStart::-webkit-scrollbar{display:none}
+  #gStart::before{content:"Start at";flex:none;align-self:center;margin-right:4px;color:#fff4df;font-size:10px;letter-spacing:.2em;text-transform:uppercase;text-shadow:0 1px 4px rgba(0,0,0,.8)}
+  #drv .gs{flex:none;padding:7px 12px;border-radius:16px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+  #drv .gs.on{background:rgba(255,176,84,.42);color:#fff4df;border-color:rgba(255,214,160,.9)}
   #gPrev,#gNext{flex:none;width:38px;height:60px;font-size:24px;padding:0}
   #drv #gGo{padding:12px 40px;font-size:14px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;background:rgba(255,176,84,.92);color:#241405;border-color:rgba(255,224,176,.95);border-radius:24px;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+  #mini{position:fixed;z-index:6;left:max(12px,env(safe-area-inset-left));top:calc(max(10px,env(safe-area-inset-top)) + 54px);width:156px;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;touch-action:manipulation}
+  #mmC{display:block;width:156px;height:156px;border-radius:50%;box-shadow:0 2px 12px rgba(0,0,0,.55)}
+  #mmD{max-width:100%;padding:3px 9px;border-radius:9px;background:rgba(9,20,28,.66);color:#fff4df;font-size:10px;letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  body.garage #mini{display:none}
   #dJoy{position:fixed;z-index:5;left:0;top:0;width:0;height:0;pointer-events:none;opacity:0;transition:opacity .15s}
   #dJoy.show{opacity:1}
   #dJoy::before{content:"";position:absolute;left:-62px;top:-62px;width:124px;height:124px;border-radius:50%;border:2px solid rgba(255,206,140,.55);background:rgba(9,20,28,.2)}
@@ -153,6 +162,11 @@
     #fc.auto .foc{display:none}
     #gPrev,#gNext{display:none}
     #drv .gc{width:150px}
+    #mini,#mmC{width:118px}
+    #mmC{height:118px}
+    #mini{top:calc(max(10px,env(safe-area-inset-top)) + 62px)}
+    #dSt{font-size:12px;letter-spacing:.07em;padding:6px 10px}
+    #dTop{gap:8px}
     #hint{bottom:calc(max(12px,env(safe-area-inset-bottom)) + 62px);font-size:10px}
     #ui{left:auto;right:max(8px,env(safe-area-inset-right));transform:none;flex-direction:column;align-items:stretch;gap:6px;padding:5px;font-size:10px;opacity:.85;max-height:calc(100vh - 24px);overflow:auto}
     #bMenu{display:block;align-self:flex-end;font-size:15px !important;padding:2px 9px !important}
@@ -190,8 +204,8 @@
 <div id="drv"><div id="dTop"><button id="dExit" title="Stop driving (Esc)" aria-label="Stop driving">✕</button><button id="dCar" title="Change vehicle (G)" aria-label="Change vehicle"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M5 11l1.5-4.2A2 2 0 0 1 8.4 5.5h7.2a2 2 0 0 1 1.9 1.3L19 11h.5A1.5 1.5 0 0 1 21 12.5V17h-2v1.5a1 1 0 0 1-2 0V17H7v1.5a1 1 0 0 1-2 0V17H3v-4.5A1.5 1.5 0 0 1 4.5 11zm2.2 0h9.6l-1.1-3.2a.5.5 0 0 0-.5-.3H8.8a.5.5 0 0 0-.5.3zM6.5 15a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6zm11 0a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6z"/></svg></button>
   <div id="dInfo"><span id="dSt"></span><span id="dNx"><i id="dArr">↑</i><b id="dNxD"></b><em id="dNxN"></em></span></div>
   <div id="dSide"><div id="dSpdBox"><b id="dSpd">0</b><small>km/h</small></div><button id="dU" title="Turn round (U)">U-turn</button></div></div>
-  <div id="dJoy"><i></i></div><div id="dTun"></div><div id="dMsg"></div>
-  <div id="garage"><b class="gh">Choose your ride</b><div class="gr"><button id="gPrev" aria-label="Previous vehicle">‹</button><div id="gList"></div><button id="gNext" aria-label="Next vehicle">›</button></div><button id="gGo">Drive</button></div></div>
+  <div id="mini" title="Tap for the whole island"><canvas id="mmC"></canvas><span id="mmD"></span></div><div id="dJoy"><i></i></div><div id="dTun"></div><div id="dMsg"></div>
+  <div id="garage"><b class="gh">Choose your ride</b><div class="gr"><button id="gPrev" aria-label="Previous vehicle">‹</button><div id="gList"></div><button id="gNext" aria-label="Next vehicle">›</button></div><div id="gStart" aria-label="Where to start"></div><button id="gGo">Drive</button></div></div>
 <div id="pm" title="Fly to Central"><b>Central</b><i></i><u></u></div>
 <div id="cr">Buildings: Lands Department, HKSAR Government, via <a href="https://data.gov.hk/en-data/dataset/hk-landsd-openmap-landsd-building" target="_blank" rel="noopener">DATA.GOV.HK</a> · map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors · elevation NASA SRTM</div>
 <script>window.__errs=[];addEventListener("error",function(e){window.__errs.push(String(e.message).slice(0,300)+" @"+e.lineno)});(function(){var ce=console.error;console.error=function(){try{window.__errs.push(Array.prototype.join.call(arguments," ").slice(0,900))}catch(e){}ce.apply(console,arguments)}})();</script>
@@ -201,6 +215,8 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { Pass, FullScreenQuad } from 'three/addons/postprocessing/Pass.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
 /* ═════════════ 1. UTILS ═════════════ */
 const PI = Math.PI, TAU = PI * 2, RAD = PI / 180;
@@ -2842,7 +2858,8 @@ function regenNear(fx, fz) {
   const G = 10.5, gi0 = Math.floor((fx - R) / G), gi1 = Math.ceil((fx + R) / G), gj0 = Math.floor((fz - R) / G), gj1 = Math.ceil((fz + R) / G);
   for (let gj = gj0; gj <= gj1; gj++) for (let gi = gi0; gi <= gi1; gi++) { const h1 = hash2(gi, gj), h2 = hash2(gj * 3 + 1, gi * 5 + 2), x = (gi + h1) * G, z = (gj + h2) * G; if ((x - fx) * (x - fx) + (z - fz) * (z - fz) > R2 || !inDom(x, z) || sdAt(x, z) < 5) continue;
     const oc = occAt(x, z), cv = coverAt(x, z), nat = !(oc & 31) && cv < 128, dens = cv === 64 ? .3 : .72; if (!(nat && h1 * h2 < dens) && !((oc & 8) && !(oc & 3) && hash2(gi + 9, gj) < .34)) continue; if (LAKE[Math.round((z - Z0) / CELL) * GW + Math.round((x - X0) / CELL)]) continue;
-    const gy = hAt(x, z), sc = (oc & 8) ? 2.4 + hash2(gi * 7, gj * 3) * 2.2 : 3.4 + hash2(gi * 7, gj * 3) * 4; tree(x, gy + sc * .75, z, sc, .8 + h2 * .5, hash2(gi, gj * 9), gy > 380 ? .6 : 0); }
+    const gy = hAt(x, z); let sc = (oc & 8) ? 2.4 + hash2(gi * 7, gj * 3) * 2.2 : 3.4 + hash2(gi * 7, gj * 3) * 4; if (oc & 32) sc = Math.min(sc, 2.3);   /* beside a street: a small tree, not a canopy over it */
+    tree(x, gy + sc * .75, z, sc, .8 + h2 * .5, hash2(gi, gj * 9), gy > 380 ? .6 : 0); }
   D.mesh.count = n; for (const [a, k] of [[D.am, 16], [D.ac, 3], [D.ap, 4]]) { a.updateRange.offset = 0; a.updateRange.count = Math.max(n, 1) * k; a.needsUpdate = true; }
   T.geo.instanceCount = nt; for (const a of [T.aa, T.ab]) { a.updateRange.offset = 0; a.updateRange.count = Math.max(nt, 1) * 4; a.needsUpdate = true; }
   /* kitchen steam */
@@ -3227,6 +3244,9 @@ function buildDriveGraph(H) {
     if (e.c > 5 && e.n > 3) { const q = e.ys.slice(); for (let i = 1; i < e.n; i++) e.ys[i] = (q[i - 1] + 2 * q[i] + q[i + 1]) / 4; }
   }
   DRIVE.N = N; DRIVE.E = E;
+  /* every drivable street joins the occupancy map: no trees on it (bit 1), only small ones within a crown's width of it (bit 32) */
+  for (const e of E) { if (e.tun) continue; for (let i = 0; i <= e.n; i++) { if (!e.br) occDisc(e.xs[i], e.zs[i], e.hw + 1.2, 1); occDisc(e.xs[i], e.zs[i], e.hw + 7, 32); } }
+  NEAR.fx = NEAR.fz = 1e9;   /* re-plant the near trees */
 }
 /* side streets have no ribbons in the city view (only painted lines): give them proper surfaces near the car */
 function buildStreetRibbons() {
@@ -3314,20 +3334,58 @@ function buildVehicle(V) {
   const g = new GB(); g.M(C(0, 0, 0)).box(0, .03, 0, V.len + .2, .02, V.wid + .3);   /* contact shadow */
   V.build(g); const m = g.mesh(propMat); m.frustumCulled = false; m.matrixAutoUpdate = false; m.visible = false; scene.add(m); return m;
 }
+/* places to start from: a famous spot and the road to put the car on there */
+const STARTS = [{ id: 'here', name: 'Where you are' }, { id: 'pier', name: 'Central Pier', site: 'wheel', roads: ['Man Kwong Street', 'Man Yiu Street', 'Lung Wo Road'] },
+  { id: 'peak', name: 'The Peak', site: 'peaktower', roads: ['Peak Road'] }, { id: 'cwb', name: 'Causeway Bay', site: 'causewaybay', roads: ['Hennessy Road', 'Yee Wo Street', 'Gloucester Road'] },
+  { id: 'iec', name: 'Eastern Corridor', site: 'northpoint', roads: ['Island Eastern Corridor'] }, { id: 'abd', name: 'Aberdeen', site: 'aberdeen', roads: ['Aberdeen Praya Road'] },
+  { id: 'rb', name: 'Repulse Bay', site: 'repulsebay', roads: ['Repulse Bay Road', 'Beach Road'] }, { id: 'stanley', name: 'Stanley', site: 'stanley', roads: ['Stanley Village Road', 'Stanley Beach Road'] },
+  { id: 'sheko', name: 'Shek O', site: 'sheko', roads: ['Shek O Road'] }];
+function dStart(id) {
+  const S = STARTS.find(q => q.id === id) || STARTS[0], here = DRIVE.hereXZ || SITE('hsbc'); DRIVE.start = S.id;
+  if (S.site && SITE(S.site)) dSpawn(SITE(S.site)[0], SITE(S.site)[1], S.roads); else dSpawn(here[0], here[1]);
+  const c = DRIVE.car, e = DRIVE.E[c.e]; c.yaw = dTan(e, c.u) + (c.d < 0 ? PI : 0); cam.az = c.yaw + PI + .9; DRIVE.joy = null;
+  if (S.id !== 'here') try { localStorage.setItem('hk-start', S.id); } catch (err) { /* storage blocked */ }
+  document.querySelectorAll('#gStart .gs').forEach(b => b.classList.toggle('on', b.dataset.id === S.id)); driveStep(0);
+}
+/* the detailed vehicles: modelled in Blender (vehicles/<id>.glb, Draco-compressed), loaded when first picked and re-built into the
+   scene's own prop format so they share its sun, shadows, night lamps and fog; the simple model stands in until they arrive */
+let _gltf = null;
+function gltfLoader() { if (_gltf) return _gltf; const d = new DRACOLoader(); d.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/gltf/'); _gltf = new GLTFLoader(); _gltf.setDRACOLoader(d); return _gltf; }
+const vehicleURL = id => (/\/$|\.html?$/.test(location.pathname) ? new URL('vehicles/' + id + '.glb', location.href) : new URL('/hong-kong/vehicles/' + id + '.glb', location.href)).href;
+function loadVehicleModel(i) {
+  const V = VEHICLES[i]; if (V.loading || V.model) return; V.loading = true;
+  gltfLoader().load(vehicleURL(V.id), gl => {
+    const P = [], N = [], Cc = [], A = [], I = [], _p = new THREE.Vector3(), _n = new THREE.Vector3(), nm = new THREE.Matrix3();
+    gl.scene.updateMatrixWorld(true);
+    gl.scene.traverse(o => { if (!o.isMesh) return; const g = o.geometry, pos = g.attributes.position, nor = g.attributes.normal, mt = Array.isArray(o.material) ? o.material[0] : o.material, base = P.length / 3; nm.getNormalMatrix(o.matrixWorld);
+      const col = mt.color || new THREE.Color(1, 1, 1), em = mt.emissive && mt.emissive.r + mt.emissive.g + mt.emissive.b > .05 ? 1 : 0, shiny = (mt.roughness ?? 1) < .3 ? 1 : 0;
+      for (let k = 0; k < pos.count; k++) { _p.fromBufferAttribute(pos, k).applyMatrix4(o.matrixWorld); P.push(_p.x, _p.y, _p.z);
+        if (nor) { _n.fromBufferAttribute(nor, k).applyMatrix3(nm).normalize(); N.push(_n.x, _n.y, _n.z); } else N.push(0, 1, 0); Cc.push(col.r, col.g, col.b); A.push(em, shiny, 0, 0); }
+      if (g.index) for (let k = 0; k < g.index.count; k++) I.push(base + g.index.getX(k)); else for (let k = 0; k < pos.count; k++) I.push(base + k); });
+    { const b = P.length / 3, hl = V.len / 2 + .1, hw = V.wid / 2 + .15; for (const [x, z] of [[-hl, -hw], [hl, -hw], [hl, hw], [-hl, hw]]) { P.push(x, .03, z); N.push(0, 1, 0); Cc.push(0, 0, 0); A.push(0, 0, 0, 0); } I.push(b, b + 2, b + 1, b, b + 3, b + 2); }
+    const n = P.length / 3, geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(N, 3));
+    geo.setAttribute('aCol', new THREE.Float32BufferAttribute(Cc, 3)); geo.setAttribute('aP', new THREE.Float32BufferAttribute(A, 4)); geo.setAttribute('aQ', new THREE.Float32BufferAttribute(new Float32Array(n * 4), 4)); geo.setAttribute('aF', new THREE.Float32BufferAttribute(new Float32Array(n), 1)); geo.setIndex(I);
+    const mesh = new THREE.Mesh(geo, propMat); mesh.frustumCulled = false; mesh.matrixAutoUpdate = false; mesh.visible = false; scene.add(mesh);
+    const old = DRIVE.meshes && DRIVE.meshes[i]; if (old) { mesh.matrix.copy(old.matrix); mesh.matrixWorldNeedsUpdate = true; mesh.visible = old.visible; scene.remove(old); old.geometry.dispose(); }
+    (DRIVE.meshes = DRIVE.meshes || [])[i] = mesh; if (DRIVE.vi === i) DRIVE.mesh = mesh; V.model = true; V.loading = false;
+    gl.scene.traverse(o => { if (o.isMesh) o.geometry.dispose(); });
+  }, undefined, err => { V.loading = false; console.warn('vehicle model ' + V.id + ': ' + (err && err.message)); });
+}
 function dSelect(i) {
   i = (i + VEHICLES.length) % VEHICLES.length; const V = VEHICLES[i]; DRIVE.vi = i; DRIVE.V = V;
-  DRIVE.meshes = DRIVE.meshes || []; if (!DRIVE.meshes[i]) DRIVE.meshes[i] = buildVehicle(V);
+  DRIVE.meshes = DRIVE.meshes || []; if (!DRIVE.meshes[i]) DRIVE.meshes[i] = buildVehicle(V); loadVehicleModel(i);
   for (const m of DRIVE.meshes) if (m) m.visible = false; DRIVE.mesh = DRIVE.meshes[i]; DRIVE.mesh.visible = DRIVE.on;
   try { localStorage.setItem('hk-vehicle', V.id); } catch (e) { /* storage blocked */ }
   document.querySelectorAll('#gList .gc').forEach((b, k) => { b.classList.toggle('on', k === i); if (k === i && DRIVE.garage) b.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' }); });
   if (DRIVE.car) driveStep(0);
 }
 function openGarage() {
+  if (DRIVE.started && DRIVE.car) DRIVE.hereXZ = [DRIVE.car.x, DRIVE.car.z]; DRIVE.started = false; document.querySelectorAll('#gStart .gs').forEach(b => b.classList.toggle('on', b.dataset.id === 'here'));
   DRIVE.garage = true; DRIVE.joy = null; dJoyDraw(); if (DRIVE.car) { DRIVE.car.v = 0; } document.body.classList.add('garage'); ctlHint.hide();
   dSelect(DRIVE.vi ?? 0);
 }
 function closeGarage() {
-  DRIVE.garage = false; document.body.classList.remove('garage');
+  DRIVE.garage = false; DRIVE.started = true; document.body.classList.remove('garage');
   ctlHint.first = true; ctlHint.show(COARSE ? ['Hold anywhere to drive', 'Slide to steer', 'Pull back to brake'] : ['↑ drive', '↓ brake', '← → steer', 'U turn round', 'Esc leave'], 9000);
 }
 function initGarage() {
@@ -3337,6 +3395,7 @@ function initGarage() {
     const bar = (lab, v) => `<span class="st"><i>${lab}</i><u><s style="width:${Math.round(clamp(v, .08, 1) * 100)}%"></s></u></span>`;
     b.innerHTML = `<b></b><em></em>${bar('Speed', V.top / VSTAT.top)}${bar('Pick-up', V.acc / VSTAT.acc)}${bar('Handling', V.grip / VSTAT.grip)}`;
     b.querySelector('b').textContent = V.name; b.querySelector('em').textContent = V.blurb; b.onclick = () => { if (DRIVE.vi === i) closeGarage(); else dSelect(i); }; L.appendChild(b); });
+  const GS0 = document.getElementById('gStart'); for (const S of STARTS) { const b = document.createElement('button'); b.type = 'button'; b.className = 'gs'; b.dataset.id = S.id; b.textContent = S.name; b.onclick = () => dStart(S.id); GS0.appendChild(b); }
   document.getElementById('gGo').onclick = closeGarage; document.getElementById('gPrev').onclick = () => dSelect(DRIVE.vi - 1); document.getElementById('gNext').onclick = () => dSelect(DRIVE.vi + 1);
   document.getElementById('dCar').onclick = openGarage;
   addEventListener('keydown', e => { if (!DRIVE.on || !DRIVE.garage) return; if (e.code === 'ArrowLeft') dSelect(DRIVE.vi - 1); if (e.code === 'ArrowRight') dSelect(DRIVE.vi + 1); if (e.code === 'Enter' || e.code === 'Space') { e.preventDefault(); closeGarage(); } });
@@ -3354,8 +3413,8 @@ function dChoose(q, nd, h, intent) {
     if (!best || sc < best.sc) best = { sc, c, rel, d: e.a === nd ? 1 : -1, against }; }
   return best;
 }
-function dSpawn(x, z) {
-  let best = null; for (const e of DRIVE.E) { if (!e.main || e.tun) continue; for (let i = 0; i <= e.n; i += 2) { const d = Math.hypot(e.xs[i] - x, e.zs[i] - z) + (e.c >= 8 ? 120 : e.c >= 6 ? 30 : 0); if (!best || d < best.d) best = { d, e, u: i * e.st }; } }
+function dSpawn(x, z, names) {
+  let best = null; for (const e of DRIVE.E) { if (!e.main || e.tun) continue; const pen = names ? (names.includes(DRIVE.names[e.nm]) ? 0 : 900) : (e.c >= 8 ? 120 : e.c >= 6 ? 30 : 0); for (let i = 0; i <= e.n; i += 2) { const d = Math.hypot(e.xs[i] - x, e.zs[i] - z) + pen; if (!best || d < best.d) best = { d, e, u: i * e.st }; } }
   const e = best.e; DRIVE.car = { e: e.i, d: 1, u: clamp(best.u, 2, e.L - 2), lat: e.ow ? 0 : e.hw / 2, latRate: 0, v: 0, yaw: 0, x: 0, y: 0, z: 0, h: 0 };
 }
 function dJunctionAhead() {
@@ -3438,28 +3497,72 @@ function dPointer(e) {
 }
 function dJoyDraw() { const J = DRIVE.joy, el = DRIVE.hud.joy; if (!J) { el.classList.remove('show'); return; } el.classList.add('show'); el.style.transform = `translate(${J.x0}px,${J.y0}px)`; el.firstChild.style.transform = `translate(${(J.dx || 0).toFixed(0)}px,${(J.dy || 0).toFixed(0)}px)`; el.classList.toggle('brk', J.brk > 0); }
 async function enterDrive() {
+  if (DRIVE.on || DRIVE.entering) return; DRIVE.entering = true; try { await enterDrive0(); } finally { DRIVE.entering = false; }
+}
+async function enterDrive0() {
   if (DRIVE.on) return; if (TOUR.on) stopTour(); if (LT.on) ltStop(); if (FOCUS.label) exitFocus();
   document.body.classList.remove('menu');
   if (!DRIVE.ready) {
     ctlHint.show(['Loading every street…'], 30000);
-    try { if (!DRIVE.loading) DRIVE.loading = loadHKD('hk-drive.bin'); const H = await DRIVE.loading; buildDriveGraph(H); buildStreetRibbons(); DRIVE.ready = true; }
+    /* let the menu close and the message show before the heavy lifting, and breathe between steps */
+    const breathe = () => new Promise(r => { let done = false; const go = () => { if (!done) { done = true; setTimeout(r, 0); } }; requestAnimationFrame(go); setTimeout(go, 80); });
+    try { await breathe(); if (!DRIVE.loading) DRIVE.loading = loadHKD('hk-drive.bin'); const H = await DRIVE.loading; await breathe(); buildDriveGraph(H); await breathe(); buildStreetRibbons(); await breathe(); buildMiniBase(); DRIVE.ready = true; }
     catch (err) { ctlHint.show(['Could not load the street map'], 5000); DRIVE.loading = null; return; }
   }
   /* start where you are looking, or in Central when looking at the whole island */
-  { const far = cam.dist > 2600, s0 = far ? SITE('hsbc') : null; dSpawn(far && s0 ? s0[0] : cam.tx, far && s0 ? s0[1] : cam.tz); } DRIVE.on = true; DRIVE.zoom = 0; DRIVE.labelsWas = LABELS.on; LABELS.on = false; cam.fly = null; cam.tour = null;
-  { const c = DRIVE.car, e = DRIVE.E[c.e]; c.yaw = dTan(e, c.u); cam.az = c.yaw + PI; }
-  document.body.classList.add('driving'); DYN.uNoNear.value = 40; cam.dist = 30; openGarage();
+  { const far = cam.dist > 2600; let saved = null; try { saved = localStorage.getItem('hk-start'); } catch (e) { /* storage blocked */ }
+    DRIVE.hereXZ = far ? null : [cam.tx, cam.tz]; DRIVE.started = false; dSpawn(cam.tx, cam.tz); DRIVE.on = true; DRIVE.pendingStart = far ? (STARTS.some(q => q.id === saved) ? saved : 'pier') : 'here'; } DRIVE.zoom = 0; DRIVE.labelsWas = LABELS.on; LABELS.on = false; cam.fly = null; cam.tour = null;
+
+  document.body.classList.add('driving'); DYN.uNoNear.value = 40; cam.dist = 30; openGarage(); dStart(DRIVE.pendingStart);
 }
 function exitDrive() {
   if (!DRIVE.on) return; DRIVE.on = false; DRIVE.joy = null; dJoyDraw(); LABELS.on = DRIVE.labelsWas; document.body.classList.remove('driving', 'garage'); DRIVE.garage = false; if (DRIVE.mesh) DRIVE.mesh.visible = false; DYN.uNoNear.value = 0;
   const c = DRIVE.car; flyTo({ tx: c.x, tz: c.z, dist: 700, pol: 62 * RAD, az: cam.az, fov: 40, ty: 0, dur: 2.2 });
 }
 function dUturn() { const c = DRIVE.car; if (!c) return; c.d = -c.d; c.lat = -c.lat; c.v = 0; c.yaw += PI; DRIVE.intent = 0; }
+/* ---------- the mini map: heading-up around the car (tap it for the whole island), with the district you are in ---------- */
+const MM = { base: null, mpp: 6, W: 0, H: 0, wide: false, cv: null, g: null, dT: 0, odd: false };
+function buildMiniBase() {
+  const mpp = MM.mpp, W = Math.ceil((X1 - X0) / mpp), H = Math.ceil((Z1 - Z0) / mpp), c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d'), P = (x, z) => [(x - X0) / mpp, (z - Z0) / mpp];
+  g.fillStyle = '#163a50'; g.fillRect(0, 0, W, H);
+  g.fillStyle = '#2c2b25'; for (const r of G.coast) { g.beginPath(); r.forEach((p, i) => { const q = P(p[0], p[1]); i ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1]); }); g.closePath(); g.fill(); }
+  g.lineCap = g.lineJoin = 'round';
+  const pass = (ok, col, w, dash) => { g.strokeStyle = col; g.lineWidth = w; g.setLineDash(dash || []); g.beginPath();
+    for (const e of DRIVE.E) { if (!ok(e)) continue; for (let i = 0; ; i = Math.min(i + 2, e.n)) { const q = P(e.xs[i], e.zs[i]); i ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1]); if (i === e.n) break; } } g.stroke(); };
+  pass(e => e.c >= 7 && !e.tun, '#5d5a52', 1.6); pass(e => e.c === 6 && !e.tun, '#8b877c', 2.2);
+  pass(e => e.c >= 2 && e.c <= 5 && !e.tun, '#efdcb6', 3); pass(e => e.c <= 1 && !e.tun, '#ffad55', 4.2); pass(e => e.tun, 'rgba(255,173,85,.55)', 3, [6, 6]);
+  MM.base = c; MM.W = W; MM.H = H;
+}
+function drawMini(dt) {
+  if (!DRIVE.on || DRIVE.garage || !MM.base || !DRIVE.car) return; if ((MM.odd = !MM.odd) && !MM.wide) return;   /* 30 Hz is plenty */
+  const cv = MM.cv, g = MM.g, D = cv.width, R = D / 2, car = DRIVE.car, px = (car.x - X0) / MM.mpp, pz = (car.z - Z0) / MM.mpp;
+  g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, D, D); g.save(); g.beginPath(); g.arc(R, R, R - 1, 0, TAU); g.clip(); g.fillStyle = '#163a50'; g.fillRect(0, 0, D, D); g.imageSmoothingEnabled = true;
+  let ax = R, ay = R, aa = -PI / 2, na;
+  if (!MM.wide) { const k = D * MM.mpp / 1100, th = -PI / 2 - car.yaw; g.translate(R, R); g.rotate(th); g.scale(k, k); g.drawImage(MM.base, -px, -pz); na = -PI / 2 + th; }
+  else { const k = D * .94 / Math.max(MM.W, MM.H); g.translate(R, R); g.scale(k, k); g.drawImage(MM.base, -MM.W / 2, -MM.H / 2); ax = R + (px - MM.W / 2) * k; ay = R + (pz - MM.H / 2) * k; aa = car.yaw; na = -PI / 2; }
+  g.restore();
+  /* you */
+  const s = D / 140; g.save(); g.translate(ax, ay); g.rotate(aa + PI / 2); g.beginPath(); g.moveTo(0, -9 * s); g.lineTo(6.5 * s, 7 * s); g.lineTo(0, 3.5 * s); g.lineTo(-6.5 * s, 7 * s); g.closePath();
+  g.fillStyle = '#ffd08f'; g.strokeStyle = '#2a1606'; g.lineWidth = 1.6 * s; g.fill(); g.stroke(); g.restore();
+  /* rim and north */
+  g.beginPath(); g.arc(R, R, R - 1.5 * s, 0, TAU); g.strokeStyle = 'rgba(255,206,140,.55)'; g.lineWidth = 2 * s; g.stroke();
+  const nx = R + Math.cos(na) * (R - 11 * s), ny = R + Math.sin(na) * (R - 11 * s); g.beginPath(); g.arc(nx, ny, 8 * s, 0, TAU); g.fillStyle = 'rgba(9,20,28,.85)'; g.fill();
+  g.fillStyle = '#ff9a5a'; g.font = `600 ${10 * s}px "Avenir Next Condensed","DIN Condensed","Helvetica Neue",Arial,sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('N', nx, ny + .5 * s);
+  /* the district, from the nearest place label */
+  if ((MM.dT -= dt) <= 0) { MM.dT = .6; let best = null, bd = 2600; for (const o of LABELS.list) { if (o.kind !== 'dist') continue; const d = Math.hypot(o.x - car.x, o.z - car.z); if (d < bd) { bd = d; best = o.name; } }
+    const el = document.getElementById('mmD'), t = best || 'Hong Kong Island'; if (el.textContent !== t) el.textContent = t; }
+}
+function initMini() {
+  const cv = MM.cv = document.getElementById('mmC'), size = () => { const r = cv.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2), n = Math.round((r.width || 132) * dpr); if (cv.width !== n) { cv.width = cv.height = n; } };
+  MM.g = cv.getContext('2d'); size(); addEventListener('resize', size); document.getElementById('mini').onclick = () => { MM.wide = !MM.wide; document.getElementById('mini').classList.toggle('wide', MM.wide); };
+  hooks.push(dt => { if (DRIVE.on && cv.width < 8) size(); drawMini(dt); });
+}
 function initDrive() {
   const H = DRIVE.hud, q = id => document.getElementById(id); Object.assign(H, { spd: q('dSpd'), st: q('dSt'), nx: q('dNx'), arr: q('dArr'), nxd: q('dNxD'), nxn: q('dNxN'), tun: q('dTun'), msg: q('dMsg'), joy: q('dJoy') });
   q('bDrive').onclick = () => DRIVE.on ? exitDrive() : enterDrive(); q('dExit').onclick = exitDrive; q('dU').onclick = dUturn;
   addEventListener('keydown', e => { if (!DRIVE.on) return; if (e.code === 'KeyU' && !DRIVE.garage) dUturn(); if (e.code === 'KeyG' && !DRIVE.garage) openGarage(); if (e.code === 'Escape') exitDrive(); });
-  initGarage();
+  initGarage(); initMini();
 }
 
 let PRESETS = [() => heroState()];
