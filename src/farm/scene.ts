@@ -180,6 +180,13 @@ export function cumulus(seed: number, w: number, h: number): Dot[] {
     const r = w * (0.055 + rand() * 0.05) * (1.15 - 0.35 * k)
     puffs.push({ x, y: -Math.max(0, top(x) - r) * k, r })
   }
+  // and a solid core under the outline, so no sky ever shows through the body
+  for (let i = 0; i <= 10; i++) {
+    const x = (i / 10 - 0.5) * span * 0.94
+    const r = w * 0.075
+    const reach = Math.max(0, top(x) - r * 1.6)
+    for (let k = 0; k * r * 1.1 <= reach; k++) puffs.push({ x, y: -k * r * 1.1, r })
+  }
   return puffs
     .sort((a, b) => a.y - b.y)
     .map((p) => ({ x: n1(p.x), y: n1(p.y), r: n1(p.r) }))

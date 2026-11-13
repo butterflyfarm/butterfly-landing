@@ -398,9 +398,21 @@ const CLOUDS = [
   { fx: -1.05, base: 336, w: 270, h: 92, seed: 67, speed: 6, always: false, rise: 0.3 },
 ] as const
 
-// the lit face of each puff; .cloud__lit slides it toward the sun
-const lit = (p: Dot): Dot => ({ x: p.x, y: p.y - p.r * 0.2, r: p.r * 0.93 })
-const asCircle = (d: Dot) => ({ cx: d.x, cy: d.y, r: d.r })
+// the lit face of each puff, reaching past the top of the silhouette so the upper edge
+// stays bright once softened; .cloud__lit slides it toward the sun
+const lit = (p: Dot): Dot => ({ x: p.x, y: p.y - p.r * 0.32, r: p.r * 1.04 })
+
+/** A few big lobes standing out from the body, each with a soft shadow along its lower edge. */
+function billows(puffs: Dot[], w: number, h: number): Dot[] {
+  const out: Dot[] = []
+  const body = puffs.filter((p) => p.y > -h * 0.78 && p.y < -h * 0.18).sort((a, b) => b.r - a.r)
+  for (const p of body) {
+    if (out.length >= 5) break
+    if (out.every((q) => Math.hypot(q.x - p.x, q.y - p.y) > (q.r + p.r) * 0.9)) out.push(p)
+  }
+  // drawn back to front: the lower lobes first, so the upper ones overlap them
+  return out.filter((p) => Math.abs(p.x) < w * 0.4).sort((a, b) => b.y - a.y)
+}
 
 const Clouds = memo(function Clouds({
   vis,
@@ -427,6 +439,7 @@ const Clouds = memo(function Clouds({
         const to = vis / 2 + w * 0.62 + 30
         const seconds = (to - from) / c.speed
         const puffs = cumulus(c.seed, w, h)
+        const box = { x: -w / 2 - pad, y: -h - pad, width: w + pad * 2, height: h + pad + 6 }
         return (
           <svg
             key={c.seed}
@@ -466,21 +479,26 @@ const Clouds = memo(function Clouds({
                 <stop offset="0.45" stopColor="#a7b1be" stopOpacity="0" />
                 <stop offset="1" stopColor="#a7b1be" stopOpacity="0.75" />
               </linearGradient>
+              {/* light and shadow inside a cloud have no hard edges; only its outline does */}
+              <filter id={`cloud-soft-${c.seed}`} filterUnits="userSpaceOnUse" {...box}>
+                <feGaussianBlur stdDeviation={(w * 0.018).toFixed(1)} />
+              </filter>
             </defs>
-            {/* a shaded silhouette, lit from the sun's side, with a few billows inside. The
-                lit faces are kept inside the silhouette, or they would show as pale cut edges
-                once the hour's colour (also kept inside) tints the rest. */}
+            {/* a crisp silhouette in shadow, with the light falling softly across it from the
+                sun's side and a few big lobes standing out. Everything inside is kept inside
+                the silhouette, or it would show as pale cut edges once the hour's colour
+                (also kept inside) tints the rest. */}
             <Dots dots={puffs} fill="#b9c1cb" />
             <g clipPath={`url(#cloud-${c.seed})`}>
-              <Dots dots={puffs.map(lit)} fill="#eee8d9" className="cloud__lit" />
-              {puffs
-                .filter((p, i) => i % 3 === 0 && p.y > -h * 0.62)
-                .map((p, i) => (
+              <g filter={`url(#cloud-soft-${c.seed})`}>
+                <Dots dots={puffs.map(lit)} fill="#eee8d9" className="cloud__lit" />
+                {billows(puffs, w, h).map((p, i) => (
                   <g key={i}>
-                    <circle cx={p.x} cy={p.y} r={p.r} fill="#c6ccd2" />
-                    <circle {...asCircle(lit(p))} fill="#eee8d9" className="cloud__lit" />
+                    <circle cx={p.x} cy={p.y + p.r * 0.2} r={p.r} fill="#c5cbd2" />
+                    <circle cx={p.x} cy={p.y - p.r * 0.12} r={p.r * 0.94} fill="#eee8d9" className="cloud__lit" />
                   </g>
                 ))}
+              </g>
             </g>
             <rect
               x={-w / 2 - pad}
