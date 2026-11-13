@@ -96,10 +96,63 @@
     color:#fff4df;font-size:11px;letter-spacing:.1em;text-transform:uppercase;line-height:1.6;text-align:center;opacity:0;pointer-events:none;transition:opacity .6s,transform .6s}
   #hint.show{opacity:1;transform:translate(-50%,0)}
   #hint span{display:inline-block;white-space:nowrap;margin:0 .75em}
+  #drv{display:none}
+  body.driving #drv{display:block}
+  body.driving #ui,body.driving #nav,body.driving #fc,body.driving #pm,body.driving #labels{display:none !important}
+  body.driving canvas#c{cursor:crosshair}
+  body.photo #drv{display:none}
+  #dTop{position:fixed;z-index:6;left:0;right:0;top:max(10px,env(safe-area-inset-top));display:flex;align-items:flex-start;gap:10px;padding:0 max(12px,env(safe-area-inset-right)) 0 max(12px,env(safe-area-inset-left));pointer-events:none}
+  #dTop>*{pointer-events:auto}
+  #drv button{font-family:inherit;color:#f3d9b4;background:rgba(9,20,28,.66);border:1px solid rgba(255,196,128,.36);border-radius:10px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);cursor:pointer;touch-action:manipulation}
+  #dExit{width:42px;height:42px;font-size:16px;padding:0;flex:none}
+  #dInfo{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none}
+  #dSt{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:6px 14px;border-radius:10px;background:rgba(9,20,28,.66);border:1px solid rgba(255,196,128,.3);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+    color:#fff4df;font-size:14px;font-weight:600;letter-spacing:.12em;text-transform:uppercase}
+  #dNx{display:none;align-items:center;gap:8px;max-width:100%;padding:4px 12px 4px 8px;border-radius:18px;background:rgba(9,20,28,.55);color:#f3e6d0;font-size:11px;letter-spacing:.08em;white-space:nowrap}
+  #dNx.show{display:flex}
+  #dArr{display:inline-block;font-style:normal;font-size:20px;line-height:1;color:#ffc98a;transition:transform .25s}
+  #dNx b{font-weight:600;font-variant-numeric:tabular-nums;color:#ffc98a}
+  #dNx em{font-style:normal;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase}
+  #dSide{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex:none}
+  #dSpdBox{min-width:66px;padding:4px 8px 5px;border-radius:10px;background:rgba(9,20,28,.66);border:1px solid rgba(255,196,128,.3);text-align:center;color:#fff4df;line-height:1}
+  #dSpd{display:block;font-size:26px;font-weight:600;font-variant-numeric:tabular-nums}
+  #dSpdBox small{font-size:9px;letter-spacing:.14em;opacity:.7}
+  #dU{padding:8px 10px;font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+  #dCar{width:42px;height:42px;padding:0;flex:none;display:flex;align-items:center;justify-content:center}
+  #garage{display:none;position:fixed;z-index:7;left:0;right:0;bottom:max(14px,env(safe-area-inset-bottom));flex-direction:column;align-items:center;gap:10px;padding:0 10px;pointer-events:none}
+  #garage>*{pointer-events:auto}
+  body.garage #garage{display:flex}
+  body.garage #cr{opacity:0;pointer-events:none}
+  body.garage #dInfo,body.garage #dSide,body.garage #dCar{visibility:hidden}
+  #garage .gh{color:#fff4df;font-size:13px;font-weight:600;letter-spacing:.26em;text-transform:uppercase;text-shadow:0 1px 5px rgba(0,0,0,.85)}
+  #garage .gr{display:flex;align-items:center;gap:8px;max-width:min(100%,1000px)}
+  #gList{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 2px 8px;scrollbar-width:none;-webkit-overflow-scrolling:touch;touch-action:pan-x}
+  #gList::-webkit-scrollbar{display:none}
+  #drv .gc{flex:none;scroll-snap-align:center;width:172px;display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:10px 12px 11px;text-align:left;border-radius:12px;background:rgba(9,20,28,.74);border:1px solid rgba(255,196,128,.26);color:#f3e6d0}
+  #drv .gc.on{border-color:rgba(255,206,140,.95);background:rgba(66,40,14,.86);box-shadow:0 0 0 1px rgba(255,206,140,.5),0 6px 18px rgba(0,0,0,.45)}
+  .gc b{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#fff4df}
+  .gc em{font-style:normal;font-size:10.5px;line-height:1.3;opacity:.82;min-height:2.6em}
+  .gc .st{display:flex;align-items:center;gap:6px;font-size:9px;letter-spacing:.12em;text-transform:uppercase;opacity:.88}
+  .gc .st i{font-style:normal;width:58px}
+  .gc .st u{flex:1;height:4px;border-radius:2px;background:rgba(255,196,128,.18);overflow:hidden;text-decoration:none}
+  .gc .st s{display:block;height:100%;background:#ffc98a;text-decoration:none}
+  #gPrev,#gNext{flex:none;width:38px;height:60px;font-size:24px;padding:0}
+  #drv #gGo{padding:12px 40px;font-size:14px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;background:rgba(255,176,84,.92);color:#241405;border-color:rgba(255,224,176,.95);border-radius:24px;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+  #dJoy{position:fixed;z-index:5;left:0;top:0;width:0;height:0;pointer-events:none;opacity:0;transition:opacity .15s}
+  #dJoy.show{opacity:1}
+  #dJoy::before{content:"";position:absolute;left:-62px;top:-62px;width:124px;height:124px;border-radius:50%;border:2px solid rgba(255,206,140,.55);background:rgba(9,20,28,.2)}
+  #dJoy i{position:absolute;left:-25px;top:-25px;width:50px;height:50px;border-radius:50%;background:rgba(255,201,138,.85);box-shadow:0 2px 10px rgba(0,0,0,.4)}
+  #dJoy.brk i{background:rgba(255,104,84,.9)}
+  #dTun{position:fixed;z-index:4;inset:0;opacity:0;pointer-events:none;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(ellipse at 50% 55%,rgba(70,48,18,.86),rgba(6,6,8,.97) 70%);color:#ffc98a;font-size:13px;letter-spacing:.32em;text-transform:uppercase}
+  #dMsg{position:fixed;z-index:6;left:50%;top:38%;transform:translate(-50%,6px);padding:7px 14px;border-radius:16px;background:rgba(9,20,28,.75);color:#fff4df;font-size:12px;letter-spacing:.1em;text-transform:uppercase;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s}
+  #dMsg.show{opacity:1;transform:translate(-50%,0)}
   @media (max-width:760px){
     body.menu #nav{opacity:0;pointer-events:none}
     #fc{max-width:calc(100vw - 100px)}
     #fc.auto .foc{display:none}
+    #gPrev,#gNext{display:none}
+    #drv .gc{width:150px}
     #hint{bottom:calc(max(12px,env(safe-area-inset-bottom)) + 62px);font-size:10px}
     #ui{left:auto;right:max(8px,env(safe-area-inset-right));transform:none;flex-direction:column;align-items:stretch;gap:6px;padding:5px;font-size:10px;opacity:.85;max-height:calc(100vh - 24px);overflow:auto}
     #bMenu{display:block;align-self:flex-end;font-size:15px !important;padding:2px 9px !important}
@@ -118,7 +171,7 @@
 <canvas id="c"></canvas>
 <div id="ui">
   <button id="bMenu" aria-label="Show controls" title="Controls">☰</button>
-  <div class="g" id="gView"><button data-v="0">Island</button><button data-v="1">Harbour</button><button data-v="2">Canyon</button><button data-v="3">Peak</button><button data-v="4">Corridor</button><button data-v="5">Stanley</button><button id="bTour" title="Guided tour, golden hour into dusk">Tour</button><button id="bLmk" title="Visit the landmarks one by one">Landmarks</button></div>
+  <div class="g" id="gView"><button data-v="0">Island</button><button data-v="1">Harbour</button><button data-v="2">Canyon</button><button data-v="3">Peak</button><button data-v="4">Corridor</button><button data-v="5">Stanley</button><button id="bTour" title="Guided tour, golden hour into dusk">Tour</button><button id="bLmk" title="Visit the landmarks one by one">Landmarks</button><button id="bDrive" title="Drive any street on the island">Drive</button></div>
   <div class="g" id="gLight"><button data-l="golden" class="on">Golden</button><button data-l="noon">Noon</button><button data-l="dusk">Dusk</button><input id="sTime" type="range" min="5.5" max="21" step="0.0166667" value="17" aria-label="Time of day (Hong Kong)" title="Time of day, Hong Kong, today's sun"><span id="oTime">17:00</span></div>
   <div class="g"><label>Traffic<input id="sTraf" type="range" min="0" max="100" value="70"></label></div>
   <div class="g"><button id="bLabels" class="on" title="Place names">Labels</button><button id="bQ" title="Quality">High</button><button id="bPhoto">Photo</button><button id="bLink" title="Copy a link to this view">Link</button><button id="bReset">Reset</button></div>
@@ -134,6 +187,11 @@
   <text id="cpN">N</text></svg></div>
   <div id="zm"><button id="zIn" title="Zoom in" aria-label="Zoom in">+</button><button id="zOut" title="Zoom out" aria-label="Zoom out">−</button></div></div>
 <div id="hint" aria-live="polite"></div>
+<div id="drv"><div id="dTop"><button id="dExit" title="Stop driving (Esc)" aria-label="Stop driving">✕</button><button id="dCar" title="Change vehicle (G)" aria-label="Change vehicle"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M5 11l1.5-4.2A2 2 0 0 1 8.4 5.5h7.2a2 2 0 0 1 1.9 1.3L19 11h.5A1.5 1.5 0 0 1 21 12.5V17h-2v1.5a1 1 0 0 1-2 0V17H7v1.5a1 1 0 0 1-2 0V17H3v-4.5A1.5 1.5 0 0 1 4.5 11zm2.2 0h9.6l-1.1-3.2a.5.5 0 0 0-.5-.3H8.8a.5.5 0 0 0-.5.3zM6.5 15a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6zm11 0a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6z"/></svg></button>
+  <div id="dInfo"><span id="dSt"></span><span id="dNx"><i id="dArr">↑</i><b id="dNxD"></b><em id="dNxN"></em></span></div>
+  <div id="dSide"><div id="dSpdBox"><b id="dSpd">0</b><small>km/h</small></div><button id="dU" title="Turn round (U)">U-turn</button></div></div>
+  <div id="dJoy"><i></i></div><div id="dTun"></div><div id="dMsg"></div>
+  <div id="garage"><b class="gh">Choose your ride</b><div class="gr"><button id="gPrev" aria-label="Previous vehicle">‹</button><div id="gList"></div><button id="gNext" aria-label="Next vehicle">›</button></div><button id="gGo">Drive</button></div></div>
 <div id="pm" title="Fly to Central"><b>Central</b><i></i><u></u></div>
 <div id="cr">Buildings: Lands Department, HKSAR Government, via <a href="https://data.gov.hk/en-data/dataset/hk-landsd-openmap-landsd-building" target="_blank" rel="noopener">DATA.GOV.HK</a> · map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors · elevation NASA SRTM</div>
 <script>window.__errs=[];addEventListener("error",function(e){window.__errs.push(String(e.message).slice(0,300)+" @"+e.lineno)});(function(){var ce=console.error;console.error=function(){try{window.__errs.push(Array.prototype.join.call(arguments," ").slice(0,900))}catch(e){}ce.apply(console,arguments)}})();</script>
@@ -2279,7 +2337,7 @@ function updateShadows(focus, radius) {
 }
 
 /* ═════════════ 7. LIFE: roads, traffic, trams, harbour, air ═════════════ */
-const DYN = { uTraffic: { value: .7 }, uPx: { value: .001 }, uRoad: { value: null }, uNearFade: { value: new THREE.Vector2(250, 380) } };
+const DYN = { uNoNear: { value: 0 }, uTraffic: { value: .7 }, uPx: { value: .001 }, uRoad: { value: null }, uNearFade: { value: new THREE.Vector2(250, 380) } };
 /* ---------- road ribbons: lane markings, tram rails, crossings; cross-faded in near the camera ---------- */
 function makeRibbons() {
   const p = [], a = [], idx = [];
@@ -2315,7 +2373,7 @@ function makeRibbons() {
         float lamp=pow(.5+.5*cos(6.2832*s/34.),3.);col+=uNight*alb*vec3(1.,.62,.28)*(1.4+5.5*lamp);
         gl_FragColor=vec4(applyFog(col,vWp),fade);
       }` }));
-  m.frustumCulled = false; m.renderOrder = 20; scene.add(m);
+  m.frustumCulled = false; m.renderOrder = 20; scene.add(m); DYN.ribMat = m.material;
 }
 /* ---------- GPU traffic: vehicles, trams and pedestrians ride the road-sample texture ---------- */
 let trafficMesh;
@@ -2339,7 +2397,7 @@ function makeTraffic() {
   });
   const g = boxGeo(); g.setAttribute('aA', new THREE.InstancedBufferAttribute(new Float32Array(A), 4)); g.setAttribute('aB', new THREE.InstancedBufferAttribute(new Float32Array(B), 4)); g.instanceCount = A.length / 4;
   trafficMesh = new THREE.Mesh(g, new THREE.ShaderMaterial({ uniforms: { ...U, ...DYN },
-    vertexShader: `uniform sampler2D uRoad;uniform float uTraffic,uPx,uTime,uNight;attribute vec4 aA,aB;varying vec3 vWp,vN,vL,vNl;varying vec4 vK;varying float vTw;
+    vertexShader: `uniform sampler2D uRoad;uniform float uTraffic,uPx,uTime,uNight,uNoNear;attribute vec4 aA,aB;varying vec3 vWp,vN,vL,vNl;varying vec4 vK;varying float vTw;
       vec4 rp(float i,float row){return texelFetch(uRoad,ivec2(int(i),int(row)),0);}
       float h1(float p){p=fract(p*.1031);p*=p+33.33;p*=p+p;return fract(p);}
       void main(){
@@ -2358,6 +2416,7 @@ function makeTraffic() {
         float dist=distance(p,cameraPosition);
         float vis=type<5?step(seed,uTraffic):1.;
         if(type!=7)vis*=smoothstep(0.,.006,t)*smoothstep(1.,.994,t);
+        vis*=smoothstep(uNoNear,uNoNear*1.5+1.,dist);   /* clear of the driven car */
         float k=1.;
         if(type<6){k=clamp(dist*uPx*1.25/sz.x,1.,mix(2.2,7.,uNight));}
         else{vis*=1.-smoothstep(380.,620.,dist);sz*=vec3(.9+.3*h1(seed*7.),.86+.2*h1(seed*3.),1.);}
@@ -2714,7 +2773,7 @@ attribute vec3 aCol;attribute vec4 aP,aQ;uniform vec2 uNearFade;uniform float uT
   tg.setAttribute('aT', t.aa); tg.setAttribute('aU', t.ab); tg.instanceCount = 0; t.geo = tg;
   t.mesh = new THREE.Mesh(tg, new THREE.ShaderMaterial({ uniforms: { ...U, ...DYN },
     vertexShader: `attribute vec4 aT,aU;uniform vec2 uNearFade;uniform float uTime;varying vec3 vWp,vN;varying vec4 vU;varying float vY;
-      void main(){float f=1.-smoothstep(uNearFade.x*1.25,uNearFade.y*1.25,distance(aT.xyz,cameraPosition));vec3 lp=position;float ns=aU.z*20.;lp*=1.+.2*sin(dot(position,vec3(2.3,1.7,3.1))*2.2+ns)+.13*sin(dot(position,vec3(-3.7,2.9,1.3))*3.1+ns*1.7)+.07*sin(dot(position,vec3(5.1,-4.3,3.7))*4.3+ns*2.3);if(lp.y<0.)lp.y*=.55;
+      void main(){float dc=distance(aT.xyz,cameraPosition),f=(1.-smoothstep(uNearFade.x*1.25,uNearFade.y*1.25,dc))*smoothstep(aT.w*1.2,aT.w*1.2+9.,dc);vec3 lp=position;float ns=aU.z*20.;lp*=1.+.2*sin(dot(position,vec3(2.3,1.7,3.1))*2.2+ns)+.13*sin(dot(position,vec3(-3.7,2.9,1.3))*3.1+ns*1.7)+.07*sin(dot(position,vec3(5.1,-4.3,3.7))*4.3+ns*2.3);if(lp.y<0.)lp.y*=.55;
         vec3 w=aT.xyz+lp*aT.w*vec3(1.,aU.y,1.)*f;w.xz+=sin(uTime*1.1+aU.z*30.+w.y*.2)*.12*max(position.y,0.)*aT.w*.2;vWp=w;vN=normalize(position+vec3(0.,.35,0.));vU=aU;vY=position.y;gl_Position=projectionMatrix*viewMatrix*vec4(w,1.);}`,
     fragmentShader: `${GL_COMMON}
       varying vec3 vWp,vN;varying vec4 vU;varying float vY;
@@ -3112,6 +3171,297 @@ function initLT() {
     const b = document.getElementById('bLmk'); if (b) b.classList.toggle('on', LT.on && LT.auto); });
 }
 
+/* ═════════════ DRIVE — every street on the island ═════════════
+   hk-drive.bin (loaded on first use) holds every drivable OpenStreetMap way on Hong Kong Island, motorways to service lanes,
+   cut at shared nodes into a junction graph. The car rides the road surface itself: it knows which stretch of road it is on,
+   how far along and how far across, so flyovers, hairpins and tunnels all work and it can never drive into a building.
+   It keeps left (Hong Kong drives on the left), follows bends by itself, slides wide if taken too fast, and at a junction
+   takes the road your steering points at. Phone: hold anywhere to drive, slide sideways to steer, pull back to brake or
+   reverse, let go to slow down. Keys: ↑/W drive, ↓/S brake, ←/→ or A/D steer, U turn round, Esc leave. */
+const DRIVE = { on: false, ready: false, loading: null, N: null, E: null, names: [], car: null, mesh: null, joy: null, k: { thr: 0, brk: 0, steer: 0 },
+  intent: 0, intentT: 0, plan: null, hud: {}, ribbons: null, labelsWas: true, msgT: 0, tun: 0 };
+async function loadHKD(file) {
+  const rel = /\/$|\.html?$/.test(location.pathname), url = rel ? new URL(file, location.href) : new URL('/hong-kong/' + file, location.href);
+  const res = await fetch(url); if (!res.ok) throw new Error(file + ' ' + res.status);
+  let u8 = new Uint8Array(await res.arrayBuffer());
+  if (u8[0] === 0x1f && u8[1] === 0x8b) u8 = new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
+  if (String.fromCharCode(u8[0], u8[1], u8[2], u8[3]) !== 'HKD1') throw new Error(file + ': bad container');
+  const hl = u8[4] | u8[5] << 8 | u8[6] << 16 | u8[7] << 24, head = JSON.parse(new TextDecoder().decode(u8.subarray(8, 8 + hl))), body = 8 + hl;
+  for (const k in head.blobs) { const [o, n] = head.blobs[k]; head[k] = u8.subarray(body + o, body + o + n); }
+  delete head.blobs; return head;
+}
+const D_HW = (c, lanes, ow) => c === 8 ? 2.4 : c === 7 ? 2.6 : (ow ? lanes * 3.3 + 1.4 : Math.max(lanes, 2) * 3.3 + 1.6) / 2;
+/* the ground a street sits on: the carved terrain on land, the sea surface (0) off it */
+const dGround = (x, z) => (inDom(x, z) && sdAt(x, z) > 0) ? Math.max(hAt(x, z), 0) : 0;
+function buildDriveGraph(H) {
+  const nb = dec(H.nodes), eb = dec(H.edges), nN = nb[0], N = []; DRIVE.names = H.names;
+  for (let i = 0; i < nN; i++) N.push({ x: nb[1 + i * 2] / 10, z: nb[2 + i * 2] / 10, y: 0, adj: [] });
+  /* main-road heights already exist (decks, ramps, carved cuttings): index the rendered road samples */
+  const RG = new Map(), rc = 16; for (const r of ROADS) { if (r.tram) continue; for (let i = 0; i < r.n; i++) { const k = Math.floor(r.pts[i * 3] / rc) * 65536 + Math.floor(r.pts[i * 3 + 2] / rc); let a = RG.get(k); if (!a) RG.set(k, a = []); a.push(r, i); } }
+  const roadY = (x, z, bridge) => { let best = 1e9, y = null; const gx = Math.floor(x / rc), gz = Math.floor(z / rc);
+    for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) { const c = RG.get((gx + a) * 65536 + gz + b); if (!c) continue;
+      for (let j = 0; j < c.length; j += 2) { const r = c[j], i = c[j + 1], d = Math.hypot(r.pts[i * 3] - x, r.pts[i * 3 + 2] - z), el = r.el[i], sc = d + (bridge ? (el < .8 ? 40 : 0) : (el > 2.5 ? 40 : 0)); if (sc < best) { best = sc; y = r.pts[i * 3 + 1]; } } }
+    return best < 9 ? y : null; };
+  const E = []; let k = 1; const nE = eb[0];
+  for (let q = 0; q < nE; q++) {
+    const a = eb[k++], b = eb[k++], c = eb[k++], fl = eb[k++], layer = eb[k++], lanes = eb[k++], nm = eb[k++], m = eb[k++], P = [[N[a].x, N[a].z]];
+    let px = N[a].x * 10, pz = N[a].z * 10; for (let i = 0; i < m; i++) { px += eb[k++]; pz += eb[k++]; P.push([px / 10, pz / 10]); } P.push([N[b].x, N[b].z]);
+    let L = 0; const cum = [0]; for (let i = 1; i < P.length; i++) { L += Math.hypot(P[i][0] - P[i - 1][0], P[i][1] - P[i - 1][1]); cum.push(L); }
+    const n = Math.max(1, Math.ceil(L / 4)), st = L / n, xs = new Float32Array(n + 1), zs = new Float32Array(n + 1), ys = new Float32Array(n + 1);
+    for (let i = 0, j = 0; i <= n; i++) { const s = i * st; while (j < P.length - 2 && cum[j + 1] < s) j++; const seg = cum[j + 1] - cum[j] || 1, t = clamp((s - cum[j]) / seg, 0, 1); xs[i] = lerp(P[j][0], P[j + 1][0], t); zs[i] = lerp(P[j][1], P[j + 1][1], t); }
+    const e = { i: q, a, b, c, ow: !!(fl & 1), br: !!(fl & 2), tun: !!(fl & 4), main: !!(fl & 8), layer, lanes, nm, L: Math.max(L, .01), n, st: st || .01, xs, zs, ys, hw: D_HW(c, lanes, fl & 1) };
+    E.push(e); N[a].adj.push(q); if (b !== a) N[b].adj.push(q);
+  }
+  /* heights: main roads take the rendered surface (bridge decks included); side streets the ground; tunnels dip between portals */
+  for (const e of E) { if (e.tun) continue;
+    for (let i = 0; i <= e.n; i++) { const x = e.xs[i], z = e.zs[i], ry = e.c <= 5 || e.br ? roadY(x, z, e.br) : null; e.ys[i] = ry ?? (e.br ? NaN : dGround(x, z) + .05); }
+    if (e.br) { /* an unmatched (minor) bridge spans level between its ends */ const y0 = isNaN(e.ys[0]) ? dGround(e.xs[0], e.zs[0]) : e.ys[0], y1 = isNaN(e.ys[e.n]) ? dGround(e.xs[e.n], e.zs[e.n]) : e.ys[e.n];
+      for (let i = 0; i <= e.n; i++) if (isNaN(e.ys[i])) e.ys[i] = lerp(y0, y1, i / e.n); } }
+  /* a node sits at the mean of its surface roads' ends; every road eases into it over its last 14 m */
+  N.forEach((nd, i) => { let s = 0, c = 0; for (const q of nd.adj) { const e = E[q]; if (e.tun) continue; if (e.a === i) { s += e.ys[0]; c++; } if (e.b === i) { s += e.ys[e.n]; c++; } } nd.y = c ? s / c : dGround(nd.x, nd.z); });
+  for (const e of E) {
+    if (e.tun) { const y0 = N[e.a].y, y1 = N[e.b].y; for (let i = 0; i <= e.n; i++) { const t = i / e.n; e.ys[i] = lerp(y0, y1, t) - Math.min(18, e.L * .08) * Math.sin(Math.PI * t); } continue; }
+    const da = N[e.a].y - e.ys[0], db = N[e.b].y - e.ys[e.n];
+    for (let i = 0; i <= e.n; i++) { const s = i * e.st; e.ys[i] += da * (1 - sm(0, 14, s)) + db * (1 - sm(0, 14, e.L - s)); }
+    /* a light smoothing so 4 m samples over a 12 m terrain grid ride smoothly */
+    if (e.c > 5 && e.n > 3) { const q = e.ys.slice(); for (let i = 1; i < e.n; i++) e.ys[i] = (q[i - 1] + 2 * q[i] + q[i + 1]) / 4; }
+  }
+  DRIVE.N = N; DRIVE.E = E;
+}
+/* side streets have no ribbons in the city view (only painted lines): give them proper surfaces near the car */
+function buildStreetRibbons() {
+  const p = [], a = [], idx = [];
+  for (const e of DRIVE.E) { if (e.c <= 5 || e.tun) continue; const hw = e.hw, one = e.c >= 7 || e.lanes < 2, fl = (one ? 32 : 0) + (one ? 1 : 2) * 64; let base = p.length / 3;
+    for (let i = 0; i <= e.n; i++) { const j = Math.min(i + 1, e.n), k = Math.max(i - 1, 0); let dx = e.xs[j] - e.xs[k], dz = e.zs[j] - e.zs[k]; const l = Math.hypot(dx, dz) || 1; dx /= l; dz /= l; const y = e.ys[i] + .3;
+      p.push(e.xs[i] + dz * hw, y, e.zs[i] - dx * hw, e.xs[i] - dz * hw, y, e.zs[i] + dx * hw); a.push(-1, i * e.st, hw, fl, 1, i * e.st, hw, fl);
+      if (i < e.n) { const b = base + i * 2; idx.push(b, b + 1, b + 2, b + 1, b + 3, b + 2); } } }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3)); g.setAttribute('aR', new THREE.Float32BufferAttribute(a, 4)); g.setIndex(idx);
+  const m = new THREE.Mesh(g, DYN.ribMat); m.frustumCulled = false; m.renderOrder = 19; scene.add(m); DRIVE.ribbons = m;
+}
+/* a Hong Kong taxi: red body, silver roof, roof sign; built facing +x */
+/* ---------- the garage: vehicles to drive, each built facing +x with its own pace, grip, size and camera ---------- */
+/* a side profile [[x, y]] extruded across the vehicle from z0 to z1 */
+function vHull(g, pts, z0, z1) {
+  const n = pts.length; let cx = 0, cy = 0; for (const p of pts) { cx += p[0]; cy += p[1]; } const ref = [cx / n, cy / n, (z0 + z1) / 2];
+  for (let i = 0; i < n; i++) { const a = pts[i], b = pts[(i + 1) % n]; g.quad([a[0], a[1], z0], [b[0], b[1], z0], [b[0], b[1], z1], [a[0], a[1], z1], ref); }
+  const V = pts.map(p => new THREE.Vector2(p[0], p[1]));
+  for (const t of THREE.ShapeUtils.triangulateShape(V, [])) for (const z of [z0, z1]) g.tri([pts[t[0]][0], pts[t[0]][1], z], [pts[t[1]][0], pts[t[1]][1], z], [pts[t[2]][0], pts[t[2]][1], z], ref);
+  return g;
+}
+const vRing = (x, y, r, n = 12) => { const p = []; for (let i = 0; i < n; i++) { const a = i / n * TAU; p.push([x + Math.cos(a) * r, y + Math.sin(a) * r]); } return p; };
+function vWheels(g, xs, zs, r, w, hub = C(.72, .72, .74)) {
+  for (const x of xs) for (const z of zs) { const s = Math.sign(z); g.M(C(.03, .03, .035)); vHull(g, vRing(x, r, r), z - w / 2, z + w / 2); g.M(hub, 0, .6); vHull(g, vRing(x, r, r * .55, 8), z + s * w / 2, z + s * (w / 2 + .012)); }
+}
+const vLights = (g, xf, xr, y, z, w = .3, h = .14) => { g.M(C(1, .96, .84), .95).box(xf, y, -z, .06, h, w).box(xf, y, z, .06, h, w); g.M(C(.95, .08, .05), .8).box(xr, y, -z, .06, h, w).box(xr, y, z, .06, h, w); };
+const GLASS = C(.035, .045, .055);
+const VEHICLES = [
+  { id: 'taxi', name: 'Red Taxi', blurb: "Hong Kong's red cab. Knows every short cut.", len: 4.6, wid: 1.72, h: 1.5, top: 36, acc: 6.5, grip: 8.5,
+    build(g) { const red = C(.74, .05, .04), sil = C(.8, .81, .82);
+      vWheels(g, [-1.4, 1.4], [-.78, .78], .32, .22);
+      g.M(red, 0, .2); vHull(g, [[-2.3, .28], [2.3, .28], [2.32, .72], [1.35, .84], [-1.55, .86], [-2.3, .8]], -.86, .86);
+      g.M(GLASS, 0, .4); vHull(g, [[1.28, .84], [.62, 1.35], [-.98, 1.35], [-1.5, .86]], -.79, .79);
+      g.M(sil, 0, .35); vHull(g, [[.62, 1.35], [-.98, 1.35], [-.95, 1.41], [.58, 1.41]], -.77, .77);
+      g.M(C(.97, .95, .86), .9).box(-.15, 1.41, 0, .3, .18, .62);
+      g.M(sil, 0, .5).box(2.33, .3, 0, .07, .2, 1.6).box(-2.32, .3, 0, .07, .2, 1.6); vLights(g, 2.31, -2.31, .6, .62); } },
+  { id: 'minibus', name: 'Minibus', blurb: 'Sixteen seats, red roof, no patience at all.', len: 6.9, wid: 2.05, h: 2.7, top: 33, acc: 5.5, grip: 7.5,
+    build(g) { const cream = C(.9, .87, .74), red = C(.72, .06, .05);
+      vWheels(g, [-2.2, 2.35], [-.9, .9], .36, .26);
+      g.M(cream, 0, .4); vHull(g, [[-3.45, .36], [3.3, .36], [3.45, .9], [3.3, 1.25], [-3.45, 1.25]], -1.02, 1.02);
+      g.M(GLASS, 0, .5); vHull(g, [[-3.38, 1.25], [3.3, 1.25], [2.92, 2.2], [-3.38, 2.2]], -1, 1);
+      g.M(red, 0, .22); vHull(g, [[-3.45, 2.2], [2.95, 2.2], [2.8, 2.68], [-3.45, 2.68]], -1.02, 1.02).box(0, 1.14, 0, 6.85, .12, 2.06);
+      g.M(C(1, .55, .1), .9).box(2.9, 2.3, 0, .06, .26, 1.2); vLights(g, 3.47, -3.47, .7, .78, .28); } },
+  { id: 'dd', name: 'Double-Decker', blurb: 'Twelve metres and two decks. Mind the bends.', len: 11.6, wid: 2.5, h: 4.4, top: 24, acc: 3.2, grip: 5.5,
+    build(g) { const red = C(.75, .07, .06), cream = C(.93, .9, .8);
+      vWheels(g, [-2.7, 3.9], [-1.08, 1.08], .5, .34);
+      g.M(red, 0, .2).box(0, .42, 0, 11.6, 3.85, 2.5); g.M(cream, 0, .3).box(0, 4.27, 0, 11.5, .12, 2.42);
+      g.M(GLASS, 0, .5).box(-.2, 1.42, 0, 10.6, .88, 2.52).box(-.2, 2.78, 0, 10.9, .95, 2.52).box(5.81, 1.25, 0, .04, 1.05, 2.2).box(5.81, 2.75, 0, .04, 1.0, 2.2);
+      g.M(cream, 0, .3).box(0, 2.42, 0, 11.62, .18, 2.52); g.M(C(1, .6, .1), .9).box(5.82, 3.85, 0, .05, .3, 1.6); vLights(g, 5.82, -5.82, .75, .95, .32); } },
+  { id: 'icecream', name: 'Ice-Cream Van', blurb: 'Soft-serve on wheels. Everyone is happy to see you.', len: 5.4, wid: 2.0, h: 3.3, top: 25, acc: 3.8, grip: 6.5,
+    build(g) { const white = C(.95, .95, .93), blue = C(.12, .32, .72), pink = C(.95, .45, .62);
+      vWheels(g, [-1.75, 1.75], [-.88, .88], .34, .24);
+      g.M(white, 0, .4); vHull(g, [[-2.7, .34], [2.6, .34], [2.72, .9], [2.05, 1.15], [1.55, 2.12], [-2.7, 2.12]], -1, 1).box(-.7, 2.12, 0, 4, .32, 1.96);
+      g.M(GLASS, 0, .5); vHull(g, [[2.0, 1.17], [1.56, 2.02], [1.0, 2.02], [1.0, 1.17]], -1.005, 1.005);
+      g.M(blue, 0, .4).box(0, .36, 0, 5.38, .38, 2.01); g.M(pink, 0, .4).box(-.6, 1.05, 0, 4.2, .1, 2.01);
+      g.M(GLASS).box(-1.0, 1.2, -1.005, 2.1, .72, .02); g.M(pink, .2).box(-1.0, 1.95, -1.08, 2.3, .08, .18);
+      /* the cone on the roof */
+      g.M(C(.82, .6, .3)).cyl(-.8, 2.44, 0, .06, .8, 10, .36); g.M(C(.99, .97, .92), .15).cyl(-.8, 3.24, 0, .4, .26, 12, .3).cyl(-.8, 3.5, 0, .3, .22, 12, .17).cyl(-.8, 3.72, 0, .17, .2, 12, .02);
+      vLights(g, 2.73, -2.71, .7, .74); } },
+  { id: 'cyber', name: 'Cyber Truck', blurb: 'A stainless-steel wedge. Brutal off the line.', len: 5.9, wid: 2.2, h: 1.95, top: 50, acc: 10, grip: 8.5,
+    build(g) { const steel = C(.64, .66, .68);
+      vWheels(g, [-1.95, 1.95], [-.96, .96], .44, .3, C(.2, .2, .22));
+      g.M(C(.06, .06, .07)).box(0, .45, 0, 5.6, .16, 2.12);
+      g.M(steel, 0, .85); vHull(g, [[2.95, .55], [2.95, .98], [.35, 1.92], [-2.95, 1.2], [-2.95, .55]], -1.02, 1.02);
+      g.M(GLASS, 0, .6); vHull(g, [[1.92, 1.375], [.35, 1.935], [-.95, 1.7], [-.9, 1.6], [.35, 1.83], [1.8, 1.33]], -1.03, 1.03);
+      g.M(C(1, .97, .9), 1).box(2.96, .9, 0, .04, .05, 2.0); g.M(C(1, .1, .06), .9).box(-2.96, 1.1, 0, .04, .05, 2.0); } },
+  { id: 'super', name: 'Supercar', blurb: 'Low, loud and very fast. Grips like glue.', len: 4.6, wid: 2.0, h: 1.15, top: 70, acc: 12, grip: 11.5,
+    build(g) { const lime = C(.48, .78, .04), blk = C(.04, .04, .045);
+      vWheels(g, [-1.45, 1.45], [-.9, .9], .36, .3, C(.15, .15, .16));
+      g.M(lime, 0, .3); vHull(g, [[2.3, .24], [2.3, .48], [1.0, .8], [.45, .93], [-.6, 1.1], [-1.7, 1.0], [-2.3, .88], [-2.3, .24]], -1, 1);
+      g.M(GLASS, 0, .7); vHull(g, [[1.02, .81], [-.55, 1.135], [-1.25, 1.05], [.85, .79]], -.74, .74);
+      g.M(blk).box(-.95, .42, -1.005, 1.1, .36, .02).box(-.95, .42, 1.005, 1.1, .36, .02).box(-2.0, .9, -.75, .1, .28, .1).box(-2.0, .9, .75, .1, .28, .1).box(-2.08, 1.16, 0, .38, .05, 1.95);
+      g.M(C(1, .97, .9), .95).box(2.2, .56, -.7, .2, .04, .45).box(2.2, .56, .7, .2, .04, .45); g.M(C(1, .1, .05), .9).box(-2.31, .74, 0, .04, .05, 1.7); } },
+  { id: 'school', name: 'School Bus', blurb: 'Big, yellow and in no hurry whatsoever.', len: 11, wid: 2.45, h: 3.15, top: 24, acc: 3.5, grip: 6,
+    build(g) { const yel = C(.97, .68, .03), blk = C(.04, .04, .045);
+      vWheels(g, [-3.4, 3.7], [-1.06, 1.06], .5, .32);
+      g.M(yel, 0, .2).box(-.8, .5, 0, 9.4, 2.62, 2.45).box(4.7, .5, 0, 1.6, 1.15, 2.2);
+      g.M(GLASS, 0, .5).box(-.95, 1.78, 0, 8.7, .86, 2.47).box(3.92, 1.72, 0, .06, 1.05, 2.2);
+      g.M(blk).box(-.8, 1.5, 0, 9.41, .08, 2.47).box(-.8, 1.05, 0, 9.41, .08, 2.47).box(5.51, .6, 0, .04, .7, 1.4);
+      g.M(C(.85, .06, .05), .3).box(3.3, 1.55, -1.25, .42, .42, .03); g.M(C(1, .5, .05), .9).box(3.88, 2.95, -.9, .06, .14, .22).box(3.88, 2.95, .9, .06, .14, .22);
+      vLights(g, 5.52, -5.52, .75, .95, .3); } },
+];
+const VSTAT = { top: 70, acc: 12, grip: 11.5 };
+function buildVehicle(V) {
+  const g = new GB(); g.M(C(0, 0, 0)).box(0, .03, 0, V.len + .2, .02, V.wid + .3);   /* contact shadow */
+  V.build(g); const m = g.mesh(propMat); m.frustumCulled = false; m.matrixAutoUpdate = false; m.visible = false; scene.add(m); return m;
+}
+function dSelect(i) {
+  i = (i + VEHICLES.length) % VEHICLES.length; const V = VEHICLES[i]; DRIVE.vi = i; DRIVE.V = V;
+  DRIVE.meshes = DRIVE.meshes || []; if (!DRIVE.meshes[i]) DRIVE.meshes[i] = buildVehicle(V);
+  for (const m of DRIVE.meshes) if (m) m.visible = false; DRIVE.mesh = DRIVE.meshes[i]; DRIVE.mesh.visible = DRIVE.on;
+  try { localStorage.setItem('hk-vehicle', V.id); } catch (e) { /* storage blocked */ }
+  document.querySelectorAll('#gList .gc').forEach((b, k) => { b.classList.toggle('on', k === i); if (k === i && DRIVE.garage) b.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' }); });
+  if (DRIVE.car) driveStep(0);
+}
+function openGarage() {
+  DRIVE.garage = true; DRIVE.joy = null; dJoyDraw(); if (DRIVE.car) { DRIVE.car.v = 0; } document.body.classList.add('garage'); ctlHint.hide();
+  dSelect(DRIVE.vi ?? 0);
+}
+function closeGarage() {
+  DRIVE.garage = false; document.body.classList.remove('garage');
+  ctlHint.first = true; ctlHint.show(COARSE ? ['Hold anywhere to drive', 'Slide to steer', 'Pull back to brake'] : ['↑ drive', '↓ brake', '← → steer', 'U turn round', 'Esc leave'], 9000);
+}
+function initGarage() {
+  const L = document.getElementById('gList'); let saved = null; try { saved = localStorage.getItem('hk-vehicle'); } catch (e) { /* storage blocked */ }
+  DRIVE.vi = Math.max(0, VEHICLES.findIndex(v => v.id === saved));
+  VEHICLES.forEach((V, i) => { const b = document.createElement('button'); b.className = 'gc'; b.type = 'button';
+    const bar = (lab, v) => `<span class="st"><i>${lab}</i><u><s style="width:${Math.round(clamp(v, .08, 1) * 100)}%"></s></u></span>`;
+    b.innerHTML = `<b></b><em></em>${bar('Speed', V.top / VSTAT.top)}${bar('Pick-up', V.acc / VSTAT.acc)}${bar('Handling', V.grip / VSTAT.grip)}`;
+    b.querySelector('b').textContent = V.name; b.querySelector('em').textContent = V.blurb; b.onclick = () => { if (DRIVE.vi === i) closeGarage(); else dSelect(i); }; L.appendChild(b); });
+  document.getElementById('gGo').onclick = closeGarage; document.getElementById('gPrev').onclick = () => dSelect(DRIVE.vi - 1); document.getElementById('gNext').onclick = () => dSelect(DRIVE.vi + 1);
+  document.getElementById('dCar').onclick = openGarage;
+  addEventListener('keydown', e => { if (!DRIVE.on || !DRIVE.garage) return; if (e.code === 'ArrowLeft') dSelect(DRIVE.vi - 1); if (e.code === 'ArrowRight') dSelect(DRIVE.vi + 1); if (e.code === 'Enter' || e.code === 'Space') { e.preventDefault(); closeGarage(); } });
+}
+const dPos = (e, u) => { const f = clamp(u / e.st, 0, e.n - 1e-4), i = Math.floor(f), t = f - i; return [lerp(e.xs[i], e.xs[i + 1], t), lerp(e.ys[i], e.ys[i + 1], t), lerp(e.zs[i], e.zs[i + 1], t)]; };
+const dTan = (e, u) => { const i = clamp(Math.floor(u / e.st), 0, e.n - 1); return Math.atan2(e.zs[i + 1] - e.zs[i], e.xs[i + 1] - e.xs[i]); };
+const wrapA = a => ((a % TAU) + TAU + PI) % TAU - PI;
+/* the heading of a road as it leaves node nd */
+function dLeave(q, nd) { const e = DRIVE.E[q], u = Math.min(10, e.L * .9); if (e.a === nd) { const p = dPos(e, u); return Math.atan2(p[2] - e.zs[0], p[0] - e.xs[0]); } const p = dPos(e, e.L - u); return Math.atan2(p[2] - e.zs[e.n], p[0] - e.xs[e.n]); }
+/* which road to take at node nd, arriving on edge q with heading h: the one nearest the direction the driver is asking for */
+function dChoose(q, nd, h, intent) {
+  const nd0 = DRIVE.N[nd], want = intent * 1.25; let best = null;
+  for (const c of nd0.adj) { if (c === q && nd0.adj.length > 1) continue; const e = DRIVE.E[c], out = dLeave(c, nd), rel = wrapA(out - h);
+    const against = e.ow && e.b === nd && e.a !== nd, sc = Math.abs(rel - want) + (against ? 1.4 : 0) + (Math.abs(rel) > 2.6 ? 1.6 : 0) + (e.tun ? .05 : 0);
+    if (!best || sc < best.sc) best = { sc, c, rel, d: e.a === nd ? 1 : -1, against }; }
+  return best;
+}
+function dSpawn(x, z) {
+  let best = null; for (const e of DRIVE.E) { if (!e.main || e.tun) continue; for (let i = 0; i <= e.n; i += 2) { const d = Math.hypot(e.xs[i] - x, e.zs[i] - z) + (e.c >= 8 ? 120 : e.c >= 6 ? 30 : 0); if (!best || d < best.d) best = { d, e, u: i * e.st }; } }
+  const e = best.e; DRIVE.car = { e: e.i, d: 1, u: clamp(best.u, 2, e.L - 2), lat: e.ow ? 0 : e.hw / 2, latRate: 0, v: 0, yaw: 0, x: 0, y: 0, z: 0, h: 0 };
+}
+function dJunctionAhead() {
+  const car = DRIVE.car, e = DRIVE.E[car.e], left = car.d > 0 ? e.L - car.u : car.u, nd = car.d > 0 ? e.b : e.a, h = car.d > 0 ? dTan(e, e.L - .01) : dTan(e, 0) + PI;
+  return { left, nd, h, opts: DRIVE.N[nd].adj.length };
+}
+function driveStep(dt) {
+  const car = DRIVE.car; if (!car) return; const K = DRIVE.k, E = DRIVE.E;
+  /* input: keys add to the touch stick */
+  const kt = (keys.ArrowUp || keys.KeyW ? 1 : 0), kb = (keys.ArrowDown || keys.KeyS ? 1 : 0), ks = (keys.ArrowRight || keys.KeyD ? 1 : 0) - (keys.ArrowLeft || keys.KeyA ? 1 : 0);
+  const G0 = DRIVE.garage, V = DRIVE.V || VEHICLES[0], j = G0 ? null : DRIVE.joy, thr = G0 ? 0 : Math.max(kt, j ? j.thr : 0), brk = G0 ? 0 : Math.max(kb, j ? j.brk : 0), steer = G0 ? 0 : clamp(ks + (j ? j.steer : 0), -1, 1);
+  if (Math.abs(steer) > .3) { DRIVE.intent = steer; DRIVE.intentT = 1.6; } else if ((DRIVE.intentT -= dt) <= 0) DRIVE.intent = 0;
+  /* speed: throttle, brakes, drag, rolling, and the hill */
+  let e = E[car.e]; const grade = (() => { const p0 = dPos(e, car.u - 3 * car.d), p1 = dPos(e, car.u + 3 * car.d); return (p1[1] - p0[1]) / 6; })();
+  const vmax = V.top * [1, 1, .85, .85, .8, .85, .62, .45, .45][e.c];
+  let a = thr * (car.v < vmax ? V.acc * (1 - car.v / (vmax * 1.08)) + .6 : -2) - grade * 9.8 * .55 - V.acc * .45 / (V.top * V.top) * car.v * Math.abs(car.v) - (car.v > 0 ? .35 : car.v < 0 ? -.35 : 0);
+  DRIVE.stopT = brk && Math.abs(car.v) < .5 ? (DRIVE.stopT || 0) + dt : 0;
+  if (brk) a = car.v > .4 ? (V.len > 8 ? -7 : -11) : DRIVE.stopT > .6 && car.v > -4 ? -3.2 : car.v < -.4 ? 0 : -car.v / Math.max(dt, .001);   /* brake to a stop; keep holding to back up */
+  if (!thr && !brk) a -= car.v > .3 ? 2.2 : car.v < -.3 ? -2.2 : 0;   /* let go: slow down */
+  car.v += a * dt; if (!thr && !brk && Math.abs(car.v) < .35) car.v = 0;
+  /* along the road, through junctions */
+  let du = car.v * dt * car.d; car.u += du; let hops = 0;
+  while ((car.u > e.L || car.u < 0) && hops++ < 4) {
+    const fwd = car.v >= 0, endB = car.u > e.L, nd = endB ? e.b : e.a, over = endB ? car.u - e.L : -car.u;
+    if (!fwd) { car.u = endB ? e.L : 0; car.v = 0; break; }   /* reversing stops at a junction */
+    const h = endB ? dTan(e, e.L - .01) : dTan(e, 0) + PI, ch = dChoose(car.e, nd, h, DRIVE.intent);
+    if (!ch || ch.c === car.e && DRIVE.N[nd].adj.length === 1) { car.d = -car.d; car.u = endB ? e.L - .1 : .1; car.v = 0; car.lat = -car.lat; dMsg('Dead end: turned round'); break; }
+    const ne = E[ch.c]; car.e = ch.c; car.d = ch.d; car.u = ch.d > 0 ? over : ne.L - over; if (ch.against) dMsg('One way: wrong direction'); DRIVE.intentT = Math.min(DRIVE.intentT, .25); e = ne;
+  }
+  car.u = clamp(car.u, 0, e.L);
+  /* across the road: keep left, steer to move over, slide wide if a bend is taken too fast */
+  const h0 = dTan(e, car.u) + (car.d < 0 ? PI : 0), hA = dTan(e, clamp(car.u + 6 * car.d, 0, e.L)) + (car.d < 0 ? PI : 0), kap = wrapA(hA - h0) / 6;   /* + = bending right */
+  const lim = Math.max(e.hw - V.wid / 2 - .15, .2), lane = e.ow || e.c >= 7 || e.lanes < 2 && e.c >= 6 ? 0 : Math.min(e.hw * .5, lim), sp = Math.abs(car.v);
+  /* the stick says where across the road to be: centred = your lane, full left or right = that kerb */
+  const want = steer > 0 ? lerp(lane, -lim, steer) : lerp(lane, lim, -steer), rmax = Math.min(sp * .35 + 1.2, 6.5);
+  let target = clamp((want - car.lat) * 2.2, -rmax, rmax);
+  const latA = sp * sp * Math.abs(kap), slide = Math.max(0, latA - V.grip); if (slide > 0) { target += Math.sign(kap) * slide * .7; car.v -= Math.sign(car.v) * Math.min(slide * .25, 4) * dt; }
+  car.latRate = lerp(car.latRate, target, 1 - Math.exp(-dt * 6)); car.lat += car.latRate * dt;
+  if (Math.abs(car.lat) > lim) { car.lat = Math.sign(car.lat) * lim; car.latRate *= .3; if (slide > 0) car.v *= Math.exp(-dt * .8); }
+  /* place the car */
+  const p = dPos(e, car.u), hx = Math.cos(h0), hz = Math.sin(h0); car.x = p[0] + hz * car.lat; car.z = p[2] - hx * car.lat; car.y = p[1];
+  car.h = h0; const yaw = h0 - Math.atan2(car.latRate * Math.sign(car.v || 1), Math.max(sp, 3)) * .8; car.yaw = car.yaw + wrapA(yaw - car.yaw) * (1 - Math.exp(-dt * 12));
+  const pitch = Math.atan(grade * .9);
+  const M = DRIVE.mesh.matrix; M.makeRotationY(-car.yaw); M.multiply(new THREE.Matrix4().makeRotationZ(pitch)); M.setPosition(car.x, car.y + .02, car.z); DRIVE.mesh.matrixWorldNeedsUpdate = true;
+  /* the chase camera */
+  /* in the garage the camera walks round the vehicle; on the road it follows */
+  if (G0) cam.az += dt * .35; else cam.az += wrapA(car.yaw + PI - cam.az) * (1 - Math.exp(-dt * 4));
+  const fwd = G0 ? 0 : V.len * .6, big = V.h > 2.4;
+  cam.tx = car.x + hx * fwd; cam.tz = car.z + hz * fwd; cam.ty = car.y + V.h * (G0 ? .45 : .75) - groundY(cam.tx, cam.tz);
+  cam.dist = lerp(cam.dist, (G0 ? 1.05 : 1) * (7 + V.len * 1.3 + Math.min(V.h, 3) * 1.2) + sp * .32 + DRIVE.zoom, 1 - Math.exp(-dt * 3)); cam.pol = lerp(cam.pol, (G0 ? 72 : big ? 74 : 76) * RAD, 1 - Math.exp(-dt * 3)); cam.fov = lerp(cam.fov, G0 ? 46 : 56 + sp * .35, 1 - Math.exp(-dt * 2));
+  cam.vaz = cam.vpol = cam.vx = cam.vz = cam.vzoom = 0;
+  /* the next junction, as a nav app would show it */
+  const J = dJunctionAhead(); DRIVE.plan = J.left < 70 && J.opts > 2 ? dChoose(car.e, J.nd, J.h, DRIVE.intent) : null; DRIVE.planLeft = J.left;
+  /* the tunnel veil: while the car (or the camera trailing it) is below the hillside */
+  const under = Math.max(e.tun && car.u > 6 && car.u < e.L - 6 ? 1 : 0, clamp((dGround(car.x, car.z) - car.y - .8) / 2.5, 0, 1), clamp((groundY(camera.position.x, camera.position.z) - car.y - 4) / 4, 0, 1) * (e.tun ? 1 : 0));
+  DRIVE.tun = lerp(DRIVE.tun, under, 1 - Math.exp(-dt * 6));
+  dHud(e, sp);
+}
+function dMsg(t) { DRIVE.hud.msg.textContent = t; DRIVE.hud.msg.classList.add('show'); DRIVE.msgT = 2.2; }
+function dHud(e, sp) {
+  const H = DRIVE.hud, nm = DRIVE.names[e.nm] || ['Motorway', 'Trunk road', 'Main road', 'Main road', 'Road', 'Slip road', 'Street', 'Lane', 'Service road'][e.c] || 'Road';
+  H.spd.textContent = Math.round(sp * 3.6); if (H.st.textContent !== nm) H.st.textContent = nm;
+  const P = DRIVE.plan; if (P) { const ne = DRIVE.E[P.c], nn = DRIVE.names[ne.nm] || ''; H.nx.classList.add('show'); H.arr.style.transform = 'rotate(' + (P.rel / RAD).toFixed(0) + 'deg)'; H.nxd.textContent = Math.max(0, Math.round(DRIVE.planLeft / 5) * 5) + ' m'; if (H.nxn.textContent !== nn) H.nxn.textContent = nn; }
+  else H.nx.classList.remove('show');
+  H.tun.style.opacity = DRIVE.tun.toFixed(3); H.tun.textContent = DRIVE.tun > .5 ? (DRIVE.names[e.nm] || 'Tunnel') : '';
+  if (DRIVE.msgT > 0 && (DRIVE.msgT -= 1 / 60) <= 0) H.msg.classList.remove('show');
+}
+/* touch / mouse: a floating stick wherever the thumb lands */
+function dPointer(e) {
+  if (DRIVE.garage) return;
+  const J = DRIVE.joy;
+  if (e.type === 'pointerdown') { if (J) return; try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* synthetic */ }
+    DRIVE.joy = { id: e.pointerId, x0: e.clientX, y0: e.clientY, thr: .8, brk: 0, steer: 0 }; dJoyDraw(); ctlHint.done(); return; }
+  if (!J || e.pointerId !== J.id) return;
+  if (e.type === 'pointermove') { const R = Math.min(90, innerWidth * .2), dx = e.clientX - J.x0, dy = e.clientY - J.y0;
+    J.steer = clamp(dx / R, -1, 1); J.steer = Math.sign(J.steer) * Math.max(0, Math.abs(J.steer) - .08) / .92;
+    if (dy > 26) { J.thr = 0; J.brk = clamp((dy - 26) / 50, .3, 1); } else { J.brk = 0; J.thr = clamp(.8 - dy / 120, .55, 1); }
+    J.dx = clamp(dx, -R, R); J.dy = clamp(dy, -R, R); dJoyDraw(); return; }
+  DRIVE.joy = null; dJoyDraw();
+}
+function dJoyDraw() { const J = DRIVE.joy, el = DRIVE.hud.joy; if (!J) { el.classList.remove('show'); return; } el.classList.add('show'); el.style.transform = `translate(${J.x0}px,${J.y0}px)`; el.firstChild.style.transform = `translate(${(J.dx || 0).toFixed(0)}px,${(J.dy || 0).toFixed(0)}px)`; el.classList.toggle('brk', J.brk > 0); }
+async function enterDrive() {
+  if (DRIVE.on) return; if (TOUR.on) stopTour(); if (LT.on) ltStop(); if (FOCUS.label) exitFocus();
+  document.body.classList.remove('menu');
+  if (!DRIVE.ready) {
+    ctlHint.show(['Loading every street…'], 30000);
+    try { if (!DRIVE.loading) DRIVE.loading = loadHKD('hk-drive.bin'); const H = await DRIVE.loading; buildDriveGraph(H); buildStreetRibbons(); DRIVE.ready = true; }
+    catch (err) { ctlHint.show(['Could not load the street map'], 5000); DRIVE.loading = null; return; }
+  }
+  /* start where you are looking, or in Central when looking at the whole island */
+  { const far = cam.dist > 2600, s0 = far ? SITE('hsbc') : null; dSpawn(far && s0 ? s0[0] : cam.tx, far && s0 ? s0[1] : cam.tz); } DRIVE.on = true; DRIVE.zoom = 0; DRIVE.labelsWas = LABELS.on; LABELS.on = false; cam.fly = null; cam.tour = null;
+  { const c = DRIVE.car, e = DRIVE.E[c.e]; c.yaw = dTan(e, c.u); cam.az = c.yaw + PI; }
+  document.body.classList.add('driving'); DYN.uNoNear.value = 40; cam.dist = 30; openGarage();
+}
+function exitDrive() {
+  if (!DRIVE.on) return; DRIVE.on = false; DRIVE.joy = null; dJoyDraw(); LABELS.on = DRIVE.labelsWas; document.body.classList.remove('driving', 'garage'); DRIVE.garage = false; if (DRIVE.mesh) DRIVE.mesh.visible = false; DYN.uNoNear.value = 0;
+  const c = DRIVE.car; flyTo({ tx: c.x, tz: c.z, dist: 700, pol: 62 * RAD, az: cam.az, fov: 40, ty: 0, dur: 2.2 });
+}
+function dUturn() { const c = DRIVE.car; if (!c) return; c.d = -c.d; c.lat = -c.lat; c.v = 0; c.yaw += PI; DRIVE.intent = 0; }
+function initDrive() {
+  const H = DRIVE.hud, q = id => document.getElementById(id); Object.assign(H, { spd: q('dSpd'), st: q('dSt'), nx: q('dNx'), arr: q('dArr'), nxd: q('dNxD'), nxn: q('dNxN'), tun: q('dTun'), msg: q('dMsg'), joy: q('dJoy') });
+  q('bDrive').onclick = () => DRIVE.on ? exitDrive() : enterDrive(); q('dExit').onclick = exitDrive; q('dU').onclick = dUturn;
+  addEventListener('keydown', e => { if (!DRIVE.on) return; if (e.code === 'KeyU' && !DRIVE.garage) dUturn(); if (e.code === 'KeyG' && !DRIVE.garage) openGarage(); if (e.code === 'Escape') exitDrive(); });
+  initGarage();
+}
+
 let PRESETS = [() => heroState()];
 /* ═════════════ 9. CAMERA ═════════════ */
 const HERO = { tx: -150, tz: 700, dist: 16800, az: 238 * RAD, pol: 58 * RAD, fov: 38, ty: 0 };
@@ -3132,7 +3482,7 @@ function heroState() {
 const cam = { ...HERO, vaz: 0, vpol: 0, vx: 0, vz: 0, vzoom: 0, tyS: 0, fly: null, tour: null };
 const groundY = (x, z) => (x > X0 && x < X1 && z > Z0 && z < Z1) ? Math.max(hAt(x, z), 0) : 0;
 function placeCamera(dt) {
-  cam.dist = clamp(cam.dist, 30, 42000);
+  cam.dist = clamp(cam.dist, DRIVE.on ? 5 : 30, 42000);
   const polMax = lerp(88.5, 84, sm(2000, 30000, cam.dist)) * RAD; cam.pol = clamp(cam.pol, 2 * RAD, polMax);
   cam.tx = clamp(cam.tx, -12000, 11500); cam.tz = clamp(cam.tz, -9000, 10000);
   const gy = groundY(cam.tx, cam.tz) + cam.ty; cam.tyS = dt ? lerp(cam.tyS, gy, 1 - Math.exp(-dt * 6)) : gy;
@@ -3183,6 +3533,7 @@ function oneStart(p, e) {
   GS.mode = alt !== FOCUS.active ? 'orbit' : 'pan'; GS.a = GS.mode === 'pan' ? grabAt(p.x, p.y) : null;
 }
 canvas.addEventListener('pointerdown', e => {
+  if (DRIVE.on) { dPointer(e); return; }
   try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* synthetic pointers cannot be captured */ }
   const now = performance.now(), p = { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, t: now, b: e.button, sh: e.shiftKey || e.ctrlKey || e.metaKey || e.altKey };
   ptrs.set(e.pointerId, p); canvas.classList.add('drag'); userInput(); cam.vaz = cam.vpol = cam.vx = cam.vz = cam.vzoom = 0;
@@ -3194,6 +3545,7 @@ canvas.addEventListener('pointerdown', e => {
   } else GS.mode = null;
 });
 canvas.addEventListener('pointermove', e => {
+  if (DRIVE.on) { dPointer(e); return; }
   const p = ptrs.get(e.pointerId); if (!p) return; const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
   const now = performance.now(); moveDt = clamp((now - lastMoveT) / 1000, .008, .1); lastMoveT = now;
   if (GS.mode === 'pan') { GS.a ? grabTo(GS.a, p.x, p.y) : panBy(dx, dy); GS.panned += Math.hypot(dx, dy); }
@@ -3217,6 +3569,7 @@ canvas.addEventListener('pointermove', e => {
   }
 });
 const pUp = e => {
+  if (DRIVE.on) { dPointer(e); ptrs.delete(e.pointerId); return; }
   const p = ptrs.get(e.pointerId); if (!p) return; ptrs.delete(e.pointerId); const now = performance.now(), still = Math.hypot(p.x - p.x0, p.y - p.y0) < 9, quick = now - p.t < 280;
   if (GS.mode === 'zoom') { if (still) zoomAbout(GS.zp, .5, .45); GS.mode = null; }
   else if (GS.mode === 'two') {
@@ -3228,7 +3581,7 @@ const pUp = e => {
 };
 canvas.addEventListener('pointerup', pUp); canvas.addEventListener('pointercancel', pUp);
 canvas.addEventListener('wheel', e => {
-  e.preventDefault(); userInput();
+  e.preventDefault(); if (DRIVE.on) { DRIVE.zoom = clamp(DRIVE.zoom + e.deltaY * .02, -7, 45); return; } userInput();
   const dz = clamp(e.deltaY * (e.deltaMode ? 30 : 1), -240, 240), f = Math.exp(dz * .0016), p = pickGround(e.clientX, e.clientY);
   const nd = clamp(cam.dist * f, 30, 42000), rf = nd / cam.dist; cam.dist = nd;
   if (p && rf < 1) { cam.tx += (p.x - cam.tx) * (1 - rf); cam.tz += (p.z - cam.tz) * (1 - rf); }
@@ -3268,14 +3621,15 @@ function initNav() {
 /* Safari on a Mac sends trackpad pinch and rotate as gesture events rather than ctrl+wheel */
 let gsc = 1, gro = 0;
 addEventListener('gesturestart', e => { if (e.target !== canvas || ptrs.size) return; e.preventDefault(); userInput(); gsc = e.scale; gro = e.rotation; });
-addEventListener('gesturechange', e => { if (e.target !== canvas) return; e.preventDefault(); if (ptrs.size) return; if (e.scale > 0) cam.dist = clamp(cam.dist * gsc / e.scale, 30, 42000); gsc = e.scale; cam.az += (e.rotation - gro) * RAD; gro = e.rotation; });
+addEventListener('gesturechange', e => { if (e.target !== canvas) return; e.preventDefault(); if (ptrs.size || DRIVE.on) return; if (e.scale > 0) cam.dist = clamp(cam.dist * gsc / e.scale, 30, 42000); gsc = e.scale; cam.az += (e.rotation - gro) * RAD; gro = e.rotation; });
 const keys = {};
-addEventListener('keydown', e => { keys[e.code] = 1; if (e.code.startsWith('Digit')) { const i = +e.code.slice(5) - 1; if (i >= 0 && i < 6) goPreset(i); }
+addEventListener('keydown', e => { keys[e.code] = 1; if (DRIVE.on && !['KeyP', 'KeyL'].includes(e.code)) { if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault(); return; } if (e.code.startsWith('Digit')) { const i = +e.code.slice(5) - 1; if (i >= 0 && i < 6) goPreset(i); }
   if (e.code === 'KeyR') goPreset(0); if (e.code === 'KeyP' || (e.code === 'Escape' && document.body.classList.contains('photo'))) togglePhoto(); else if (e.code === 'Escape' && FOCUS.label) exitFocus();
   if ((e.code === 'KeyN' || e.code === 'BracketRight') && FOCUS.label) ltStep(1); if (e.code === 'BracketLeft' && FOCUS.label) ltStep(-1);
   if (e.code === 'KeyF' && FOCUS.label) FOCUS.active ? exitFocus() : enterFocus(FOCUS.label); if (e.code === 'KeyI' && FOCUS.active) setFocusMode(!FOCUS.iso); if (e.code === 'KeyC' && FOCUS.active) setFocusClay(!FOCUS.clay); if (e.code === 'KeyB' && FOCUS.active) focusBestView(); if (e.code === 'KeyL') setLight({ golden: 'noon', noon: 'dusk', dusk: 'golden' }[L.name]); if (e.code === 'KeyT') TOUR.on ? stopTour() : startTour(); });
 addEventListener('keyup', e => { keys[e.code] = 0; });
 function stepCamera(dt) {
+  if (DRIVE.on) { driveStep(dt); placeCamera(dt); return; }
   if (cam.fly) {
     const f = cam.fly; f.t = Math.min(1, f.t + dt / f.dur); const e = f.t * f.t * f.t * (f.t * (6 * f.t - 15) + 10), a = f.a, b = f.b;
     const arc = Math.sin(e * PI) * f.arc;
@@ -3443,7 +3797,7 @@ async function boot() {
   initTod(); setQuality(2);
   const shared = readHash(); setTime(shared && shared.h != null ? shared.h : presetTime('golden'), true);
   Object.assign(cam, shared ? shared.pose : heroState()); placeCamera(0);
-  makeLabels(); hooks.push(keepHash); initFocus(); initNav(); initLT();
+  makeLabels(); hooks.push(keepHash); initFocus(); initNav(); initLT(); initDrive();
   if (shared && shared.f) { let nm = ''; try { nm = decodeURIComponent(shared.f); } catch (e) { } const o = LABELS.list.find(l => l.focus && l.name === nm); if (o) { FOCUS.iso = shared.iso; FOCUS.clay = shared.clay; enterFocus(o); } }
   T.total = performance.now() - t0; ST.timing = T;
   document.querySelectorAll('#gView button[data-v]').forEach(b => b.onclick = () => goPreset(+b.dataset.v));
@@ -3471,7 +3825,7 @@ async function boot() {
 }
 window.__hk = {
   THREE, TRAMS, TOD, TOUR, LABELS, setTime, startTour, stopTour, viewHash, flyTo, scene, camera, renderer, cam, U, ST, L, ROADS, DAMS, LAKES, LL, SH, STATS, BI, FA, G, SITES, PATHS, CITY, get GEO() { return GEO; },
-  get terr() { return terr; }, QUALS, resize, get composer() { return composer; }, get scenePass() { return scenePass; }, NEAR, hooks, hAt: (x, z) => hAt(x, z), pick: (x, y) => pickGround(x, y), GS, LT, ltGo, FOCUS, goPreset, setLight, setQuality,
+  get terr() { return terr; }, QUALS, resize, get composer() { return composer; }, get scenePass() { return scenePass; }, NEAR, hooks, hAt: (x, z) => hAt(x, z), pick: (x, y) => pickGround(x, y), GS, LT, ltGo, FOCUS, DRIVE, keys, goPreset, setLight, setQuality,
   pose(o) { userInput(); Object.assign(cam, o); cam.vaz = cam.vpol = cam.vx = cam.vz = cam.vzoom = 0; placeCamera(0); },
   at(lat, lon, dist, azDeg, polDeg, fov) { const p = LL(lat, lon); this.pose({ tx: p[0], tz: p[1], dist, az: azDeg * RAD, pol: polDeg * RAD, fov: fov || 36, ty: 0 }); },
   step(n = 1, dt = 1 / 60) { for (let i = 0; i < n; i++) frame(dt); },
