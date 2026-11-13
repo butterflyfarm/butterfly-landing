@@ -116,6 +116,18 @@
   isolation: isolate;
 }
 
+/* cast shadows lean away from the light and stretch as it sinks */
+.shade {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: translateX(calc(var(--lean, 0.6) * var(--rx) * 0.55px)) scaleX(var(--stretch, 1.2));
+  opacity: calc(var(--o) * var(--shadow-a, 1));
+}
+
+.cloud__lit {
+  transform: translateX(calc(var(--sun-dir, -0.6) * var(--k) * 1px));
+}
+
 /* ---- sun, moon, stars, rainbow ---- */
 
 .sun,
@@ -161,6 +173,53 @@
     0 0 calc(120 * var(--u)) calc(50 * var(--u)) rgba(180, 196, 230, 0.14);
 }
 
+/* The copies in front of the clouds show only their light, until the sun or
+   moon is picked up: then the disc comes forward so it is never lost behind a cloud. */
+.sun--front i,
+.moon--front i {
+  opacity: 0;
+  transition:
+    opacity 250ms ease,
+    scale 350ms cubic-bezier(0.3, 1.4, 0.5, 1),
+    filter 350ms ease;
+}
+
+.farm[data-holding] .sun--front i,
+.farm[data-holding] .moon--front i {
+  opacity: 1;
+}
+
+.sun--front::before {
+  position: absolute;
+  left: calc(-130 * var(--u));
+  top: calc(-130 * var(--u));
+  width: calc(260 * var(--u));
+  height: calc(260 * var(--u));
+  content: '';
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--sun, #f8eac4) 38%, transparent), transparent);
+  border-radius: 50%;
+}
+
+/* held in the hand, the sun swells a little and burns brighter */
+.sun i,
+.moon i {
+  transition:
+    scale 350ms cubic-bezier(0.3, 1.4, 0.5, 1),
+    filter 350ms ease;
+}
+
+.farm[data-holding] .sun i,
+.farm[data-holding] .moon i {
+  scale: 1.16;
+  filter: brightness(1.08) saturate(1.15);
+}
+
+.farm[data-holding] .sun i {
+  box-shadow:
+    0 0 calc(46 * var(--u)) calc(16 * var(--u)) color-mix(in srgb, var(--sun, #f8eac4) 62%, transparent),
+    0 0 calc(200 * var(--u)) calc(100 * var(--u)) color-mix(in srgb, var(--sun, #f8eac4) 28%, transparent);
+}
+
 @keyframes body-breathe {
   50% {
     transform: scale(1.05);
@@ -169,7 +228,7 @@
 
 /* the sun or moon is the farm's clock: drag it, tap it, or use the arrow keys */
 .time-handle {
-  --size: max(calc(116 * var(--u)), 64px);
+  --size: max(calc(150 * var(--u)), 72px);
   left: 0;
   top: 0;
   z-index: 11;
@@ -826,13 +885,24 @@
 }
 
 .grass,
-.fx {
+.fx,
+.critters {
   position: absolute;
   inset: 0;
   z-index: 2;
   width: 100%;
   height: 100%;
   pointer-events: none;
+}
+
+/* the animals walk on the land, behind the near grass and in the hour's light */
+.critters {
+  z-index: 1;
+}
+
+/* the seedling stands in front of animals passing behind the garden */
+.plot {
+  z-index: 3;
 }
 
 /* rain, fireflies, drifting seeds, shooting stars: in front of everything painted */

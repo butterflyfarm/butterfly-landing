@@ -64,9 +64,19 @@ function measure(): View {
 const spreadFor = (vis: number) =>
   Math.round((0.6 + 0.4 * Math.min(1, Math.max(0, (vis - 600) / 900))) * 50) / 50
 
-function Dots({ dots, fill, opacity }: { dots: Dot[]; fill: string; opacity?: number }) {
+function Dots({
+  dots,
+  fill,
+  opacity,
+  className,
+}: {
+  dots: Dot[]
+  fill: string
+  opacity?: number
+  className?: string
+}) {
   return (
-    <g fill={fill} opacity={opacity}>
+    <g fill={fill} opacity={opacity} className={className}>
       {dots.map((d, i) => (
         <circle key={i} cx={d.x} cy={d.y} r={d.r} />
       ))}
@@ -88,6 +98,9 @@ function Leaves({ f, tones }: { f: Foliage; tones: Tones }) {
 }
 
 const HILL_TREE: Tones = ['#5a7960', '#70916f', '#93b37e']
+/** A cast shadow: it leans away from the sun and lengthens as the sun sinks (see .shade). */
+const shadow = (rx: number, o: number) => ({ '--rx': Math.round(rx), '--o': o }) as CSSProperties
+
 const BIG_TREE: Tones = ['#4a6853', '#628764', '#8aae74']
 const FLOWER_TONES = ['#eee6c4', '#e0d394', '#deacb6', '#c3b4d7']
 
@@ -257,14 +270,14 @@ const Land = memo(function Land({ spread }: { spread: number }) {
 
       {art.trees.map((t, i) => (
         <g key={i}>
-          <ellipse cx={t.x + t.R * 0.5} cy={t.y + 1} rx={t.R * 1.1} ry={t.R * 0.16} fill="#658563" opacity="0.4" />
+          <ellipse className="shade" cx={t.x} cy={t.y + 1} rx={t.R * 1.1} ry={t.R * 0.16} fill="#658563" style={shadow(t.R * 1.1, 0.4)} />
           <rect x={t.x - t.R * 0.08} y={t.y - t.R} width={t.R * 0.16} height={t.R + 1} fill="#6d5a4c" />
           <Leaves f={t.f} tones={HILL_TREE} />
         </g>
       ))}
 
       <g transform={`translate(${hx} ${hy}) scale(1.2)`}>
-        <ellipse cx="14" cy="2" rx="88" ry="7" fill="#658563" opacity="0.4" />
+        <ellipse className="shade" cx="14" cy="2" rx="88" ry="7" fill="#658563" style={shadow(88, 0.4)} />
         {/* two poplars behind the cottage */}
         {[
           [-74, 76],
@@ -318,7 +331,7 @@ const Land = memo(function Land({ spread }: { spread: number }) {
       {art.bushes.map((f, i) => (
         <Leaves key={i} f={f} tones={['#517258', '#678c66', '#8db076']} />
       ))}
-      <ellipse cx={treeX + 46} cy={treeY + 6} rx={230 * (0.7 + 0.15 * s)} ry="22" fill="#4f7254" opacity="0.38" />
+      <ellipse className="shade" cx={treeX} cy={treeY + 6} rx={230 * (0.7 + 0.15 * s)} ry="22" fill="#4f7254" style={shadow(230 * (0.7 + 0.15 * s), 0.38)} />
 
       {/* the garden bed */}
       <g transform={`translate(0 ${BED_Y})`}>
@@ -355,7 +368,7 @@ const Land = memo(function Land({ spread }: { spread: number }) {
         ))}
         {/* a watering can left by the bed */}
         <g transform={`translate(${-bedRx * 0.82} 44)`}>
-          <ellipse cx="3" cy="1" rx="24" ry="4" fill="#4f7254" opacity="0.45" />
+          <ellipse className="shade" cx="0" cy="1" rx="24" ry="4" fill="#4f7254" style={shadow(24, 0.45)} />
           <path d="M-11 -17C-24 -18 -24 -3 -12 -4" fill="none" stroke="#708588" strokeWidth="3" strokeLinecap="round" />
           <path d="M10 -7L29 -22" stroke="#7b9498" strokeWidth="4.5" strokeLinecap="round" />
           <ellipse cx="30.5" cy="-23.5" rx="5" ry="2.6" transform="rotate(-52 30.5 -23.5)" fill="#91aaae" />
@@ -382,7 +395,8 @@ const CLOUDS = [
   { fx: -1.05, base: 336, w: 270, h: 92, seed: 67, speed: 6, always: false, rise: 0.3 },
 ] as const
 
-const lit = (p: Dot): Dot => ({ x: p.x - p.r * 0.14, y: p.y - p.r * 0.2, r: p.r * 0.93 })
+// the lit face of each puff; .cloud__lit slides it toward the sun
+const lit = (p: Dot): Dot => ({ x: p.x, y: p.y - p.r * 0.2, r: p.r * 0.93 })
 const asCircle = (d: Dot) => ({ cx: d.x, cy: d.y, r: d.r })
 
 const Clouds = memo(function Clouds({
@@ -424,6 +438,7 @@ const Clouds = memo(function Clouds({
                 top: U(c.base - sky * c.rise - h - pad),
                 width: U(w + pad * 2),
                 height: U(h + pad + 6),
+                '--k': Math.round(puffs.reduce((n, p) => n + p.r, 0) / puffs.length * 0.16 * 10) / 10,
                 '--from': U(from - x),
                 '--to': U(to - x),
                 animationDuration: `${seconds.toFixed(0)}s`,
@@ -444,13 +459,13 @@ const Clouds = memo(function Clouds({
             </defs>
             {/* a shaded silhouette, lit from the upper left, with a few billows inside */}
             <Dots dots={puffs} fill="#b9c1cb" />
-            <Dots dots={puffs.map(lit)} fill="#eee8d9" />
+            <Dots dots={puffs.map(lit)} fill="#eee8d9" className="cloud__lit" />
             {puffs
               .filter((p, i) => i % 3 === 0 && p.y > -h * 0.62)
               .map((p, i) => (
                 <g key={i}>
                   <circle cx={p.x} cy={p.y} r={p.r} fill="#c6ccd2" />
-                  <circle {...asCircle(lit(p))} fill="#eee8d9" />
+                  <circle {...asCircle(lit(p))} fill="#eee8d9" className="cloud__lit" />
                 </g>
               ))}
             <rect
@@ -568,7 +583,7 @@ const FarmSign = memo(function FarmSign({ x, y, k }: { x: number; y: number; k: 
             <path d="M221 -219H235L232 -224H224ZM222 -219H234V-204H222Z" />
           </clipPath>
         </defs>
-        <ellipse cx="14" cy="2" rx="46" ry="6" fill="#3f5c45" opacity="0.4" />
+        <ellipse className="shade" cx="4" cy="2" rx="46" ry="6" fill="#3f5c45" style={shadow(46, 0.4)} />
         {/* post, arm and brace */}
         <path d="M-8 4L-7 -252H7L8 4Z" fill="#7b6350" />
         <path d="M1 4L1 -252H7L8 4Z" fill="#63503f" />
@@ -876,9 +891,10 @@ export default function Farm() {
       root: el,
       sky: find('.sky'),
       grass: find<HTMLCanvasElement>('.grass'),
+      critters: find<HTMLCanvasElement>('.critters'),
       fx: find<HTMLCanvasElement>('.fx'),
-      sun: find('.sun'),
-      moon: find('.moon'),
+      suns: [...el.querySelectorAll<HTMLElement>('.sun')],
+      moons: [...el.querySelectorAll<HTMLElement>('.moon')],
       handle: find('.time-handle'),
       rainbow: find('.rainbow'),
       fliers,
@@ -970,6 +986,13 @@ export default function Farm() {
           <i />
         </div>
         <Clouds vis={Math.round(view.vis)} spread={spread} sky={sky} onTap={toggleRain} />
+        {/* in front of the clouds: the sun's light spilling over them, and the disc while held */}
+        <div className="sun sun--front">
+          <i />
+        </div>
+        <div className="moon moon--front">
+          <i />
+        </div>
         <Land spread={spread} />
 
         <div className="cloud-shadows" style={overLand}>
@@ -1092,13 +1115,14 @@ export default function Farm() {
           data-farm-control
           role="slider"
           tabIndex={0}
-          aria-label="Time of day. Drag the sun or moon across the sky, or use the arrow keys."
+          aria-label="Time of day. Drag the sun or moon anywhere in the sky, or move it with the arrow keys. Below the hills it sets."
           aria-valuemin={0}
           aria-valuemax={24}
           aria-valuenow={hour}
           aria-valuetext={clockText(hour)}
         />
       </div>
+      <canvas className="critters" aria-hidden="true" />
       <canvas className="grass" aria-hidden="true" />
       <canvas className="fx" aria-hidden="true" />
       <div className="grain" />
