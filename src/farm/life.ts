@@ -76,7 +76,17 @@ type Flower = Point & { h: number; r: number; color: string; phase: number; afte
 type Mote = Point & { r: number; vx: number; vy: number; phase: number }
 type Seed = Point & { vx: number; vy: number; age: number; life: number; phase: number }
 type Streak = Point & { age: number }
-type Bird = Point & { vx: number; vy: number; age: number; phase: number; size: number }
+type Bird = Point & {
+  vx: number
+  vy: number
+  age: number
+  phase: number
+  size: number
+  /** how fast its path bends, in radians a second */
+  turn: number
+  /** wingbeats, in radians a second */
+  flap: number
+}
 
 const ROWS: readonly Row[] = [
   { y: 824, hMin: 30, hMax: 58, gap: 6.5, colors: ['#658a61', '#6f9568', '#7aa36c', '#99b677'] },
@@ -439,7 +449,9 @@ export function startLife(o: LifeOptions): Life {
     s.setProperty('--stars', (night * (1 - wet)).toFixed(3))
     s.setProperty('--lamps', Math.min(1, night * 1.8).toFixed(3))
     s.setProperty('--day', (1 - night).toFixed(3))
+    s.setProperty('--night', night.toFixed(3))
     o.root.toggleAttribute('data-flat', light.flat)
+    o.root.toggleAttribute('data-night', night > 0.6)
 
     const at = (el: HTMLElement, p: Point) => {
       el.style.transform = `translate3d(${(p.x * v.u).toFixed(1)}px, ${(p.y * v.u).toFixed(1)}px, 0)`
@@ -478,12 +490,19 @@ export function startLife(o: LifeOptions): Life {
     s.setProperty('--lean', shade.lean.toFixed(3))
     s.setProperty('--stretch', shade.stretch.toFixed(3))
     s.setProperty('--shadow-a', shade.strength.toFixed(3))
-    // a low sun is amber, a high sun pale
-    const high = Math.min(1, sunHeight() * 1.7)
+    // a low sun is amber, a high sun pale gold; only a sun well up has rays
+    const sh = sunHeight()
+    const high = Math.min(1, sh * 1.7)
     s.setProperty(
       '--sun',
-      `rgb(${Math.round(244 + 4 * high)}, ${Math.round(170 + 64 * high)}, ${Math.round(116 + 80 * high)})`,
+      `rgb(${Math.round(244 + 6 * high)}, ${Math.round(170 + 58 * high)}, ${Math.round(116 + 54 * high)})`,
     )
+    s.setProperty('--rays', (clamp((sh - 0.12) * 2.6) * (1 - wet)).toFixed(3))
+
+    // the moon's crescent turns its lit side to the sun, wherever the sun is
+    s.setProperty('--moon-turn', `${((Math.atan2(sp.y - mp.y, sp.x - mp.x) * 180) / Math.PI).toFixed(1)}deg`)
+    // a moon that is up rims the clouds with silver on its side
+    s.setProperty('--moonlit', (night * clamp(elevation('moon') * 4) * (1 - wet)).toFixed(3))
   }
 
   // --- small wonders: seeds, shooting stars, birds -----------------------
@@ -511,16 +530,32 @@ export function startLife(o: LifeOptions): Life {
     for (let i = 0; i < 9; i++) seed(p.x + (rand() - 0.5) * 30, Math.min(p.y, 860) - 30 - rand() * 40)
     if (seeds.length > 260) seeds.splice(0, seeds.length - 260)
   }
+  /**
+   * A few birds lifting off where the sky was touched. Each flock picks its own
+   * way (left or right, climbing steeply or nearly level), and within it every
+   * bird keeps its own pace, wingbeat and slowly bending line. Now and then one
+   * goes its own way.
+   */
   function flock(p: Point) {
-    for (let i = 0, n = 3 + Math.floor(rand() * 3); i < n; i++) {
+    const dir = rand() < 0.5 ? -1 : 1
+    const climb = 0.08 + rand() * 0.5 // radians above level
+    const bend = (rand() - 0.5) * 0.24 // the whole flock curves a little, one way or the other
+    for (let i = 0, n = 3 + Math.floor(rand() * 4); i < n; i++) {
+      const stray = i > 0 && rand() < 0.2
+      const way = stray ? -dir : dir
+      const a = stray ? 0.2 + rand() * 0.6 : climb + (rand() - 0.5) * 0.5
+      const speed = 52 + rand() * 46
       birds.push({
-        x: p.x - i * 26 + (rand() - 0.5) * 20,
-        y: p.y + i * 12 + (rand() - 0.5) * 16,
-        vx: 62 + rand() * 30,
-        vy: -(16 + rand() * 18),
-        age: 0,
+        // loosely strung out behind the leader, above and below
+        x: p.x - way * i * (16 + rand() * 16) + (rand() - 0.5) * 18,
+        y: p.y + (rand() - 0.4) * (14 + i * 10),
+        vx: way * Math.cos(a) * speed,
+        vy: -Math.sin(a) * speed,
+        age: -rand() * 0.35 * i, // they don't all leave at once
         phase: rand() * Math.PI * 2,
-        size: 7 + rand() * 4,
+        size: 6.5 + rand() * 4.5,
+        turn: bend * way + (rand() - 0.5) * 0.3,
+        flap: 6.5 + rand() * 3.5,
       })
     }
   }
@@ -946,10 +981,19 @@ export function startLife(o: LifeOptions): Life {
         birds.splice(i, 1)
         continue
       }
+      if (bd.age < 0) continue // still waiting to take off
+      // the line bends slowly; a bird never turns back on itself or dives
+      const r = bd.turn * dt
+      const vx = bd.vx * Math.cos(r) - bd.vy * Math.sin(r)
+      const vy = bd.vx * Math.sin(r) + bd.vy * Math.cos(r)
+      if (Math.sign(vx) === Math.sign(bd.vx) && vy < Math.abs(vx) * 0.3) {
+        bd.vx = vx
+        bd.vy = vy
+      } else bd.turn = -bd.turn
       bd.x += bd.vx * dt
       bd.y += bd.vy * dt
       const size = bd.size * (1 - bd.age * 0.06)
-      const lift = Math.sin(t * 8 + bd.phase) * size * 0.55
+      const lift = Math.sin(t * bd.flap + bd.phase) * size * 0.55
       const alpha = Math.min(1, bd.age * 3, (9 - bd.age) / 3) * 0.7
       c.strokeStyle = `rgba(62, 70, 80, ${alpha.toFixed(3)})`
       c.beginPath()
