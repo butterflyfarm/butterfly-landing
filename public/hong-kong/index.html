@@ -2845,6 +2845,7 @@ function regenNear(fx, fz) {
   const steam = [];
   for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) { const lst = NEAR.lists[j * NEAR.gw + i]; if (!lst) continue;
     for (const k of lst) { const a = FA.a, o = k * 10, x = a[o], z = a[o + 1], d2 = (x - fx) * (x - fx) + (z - fz) * (z - fz); if (d2 > R2) continue;
+      if (a[o + 6] <= 0) continue;
       const yaw = a[o + 2], w = a[o + 3], d = a[o + 4], base = a[o + 5], h = a[o + 6], type = a[o + 7], seed = a[o + 8], kind = a[o + 9], top = base + h, c = Math.cos(yaw), s = Math.sin(yaw), rnd = mulberry((seed * 4e9) | 0);
       const LX = (lx, lz) => x + lx * c - lz * s, LZ = (lx, lz) => z + lx * s + lz * c;
       /* roofline: water tanks on legs, stair bulkheads, antennae, chillers, drying racks */
@@ -2858,7 +2859,10 @@ function regenNear(fx, fz) {
       /* street level: awnings and overhanging signboards */
       if (kind === 0 || kind === 1 || kind === 10) for (const sz of [-1, 1]) {
         for (let lx = -w / 2 + 2.3; lx < w / 2 - 1.5; lx += 4.6) { if (rnd() < .62) put(LX(lx, sz * (d / 2 + .95)), base + 3.05, LZ(lx, sz * (d / 2 + .95)), 4.1, .16, 1.9, yaw, DC.awn[(rnd() * 6) | 0]);
-          if (rnd() < (kind === 0 ? .6 : .3)) { const len = 1.6 + rnd() * 2.4, hh = rnd() < .5 ? 1 + rnd() * 1.2 : 2.6 + rnd() * 3.2, y = base + 4.6 + rnd() * 9, nc = DC.neon[(rnd() * 6) | 0]; put(LX(lx + 1, sz * (d / 2 + len / 2 + .25)), y, LZ(lx + 1, sz * (d / 2 + len / 2 + .25)), .22, hh, len, yaw, [nc[0] * .5 + .12, nc[1] * .5 + .12, nc[2] * .5 + .12], 2.4); } }
+          if (rnd() < (kind === 0 ? .6 : .3)) { const len = 1.6 + rnd() * 2.4, hh = rnd() < .5 ? 1 + rnd() * 1.2 : 2.6 + rnd() * 3.2, y = base + 4.6 + rnd() * 9, nc = DC.neon[(rnd() * 6) | 0], tx = LX(lx + 1, sz * (d / 2 + len + .25)), tz = LZ(lx + 1, sz * (d / 2 + len + .25));
+            /* a sign may hang over a street, but not down into the driving space of a road at its height (a flyover) */
+            if (DRIVE.RH && kerbDist(tx, tz) < .5) { const ry = landY(tx, tz, -99); if (y < ry + 5.2 && y + hh > ry - .5) continue; }
+            put(LX(lx + 1, sz * (d / 2 + len / 2 + .25)), y, LZ(lx + 1, sz * (d / 2 + len / 2 + .25)), .22, hh, len, yaw, [nc[0] * .5 + .12, nc[1] * .5 + .12, nc[2] * .5 + .12], 2.4); } }
         if (kind === 0 && rnd() < .3) steam.push(LX((rnd() - .5) * w, sz * (d / 2 + 1.2)), base + 2.4, LZ((rnd() - .5) * w, sz * (d / 2 + 1.2)));
       }
       if (kind === 3 && rnd() < .5) steam.push(LX(0, 0), top + 2, LZ(0, 0));
@@ -3230,6 +3234,17 @@ function kerbDist(x, z) { const RH = DRIVE.RH; if (!RH) return 99; let best = 99
   return best; }
 /* the largest crown (its lumpy outline reaches ~1.35x the scale) that stays a metre clear of every road; 0 = no room for a tree here */
 const crownFit = (x, z, sc) => { const k = kerbDist(x, z); if (k >= 30) return sc; const fit = Math.min(sc, (k - 1) / 1.35); return fit >= 1.1 ? fit : 0; };
+/* lower surveyed buildings to the ground (in every level of detail and the shadow pass), and drop their near-tier details */
+function flattenRecs(set) {
+  if (!set.size) return; const recs = CITY.recs, boxes = [];
+  for (const ri of set) { const b = recs[ri]; b.flat = true; let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9; for (const q of b.rings[0]) { x0 = Math.min(x0, q[0]); x1 = Math.max(x1, q[0]); z0 = Math.min(z0, q[1]); z1 = Math.max(z1, q[1]); } boxes.push([x0, z0, x1, z1]); }
+  for (const ch of CITY.chunks) { if (!boxes.some(bb => Math.hypot(Math.max(bb[0] - ch.c.x, 0, ch.c.x - bb[2]), Math.max(bb[1] - ch.c.z, 0, ch.c.z - bb[3])) < ch.r + 1)) continue;
+    for (const m of ch.lods) { if (!m) continue; const g = m.geometry, pos = g.attributes.position, B = g.attributes.aB; if (!B) continue; let hit = false;
+      for (let v = 0; v < pos.count; v++) { const ri = Math.round(B.array[v * 2]); if (set.has(ri)) { pos.array[v * 3 + 1] = Math.min(pos.array[v * 3 + 1], recs[ri].base - .6); hit = true; } }
+      if (hit) { pos.needsUpdate = true; g.computeBoundingSphere(); } } }
+  for (let k = 0; k < FA.n; k++) { const o = k * 10, x = FA.a[o], z = FA.a[o + 1]; for (const ri of set) { const b = recs[ri]; if (Math.abs(b.cx - x) < 80 && Math.abs(b.cz - z) < 80 && inPoly(x, z, b.rings[0])) { FA.a[o + 6] = 0; break; } } }
+  SH.farDirty = SH.nearDirty = true; NEAR.fx = NEAR.fz = 1e9;
+}
 const DRIVE = { on: false, ready: false, loading: null, N: null, E: null, names: [], car: null, mesh: null, joy: null, k: { thr: 0, brk: 0, steer: 0 },
   intent: 0, intentT: 0, plan: null, hud: {}, ribbons: null, labelsWas: true, msgT: 0, tun: 0 };
 async function loadHKD(file) {
@@ -3280,15 +3295,26 @@ function buildDriveGraph(H) {
   }
   /* streets that run into surveyed buildings: lanes into car parks and under podiums are taken out of the network (you cannot drive
      into a building); main roads that pass beneath one (the bypass under the Convention Centre) become covered stretches */
-  { const cs = 32, RG = new Map(); CITY.recs.forEach((b, i) => { if (b.skip) return; let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9; for (const q of b.rings[0]) { x0 = Math.min(x0, q[0]); x1 = Math.max(x1, q[0]); z0 = Math.min(z0, q[1]); z1 = Math.max(z1, q[1]); }
+  { const cs = 32, RG = new Map(); CITY.recs.forEach((b, i) => { let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9; for (const q of b.rings[0]) { x0 = Math.min(x0, q[0]); x1 = Math.max(x1, q[0]); z0 = Math.min(z0, q[1]); z1 = Math.max(z1, q[1]); }
       for (let gx = Math.floor(x0 / cs); gx <= Math.floor(x1 / cs); gx++) for (let gz = Math.floor(z0 / cs); gz <= Math.floor(z1 / cs); gz++) { const k = gx * 65536 + gz; let a = RG.get(k); if (!a) RG.set(k, a = []); a.push(i); } });
-    const inside = (x, y, z) => { for (const ri of RG.get(Math.floor(x / cs) * 65536 + Math.floor(z / cs)) || []) { const b = CITY.recs[ri]; if (y > b.base - 3 && y < b.top - 1 && inPoly(x, z, b.rings[0])) return true; } return false; };
+    /* surveyed buildings whose walls or roof stand in the driving space at a point (from just under the road to just over its roof) */
+    const at = (x, y, z, out) => { for (const ri of RG.get(Math.floor(x / cs) * 65536 + Math.floor(z / cs)) || []) { const b = CITY.recs[ri]; if (!b.flat && y > b.base - 3 && y < b.top + .5 && inPoly(x, z, b.rings[0])) out.push(ri); } return out; };
+    /* main roads, checked across their whole width: low structures in the way (podium decks, sheds, structures under flyovers) are lowered */
+    const lower = new Set();
+    for (const e of E) { if (e.tun || e.c > 5) continue; for (let i = 0; i <= e.n; i++) { const j = Math.min(i + 1, e.n), k = Math.max(i - 1, 0); let dx = e.xs[j] - e.xs[k], dz = e.zs[j] - e.zs[k]; const l = Math.hypot(dx, dz) || 1; dx /= l; dz /= l; const o = Math.max(e.hw - .4, .5);
+      for (const t of [0, 1, -1]) for (const ri of at(e.xs[i] + dz * o * t, e.ys[i], e.zs[i] - dx * o * t, [])) { const b = CITY.recs[ri]; if (!b.skip && b.top - b.base < 30) lower.add(ri); } } }
+    flattenRecs(lower);
+    /* what is left in the way: lanes that run into a building are taken out; main roads through a tall one become covered there */
     let dropped = 0, cov = 0;
-    for (const e of E) { if (e.tun) continue; const inn = new Uint8Array(e.n + 1); let run = 0, best = 0; for (let i = 0; i <= e.n; i++) { if (inside(e.xs[i], e.ys[i], e.zs[i])) { inn[i] = 1; run += e.st; best = Math.max(best, run); } else run = 0; }
-      if (best <= 10) continue;
-      if (e.c >= 6) { e.dead = true; dropped++; for (const nd of [N[e.a], N[e.b]]) { const k = nd.adj.indexOf(e.i); if (k >= 0) nd.adj.splice(k, 1); } }
+    for (const e of E) { if (e.tun) continue; const inn = new Uint8Array(e.n + 1); let run = 0, best = 0, any = 0; for (let i = 0; i <= e.n; i++) { if (at(e.xs[i], e.ys[i], e.zs[i], []).length) { inn[i] = 1; any++; run += e.st; best = Math.max(best, run); } else run = 0; }
+      if (!any) continue;
+      if (e.c >= 6) { if (best > 10) { e.dead = true; dropped++; for (const nd of [N[e.a], N[e.b]]) { const k = nd.adj.indexOf(e.i); if (k >= 0) nd.adj.splice(k, 1); } } }
       else { e.cov = inn; cov++; } }
-    DRIVE.dropped = dropped; DRIVE.covered = cov; }
+    DRIVE.dropped = dropped; DRIVE.covered = cov; DRIVE.lowered = lower.size;
+    DRIVE.inBld = (x, y, z) => { for (const ri of RG.get(Math.floor(x / cs) * 65536 + Math.floor(z / cs)) || []) { const b = CITY.recs[ri]; if (!b.flat && y > b.base + .5 && y < b.top && inPoly(x, z, b.rings[0])) return true; } return false; }; }
+  /* main-road stretches the city view never drew (one carriageway of a split flyover, many ramps) get their own surface */
+  { const near = (x, y, z) => { const gx = Math.floor(x / rc), gz = Math.floor(z / rc); for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) { const c = RG.get((gx + a) * 65536 + gz + b); if (!c) continue; for (let j = 0; j < c.length; j += 2) { const r = c[j], i = c[j + 1]; if (Math.hypot(r.pts[i * 3] - x, r.pts[i * 3 + 2] - z) < 4 && Math.abs(r.pts[i * 3 + 1] - y) < 2.5) return true; } } return false; };
+    for (const e of E) { if (e.c > 5 || e.tun || e.dead) continue; let miss = 0, tot = 0; for (let i = 0; i <= e.n; i += 2) { tot++; if (!near(e.xs[i], e.ys[i], e.zs[i])) miss++; } e.bare = miss > tot * .5; } }
   DRIVE.N = N; DRIVE.E = E;
   /* every street sample in a spatial hash, so a tree can ask how far it stands from the nearest kerb */
   const RH = new Map(); for (const e of E) { if (e.tun || e.dead) continue; for (let i = 0; i <= e.n; i++) { const k = Math.floor(e.xs[i] / 16) * 65536 + Math.floor(e.zs[i] / 16); let a = RH.get(k); if (!a) RH.set(k, a = []); a.push(e.xs[i], e.zs[i], e.hw, e.ys[i]); } } DRIVE.RH = RH;
@@ -3299,12 +3325,17 @@ function buildDriveGraph(H) {
 /* side streets have no ribbons in the city view (only painted lines): give them proper surfaces near the car */
 function buildStreetRibbons() {
   const p = [], a = [], idx = [];
-  for (const e of DRIVE.E) { if (e.c <= 5 || e.tun || e.dead) continue; const hw = e.hw, one = e.c >= 7 || e.lanes < 2, fl = (one ? 32 : 0) + (one ? 1 : 2) * 64; let base = p.length / 3;
+  const deck = new GB();
+  for (const e of DRIVE.E) { if ((e.c <= 5 && !e.bare) || e.tun || e.dead) continue; const hw = e.hw, one = e.c >= 7 || e.lanes < 2, fl = e.c <= 5 ? (e.c <= 1 ? 2 : 0) + (e.ow ? 32 : 0) + Math.max(e.lanes, 1) * 64 + (e.br ? 16 : 0) : (one ? 32 : 0) + (one ? 1 : 2) * 64; let base = p.length / 3;
+    if (e.c <= 5 && e.br) for (let i = 0; i < e.n; i += 2) { const j = Math.min(i + 2, e.n), dx = e.xs[j] - e.xs[i], dz = e.zs[j] - e.zs[i], L = Math.hypot(dx, dz); if (L < .5) continue; const y = (e.ys[i] + e.ys[j]) / 2, gy = dGround(e.xs[i], e.zs[i]);
+      if (y - gy < 2.5) continue; deck.at((e.xs[i] + e.xs[j]) / 2, (e.zs[i] + e.zs[j]) / 2, Math.atan2(dz, dx), 0).M(C(.58, .57, .55)).box(0, y - 1.6, 0, L + .4, 1.5, hw * 2 + 1);
+      deck.M(C(.66, .65, .62)).box(0, y - .1, -(hw + .3), L + .4, 1.0, .45).box(0, y - .1, hw + .3, L + .4, 1.0, .45); if (i % 8 === 0) deck.box(0, gy - 2, 0, 2, y - 1.6 - gy + 2, 2); }
     for (let i = 0; i <= e.n; i++) { const j = Math.min(i + 1, e.n), k = Math.max(i - 1, 0); let dx = e.xs[j] - e.xs[k], dz = e.zs[j] - e.zs[k]; const l = Math.hypot(dx, dz) || 1; dx /= l; dz /= l; const y = e.ys[i] + .3;
       p.push(e.xs[i] + dz * hw, y, e.zs[i] - dx * hw, e.xs[i] - dz * hw, y, e.zs[i] + dx * hw); a.push(-1, i * e.st, hw, fl, 1, i * e.st, hw, fl);
       if (i < e.n) { const b = base + i * 2; idx.push(b, b + 1, b + 2, b + 1, b + 3, b + 2); } } }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3)); g.setAttribute('aR', new THREE.Float32BufferAttribute(a, 4)); g.setIndex(idx);
   const m = new THREE.Mesh(g, DYN.ribMat); m.frustumCulled = false; m.renderOrder = 19; scene.add(m); DRIVE.ribbons = m;
+  if (deck.p.length) { const dm = deck.mesh(propMat); dm.layers.enable(1); scene.add(dm); DRIVE.decks = dm; }
 }
 /* a Hong Kong taxi: red body, silver roof, roof sign; built facing +x */
 /* ---------- the garage: vehicles to drive, each built facing +x with its own pace, grip, size and camera ---------- */
@@ -3557,10 +3588,11 @@ function landY(x, z, fallback) { const RH = DRIVE.RH; if (RH) { let best = 1e9, 
 function hitState(sl, T) { const te = Math.max(T - sl.t0, 0), tf = Math.min(te, sl.tl); let x = sl.px + sl.vx * tf, z = sl.pz + sl.vz * tf;
   if (te > sl.tl) { const ts = Math.min(te - sl.tl, 1.4), d = .3 * (ts - ts * ts / 2.8); x += sl.vx * d; z += sl.vz * d; } return { x, z, landed: te > sl.tl + 1.4, flying: te < sl.tl }; }
 function launch(k, pos, car, V, T) {
-  const sp = Math.abs(car.v), cfx = Math.cos(car.yaw) * Math.sign(car.v || 1), cfz = Math.sin(car.yaw) * Math.sign(car.v || 1), heavy = pos.type >= 2;
-  let ox = pos.x - car.x, oz = pos.z - car.z; const ol = Math.hypot(ox, oz) || 1; ox /= ol; oz /= ol;
-  let dx = cfx + ox * .7, dz = cfz + oz * .7; const dl = Math.hypot(dx, dz) || 1; dx /= dl; dz /= dl;
-  const hs = (Math.max(sp, 4) * (heavy ? .55 : 1) + 2) * (.9 + Math.random() * .3), vy = Math.min(3 + Math.max(sp, 4) * (heavy ? .22 : .4), 17), vx = dx * hs, vz = dz * hs;
+  /* thrown sideways off the carriageway (and over the edge of a flyover), never left lying in the lane ahead */
+  const sp = Math.abs(car.v), sg = Math.sign(car.v || 1), cfx = Math.cos(car.yaw) * sg, cfz = Math.sin(car.yaw) * sg, heavy = pos.type >= 2;
+  const lx = -cfz, lz = cfx, side = Math.sign((pos.x - car.x) * lx + (pos.z - car.z) * lz) || (Math.random() < .5 ? -1 : 1);
+  let dx = cfx * .55 + lx * side, dz = cfz * .55 + lz * side; const dl = Math.hypot(dx, dz) || 1; dx /= dl; dz /= dl;
+  const vy = clamp(4.5 + sp * (heavy ? .22 : .32), 4.5, 15), fl = 2 * vy / 9.8, reach = (heavy ? 12 : 15) + sp * (heavy ? .45 : .7), hs = reach / fl * (.9 + Math.random() * .25), vx = dx * hs, vz = dz * hs;
   /* flight time to the ground below the landing point (two passes, since the landing point depends on it) */
   let yL = pos.y, tl = (vy + Math.sqrt(vy * vy)) / 9.8; for (let it = 0; it < 2; it++) { yL = Math.min(landY(pos.x + vx * tl, pos.z + vz * tl, pos.y), pos.y + vy * vy / 19.6 - .2); tl = (vy + Math.sqrt(vy * vy + 19.6 * (pos.y - yL))) / 9.8; }
   /* a roll that ends on wheels, side or roof */
@@ -3585,6 +3617,13 @@ function crashStep() {
 }
 function uploadHits() { const n = HIT.slots.length; DYN.uHitN.value = n;
   HIT.slots.forEach((s, i) => { DYN.uHitA.value[i].set(s.k, s.t0, s.spin, s.yL); DYN.uHitB.value[i].set(s.px, s.py, s.pz, s.yaw); DYN.uHitC.value[i].set(s.vx, s.vy, s.vz, s.tl); }); }
+/* keep the chase camera out of buildings: if one stands between the vehicle and the camera, bring the camera in front of it */
+function camGuard(dt) {
+  const car = DRIVE.car, f = DRIVE.inBld; if (!car || !f) return; const p = camera.position, hx = car.x, hy = car.y + 1.6, hz = car.z; let k = 1;
+  for (let i = 1; i <= 24; i++) { const t = i / 24; if (f(hx + (p.x - hx) * t, hy + (p.y - hy) * t, hz + (p.z - hz) * t)) { k = Math.max((i - 1.5) / 24, .03); break; } }
+  DRIVE.camK = k < (DRIVE.camK ?? 1) ? k : lerp(DRIVE.camK ?? 1, k, 1 - Math.exp(-dt * 2.5));
+  if (DRIVE.camK < .999) { p.set(hx + (p.x - hx) * DRIVE.camK, hy + (p.y - hy) * DRIVE.camK + (1 - DRIVE.camK) * 1.2, hz + (p.z - hz) * DRIVE.camK); camera.lookAt(car.x + Math.cos(car.yaw) * 4, car.y + 1.2, car.z + Math.sin(car.yaw) * 4); camera.updateMatrixWorld(true); }
+}
 function dMsg(t) { DRIVE.hud.msg.textContent = t; DRIVE.hud.msg.classList.add('show'); DRIVE.msgT = 2.2; }
 function dHud(e, sp) {
   const H = DRIVE.hud, nm = DRIVE.names[e.nm] || ['Motorway', 'Trunk road', 'Main road', 'Main road', 'Road', 'Slip road', 'Street', 'Lane', 'Service road'][e.c] || 'Road';
@@ -3844,7 +3883,7 @@ addEventListener('keydown', e => { keys[e.code] = 1; if (DRIVE.on && !['KeyP', '
   if (e.code === 'KeyF' && FOCUS.label) FOCUS.active ? exitFocus() : enterFocus(FOCUS.label); if (e.code === 'KeyI' && FOCUS.active) setFocusMode(!FOCUS.iso); if (e.code === 'KeyC' && FOCUS.active) setFocusClay(!FOCUS.clay); if (e.code === 'KeyB' && FOCUS.active) focusBestView(); if (e.code === 'KeyL') setLight({ golden: 'noon', noon: 'dusk', dusk: 'golden' }[L.name]); if (e.code === 'KeyT') TOUR.on ? stopTour() : startTour(); });
 addEventListener('keyup', e => { keys[e.code] = 0; });
 function stepCamera(dt) {
-  if (DRIVE.on) { driveStep(dt); placeCamera(dt); return; }
+  if (DRIVE.on) { driveStep(dt); placeCamera(dt); camGuard(dt); return; }
   if (cam.fly) {
     const f = cam.fly; f.t = Math.min(1, f.t + dt / f.dur); const e = f.t * f.t * f.t * (f.t * (6 * f.t - 15) + 10), a = f.a, b = f.b;
     const arc = Math.sin(e * PI) * f.arc;
