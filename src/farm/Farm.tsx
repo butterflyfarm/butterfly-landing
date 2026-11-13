@@ -467,17 +467,21 @@ const Clouds = memo(function Clouds({
                 <stop offset="1" stopColor="#a7b1be" stopOpacity="0.75" />
               </linearGradient>
             </defs>
-            {/* a shaded silhouette, lit from the upper left, with a few billows inside */}
+            {/* a shaded silhouette, lit from the sun's side, with a few billows inside. The
+                lit faces are kept inside the silhouette, or they would show as pale cut edges
+                once the hour's colour (also kept inside) tints the rest. */}
             <Dots dots={puffs} fill="#b9c1cb" />
-            <Dots dots={puffs.map(lit)} fill="#eee8d9" className="cloud__lit" />
-            {puffs
-              .filter((p, i) => i % 3 === 0 && p.y > -h * 0.62)
-              .map((p, i) => (
-                <g key={i}>
-                  <circle cx={p.x} cy={p.y} r={p.r} fill="#c6ccd2" />
-                  <circle {...asCircle(lit(p))} fill="#eee8d9" className="cloud__lit" />
-                </g>
-              ))}
+            <g clipPath={`url(#cloud-${c.seed})`}>
+              <Dots dots={puffs.map(lit)} fill="#eee8d9" className="cloud__lit" />
+              {puffs
+                .filter((p, i) => i % 3 === 0 && p.y > -h * 0.62)
+                .map((p, i) => (
+                  <g key={i}>
+                    <circle cx={p.x} cy={p.y} r={p.r} fill="#c6ccd2" />
+                    <circle {...asCircle(lit(p))} fill="#eee8d9" className="cloud__lit" />
+                  </g>
+                ))}
+            </g>
             <rect
               x={-w / 2 - pad}
               y={-h - pad}
@@ -1223,8 +1227,8 @@ export default function Farm() {
             tabIndex={0}
             aria-label={
               b === 'sun'
-                ? 'The sun, and the time of day. Drag it anywhere in the sky; push it behind the hills for night, and take hold of its glow on the ridge to pull it back up. Arrow keys move it too.'
-                : 'The moon. Drag it across the night sky; push it behind the hills and the morning comes.'
+                ? 'The sun, and the time of day. Drag it anywhere in the sky; push it behind the hills to set it, and take hold of its glow on the ridge to pull it back up. The night belongs to the moon. Arrow keys move it too.'
+                : 'The moon, and the hours of the night. Drag it across the night sky; push it behind the hills and the morning comes, then the sun takes over.'
             }
             aria-valuemin={0}
             aria-valuemax={24}

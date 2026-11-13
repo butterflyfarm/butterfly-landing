@@ -235,6 +235,26 @@
   opacity: 0;
 }
 
+/* The sun was pushed on past where it stops behind the hills: the moon calls,
+   since the night is the moon's to move (and at dawn, the other way round). */
+.farm[data-nudge='moon'] .moon:not(.moon--front)::before,
+.farm[data-nudge='sun'] .sun--front::before {
+  animation: call 0.9s ease-in-out infinite alternate;
+}
+
+.farm[data-nudge='moon'] .moon:not(.moon--front) i,
+.farm[data-nudge='sun'] .sun:not(.sun--front) i {
+  filter: brightness(1.15);
+  scale: 1.12;
+}
+
+@keyframes call {
+  to {
+    scale: 1.45;
+    opacity: 1;
+  }
+}
+
 .farm[data-holding='moon'] .moon--front::before {
   opacity: 1;
 }
