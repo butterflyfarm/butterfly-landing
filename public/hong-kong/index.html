@@ -69,6 +69,17 @@
   #fc.focused .foc{display:flex}
   #fc.focused .pre{display:none}
   body.photo #fc{display:none}
+  #fc .yr{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#ffc98a;opacity:.9;margin-top:-3px}
+  #fc .fact{font-size:12px;line-height:1.4;color:#fff4df;opacity:.95}
+  #fc:not(.hasf) .yr,#fc:not(.hasf) .fact{display:none}
+  #fc #fcS{font-size:10px;opacity:.62}
+  #fc .ltr{display:none;gap:6px}
+  #fc.lt .ltr{display:flex}
+  #fc .ltr button{min-width:38px;padding:2px 10px 4px;font-size:20px;font-weight:600;line-height:1}
+  #fc #ltPlay{font-size:11px;padding:5px 9px}
+  #fc #ltN{min-width:46px;text-align:center;font-variant-numeric:tabular-nums;font-size:10.5px;letter-spacing:.1em;opacity:.8}
+  #fc #ltBar{position:absolute;left:10px;right:10px;bottom:4px;height:2px;border-radius:1px;background:rgba(255,190,110,.75);transform-origin:left;transform:scaleX(0)}
+  #fc{touch-action:none}
   #nav{position:fixed;z-index:5;transform:translateZ(0);right:max(12px,env(safe-area-inset-right));top:max(12px,env(safe-area-inset-top));display:flex;flex-direction:column;align-items:center;gap:8px;transition:opacity .5s}
   #cp{width:62px;height:62px;cursor:grab;touch-action:none;outline:none;filter:drop-shadow(0 1px 4px rgba(0,0,0,.45))}
   #cp.drag{cursor:grabbing}
@@ -87,6 +98,8 @@
   #hint span{display:inline-block;white-space:nowrap;margin:0 .75em}
   @media (max-width:760px){
     body.menu #nav{opacity:0;pointer-events:none}
+    #fc{max-width:calc(100vw - 100px)}
+    #fc.auto .foc{display:none}
     #hint{bottom:calc(max(12px,env(safe-area-inset-bottom)) + 62px);font-size:10px}
     #ui{left:auto;right:max(8px,env(safe-area-inset-right));transform:none;flex-direction:column;align-items:stretch;gap:6px;padding:5px;font-size:10px;opacity:.85;max-height:calc(100vh - 24px);overflow:auto}
     #bMenu{display:block;align-self:flex-end;font-size:15px !important;padding:2px 9px !important}
@@ -105,15 +118,16 @@
 <canvas id="c"></canvas>
 <div id="ui">
   <button id="bMenu" aria-label="Show controls" title="Controls">☰</button>
-  <div class="g" id="gView"><button data-v="0">Island</button><button data-v="1">Harbour</button><button data-v="2">Canyon</button><button data-v="3">Peak</button><button data-v="4">Corridor</button><button data-v="5">Stanley</button><button id="bTour" title="Guided tour, golden hour into dusk">Tour</button></div>
+  <div class="g" id="gView"><button data-v="0">Island</button><button data-v="1">Harbour</button><button data-v="2">Canyon</button><button data-v="3">Peak</button><button data-v="4">Corridor</button><button data-v="5">Stanley</button><button id="bTour" title="Guided tour, golden hour into dusk">Tour</button><button id="bLmk" title="Visit the landmarks one by one">Landmarks</button></div>
   <div class="g" id="gLight"><button data-l="golden" class="on">Golden</button><button data-l="noon">Noon</button><button data-l="dusk">Dusk</button><input id="sTime" type="range" min="5.5" max="21" step="0.0166667" value="17" aria-label="Time of day (Hong Kong)" title="Time of day, Hong Kong, today's sun"><span id="oTime">17:00</span></div>
   <div class="g"><label>Traffic<input id="sTraf" type="range" min="0" max="100" value="70"></label></div>
   <div class="g"><button id="bLabels" class="on" title="Place names">Labels</button><button id="bQ" title="Quality">High</button><button id="bPhoto">Photo</button><button id="bLink" title="Copy a link to this view">Link</button><button id="bReset">Reset</button></div>
 </div>
 <div id="labels"></div>
-<div id="fc" role="dialog" aria-label="Landmark"><button class="x" id="fcX" title="Close (Esc)" aria-label="Close">✕</button><h3 id="fcN"></h3><p id="fcS"></p>
+<div id="fc" role="dialog" aria-label="Landmark"><button class="x" id="fcX" title="Close (Esc)" aria-label="Close">✕</button><h3 id="fcN"></h3><p id="fcY" class="yr"></p><p id="fcF" class="fact"></p><p id="fcS"></p>
   <div class="r pre"><button id="fcGo" title="Quiet the surroundings (F)">Focus</button></div>
-  <div class="r foc"><button id="fcSee" class="on" title="Lower whatever stands in the way and outline anything still hidden">Clear view</button><button id="fcIso" title="Hide the neighbours, leaving their footprints (I)">Isolate</button><button id="fcClay" class="on" title="Neighbours in plain clay (C)">Clay</button><button id="fcBest" title="Fly to the clearest angle (B)">Best view</button><button id="fcOut" title="Back to the full city (Esc)">Exit</button></div></div>
+  <div class="r foc"><button id="fcSee" class="on" title="Lower whatever stands in the way and outline anything still hidden">Clear view</button><button id="fcIso" title="Hide the neighbours, leaving their footprints (I)">Isolate</button><button id="fcClay" class="on" title="Neighbours in plain clay (C)">Clay</button><button id="fcBest" title="Fly to the clearest angle (B)">Best view</button><button id="fcOut" title="Back to the full city (Esc)">Exit</button></div>
+  <div class="r ltr"><button id="ltPrev" title="Previous landmark ([)" aria-label="Previous landmark">‹</button><span id="ltN"></span><button id="ltPlay"></button><button id="ltNext" title="Next landmark (N or ])" aria-label="Next landmark">›</button></div><i id="ltBar"></i></div>
 <div id="nav"><div id="cp" role="button" tabindex="0" aria-label="Compass. Drag to turn and tilt, press to face north" title="Drag to turn and tilt · tap to face north">
   <svg viewBox="-32 -32 64 64" aria-hidden="true"><circle class="bz" r="30" fill="rgba(9,20,28,.78)" stroke="rgba(255,196,128,.4)"/>
   <g id="cpR"><circle r="20" fill="none" stroke="rgba(255,206,140,.3)" stroke-dasharray="2 3.2"/><path d="M0-18L5 0H-5Z" fill="#ff8a52"/><path d="M0 18L5 0H-5Z" fill="rgba(243,217,180,.6)"/><circle r="2" fill="#2a1a0c"/></g>
@@ -2963,7 +2977,7 @@ function sightClear(e, p, ex) { const { G, cs } = focusGrid(), dx = p[0] - e[0],
     const cell = G.get(Math.floor(x / cs) * 100003 + Math.floor(z / cs)); if (!cell) continue;
     for (const i of cell) { if (ex.has(i)) continue; const b = CITY.recs[i]; if (y > b.top || y < b.base - 6) continue; const bb = b.bb; if (x < bb[0] || x > bb[2] || z < bb[1] || z > bb[3]) continue; if (inPoly(x, z, b.rings[0])) return false; } }
   return true; }
-function focusBestView() {
+function focusBestView(poseOnly) {
   const t = FOCUS.t; if (!t) return null; const b = t.box, c = b.getCenter(new V3()), sz = b.getSize(new V3()), R = Math.max(Math.hypot(sz.x, sz.z) / 2, 8), H = sz.y, g = groundY(c.x, c.z);
   /* not obstacles: the landmark's own records, and records cleared for it (skipped, inside its box, not another landmark's) */
   const own = new Set(FOCUS.label.focus.names.map(n => n.toLowerCase())), ex = new Set(t.ids);
@@ -2972,11 +2986,14 @@ function focusBestView() {
   for (const pd of [62, 70, 77]) for (let a = 0; a < 24; a++) { const az = a / 24 * TAU, pol = pd * RAD, sp = Math.sin(pol), e = [c.x + dist * sp * Math.cos(az), g + ty + dist * Math.cos(pol), c.z + dist * sp * Math.sin(az)], lx = -Math.sin(az), lz = Math.cos(az);
     let vis = 0, tot = 0; for (const fy of [.12, .45, .8]) for (const fl of [-.55, 0, .55]) { tot++; if (sightClear(e, [c.x + lx * R * fl, b.min.y + H * fy, c.z + lz * R * fl], ex)) vis++; }
     const daz = Math.abs(((az - cam.az) % TAU + TAU + PI) % TAU - PI), score = vis / tot - daz * .02 - Math.abs(pd - 70) * .002; if (!best || score > best.s) best = { s: score, az, pol, vis: vis / tot }; }
-  if (TOUR.on) stopTour(); flyTo({ tx: c.x, tz: c.z, dist, az: best.az, pol: best.pol, ty }); return best;
+  const pose = { tx: c.x, tz: c.z, dist, az: best.az, pol: best.pol, ty }; if (poseOnly) return pose;
+  if (TOUR.on) stopTour(); if (LT.on) ltPause(); flyTo(pose); return best;
 }
 const fcEl = id => document.getElementById(id);
 function focusCard() { const c = fcEl('fc'), o = FOCUS.label; c.classList.toggle('show', !!o); if (!o) return; c.classList.toggle('focused', FOCUS.active);
-  fcEl('fcN').textContent = o.name; fcEl('fcS').textContent = o.focus.info || ''; fcEl('fcSee').classList.toggle('on', !FOCUS.iso); fcEl('fcIso').classList.toggle('on', FOCUS.iso); fcEl('fcClay').classList.toggle('on', FOCUS.clay); }
+  fcEl('fcN').textContent = o.name; fcEl('fcS').textContent = o.focus.info || '';
+  { const f = LT_FACTS[o.name], k = ltIndex(o), n = ltStops().length; fcEl('fcF').textContent = f ? f.fact : ''; fcEl('fcY').textContent = f ? [f.year, f.by].filter(Boolean).join(' · ') : ''; c.classList.toggle('hasf', !!f);
+    c.classList.toggle('lt', k >= 0); c.classList.toggle('touring', LT.on); c.classList.toggle('auto', LT.on && LT.auto); fcEl('ltN').textContent = k >= 0 ? (k + 1) + ' / ' + n : ''; const pb = fcEl('ltPlay'); pb.textContent = LT.on && LT.auto ? '❚❚' : '▶\uFE0E'; pb.title = LT.on && LT.auto ? 'Pause' : 'Play the landmark tour'; pb.classList.toggle('on', LT.on && LT.auto); } fcEl('fcSee').classList.toggle('on', !FOCUS.iso); fcEl('fcIso').classList.toggle('on', FOCUS.iso); fcEl('fcClay').classList.toggle('on', FOCUS.clay); }
 function focusOffer(o) { if (FOCUS.active && FOCUS.label !== o) exitFocus(); FOCUS.label = o; focusCard(); }
 function enterFocus(o) {
   const t = focusTargets(o); if (t.box.isEmpty()) return; FOCUS.eye.set(1e9, 0, 0);
@@ -2985,7 +3002,7 @@ function enterFocus(o) {
   const c = t.box.getCenter(new V3()), sz = t.box.getSize(new V3()); U.uFocC.value.set(c.x, c.z); U.uFocR.value = Math.hypot(sz.x, sz.z) / 2 + 40;
   buildFocusProxy(t); SH.farDirty = true; focusCard(); ctlHint.focus();
 }
-function exitFocus() { const was = FOCUS.active; FOCUS.active = false; FOCUS.label = null; focusCard(); if (was) { SH.farDirty = true; setTimeout(() => { SH.farDirty = true; }, 900); } }
+function exitFocus() { if (LT.on && !LT.sw) ltStop(); const was = FOCUS.active; FOCUS.active = false; FOCUS.label = null; focusCard(); if (was) { SH.farDirty = true; setTimeout(() => { SH.farDirty = true; }, 900); } }
 function setFocusMode(iso) { FOCUS.iso = iso; SH.farDirty = true; focusCard(); }
 function setFocusClay(on) { FOCUS.clay = on; focusCard(); }
 function initFocus() {
@@ -3046,12 +3063,54 @@ function tourLegs() {
   ];
 }
 function startTour() {
+  if (LT.on) { ltStop(); exitFocus(); }
   const legs = tourLegs(); TOUR.on = true; TOUR.i = 0; document.getElementById('bTour').classList.add('on'); setTime(presetTime('golden'), false);
   const next = () => { if (!TOUR.on) return; const L1 = legs[TOUR.i++]; if (!L1) { stopTour(); return; } if (L1.time) setTime(presetTime(L1.time), false);
     flyTo({ ...L1.p, dur: TOUR.i === 1 ? 2.5 : 4.5 }, () => { let t = 0; return dt => { t += dt; cam.az += dt * .025; if (t > L1.dwell) next(); }; }); };
   next();
 }
 function stopTour() { TOUR.on = false; const b = document.getElementById('bTour'); if (b) b.classList.remove('on'); }
+/* ---------- landmark tour: visit the landmarks in route order (Central along the harbour to Taikoo, then the hills and the south side).
+   Each stop focuses the building, flies to its clearest view, circles it slowly and shows a fact; the clock runs from golden hour to dusk.
+   Any input pauses it (look around freely); ◀ ▶, a swipe on the card, or [ / ] (N) step through; Exit ends it. ---------- */
+const LT_ROUTE = ['The Center', 'One IFC', 'Two IFC', 'Exchange Square', 'Jardine House', 'Central Yards', 'The Landmark', 'HSBC', 'The Henderson', 'Cheung Kong Center', 'Champion Tower',
+  'Bank of China Tower', 'Lippo Centre', 'Queensway Government Offices', 'Central Government Offices', 'Legislative Council', 'Convention Centre', 'Central Plaza', 'Hopewell Centre',
+  'Sun Hung Kai Centre', 'Times Square', 'Hysan Place', 'Lee Garden One', 'One Island East', 'One Taikoo Place', 'Cityplaza', 'The Summit', 'Highcliff', 'Peak Tower', 'The Repulse Bay', 'Murray House'];
+const LT_FACTS = /*@@LT_FACTS@@*/{"The Center":{"year":"1998","by":"Dennis Lau & Ng Chun Man (DLN)","fact":"Neon bars wrap the tower and cycle through the rainbow each night, forming a Christmas tree in December."},"Two IFC":{"year":"2003","by":"Cesar Pelli, with Rocco Design","fact":"There is no 14th or 24th floor: both were skipped because 4 sounds like 'death' in Cantonese."},"One IFC":{"year":"1998","by":"Cesar Pelli, with Rocco Design","fact":"It opened on 6 July 1998, the day the new airport began flights; the Airport Express stops right beneath it."},"Exchange Square":{"year":"1985 (Tower 3: 1988)","by":"P&T Group (Remo Riva)","fact":"Home of the Hong Kong stock exchange, its plaza of Henry Moore and Ju Ming sculptures sits atop a bus terminus."},"Jardine House":{"year":"1973","by":"Palmer & Turner","fact":"Its round porthole windows earned it a cheeky nickname, politely 'House of a Thousand Orifices'."},"Central Yards":{"year":"due 2027","by":"Lead8, AL_A, UNStudio","fact":"Plans include a 1,100-seat theatre in a lattice shell, billed as Hong Kong's first Broadway-calibre stage."},"The Landmark":{"year":"1983","by":"P&T Group","fact":"Sun Yat-sen once stayed at the Hong Kong Hotel, whose north wing stood on this very site."},"HSBC":{"year":"1985","by":"Foster Associates (Norman Foster)","fact":"Its bronze lions are named Stephen and Stitt; Stephen still bears shrapnel scars from the Battle of Hong Kong."},"The Henderson":{"year":"2024","by":"Zaha Hadid Architects","fact":"Its curving glass is modelled on a bauhinia bud, and its plot was called the world's priciest when sold in 2017."},"Champion Tower":{"year":"1992","by":"Rocco Yim (Rocco Design)","fact":"Called Citibank Tower until 2016, it was billed as Hong Kong's first 'intelligent' office building."},"Cheung Kong Center":{"year":"1999","by":"Cesar Pelli, Leo A. Daly","fact":"Its height was capped by an imaginary line drawn between its neighbours, the Bank of China Tower and HSBC."},"Bank of China Tower":{"year":"1990","by":"I. M. Pei & Partners","fact":"Feng shui critics likened its sharp edges to a meat cleaver, earning it the nickname 'vertical knife'."},"Legislative Council":{"year":"2011","by":"Rocco Design Architects","fact":"A light funnel pours daylight into the debating chamber, and a lily pond outside helps keep the site cool."},"Central Government Offices":{"year":"2011","by":"Rocco Design Architects","fact":"Its two wings join overhead to form a giant 'Door Always Open' that frames the view from park to harbour."},"Lippo Centre":{"year":"1988","by":"Paul Rudolph, with Wong & Ouyang","fact":"Its bulging glass bays look like koalas climbing a tree, apt for a tower first named for Australian Alan Bond."},"Queensway Government Offices":{"year":"1985","by":"K. M. Tseng, Architectural Services Dept","fact":"It stands on old Victoria Barracks land, and the Brand Hong Kong dragon has crowned its roof since 2002."},"Convention Centre":{"year":"1997","by":"SOM (Larry Oltmanns), Wong & Ouyang","fact":"The 1997 handover was held in this wing, whose roof is likened to a seabird or, by critics, a turtle."},"Central Plaza":{"year":"1992","by":"Ng Chun Man & Associates (DLN)","fact":"Its top is a clock: four neon bars change colour every 15 minutes to tell the time through the night."},"Sun Hung Kai Centre":{"year":"1981","by":"David Woo + Associates","fact":"Five extra floors were stacked onto its roof in 1991, a decade after it opened."},"Hopewell Centre":{"year":"1980","by":"Gordon Wu, WMKY","fact":"Its round rooftop pool was added for feng shui, because people thought the tower looked like a cigarette."},"Times Square":{"year":"1994","by":"Wong & Ouyang","fact":"Built on an old tram depot, its plaza dropped a giant apple every New Year's Eve from 1993 to 2014."},"Hysan Place":{"year":"2012","by":"Kohn Pedersen Fox, with DLN","fact":"Hong Kong's first building pre-certified LEED Platinum, its shifting boxes open up into gardens and terraces."},"Lee Garden One":{"year":"1997","by":"Dennis Lau & Ng Chun Man (DLN)","fact":"Long known as Manulife Plaza, it replaced the 1971 Lee Gardens Hotel, demolished in 1994."},"One Island East":{"year":"2008","by":"Wong & Ouyang","fact":"Its glass walls run past the corners and open at top and bottom, a trick meant to make the tower look afloat."},"One Taikoo Place":{"year":"2018","by":"Wong & Ouyang","fact":"It makes some of its own power from biodiesel refined from local restaurants' used cooking oil."},"Cityplaza":{"year":"1982 (mall)","by":"Wong Tung & Partners","fact":"Inside the mall is Ice Palace, the largest real-ice skating rink on Hong Kong Island."},"Peak Tower":{"year":"1997","by":"Terry Farrell","fact":"Its wok-shaped roof was kept low on purpose so the tower would not break the line of the hills."},"Highcliff":{"year":"2003","by":"Dennis Lau & Ng Chun Man (DLN)","fact":"One of the world's thinnest towers, it hides a water-tank damper on top to calm its sway in typhoons."},"The Summit":{"year":"2001","by":"Dennis Lau & Ng Chun Man (DLN)","fact":"Its butterfly-shaped floors hold duplex flats; with Highcliff next door it forms 'the Chopsticks'."},"The Repulse Bay":{"year":"1986","by":"Kwan Ng Wong & Associates","fact":"A 1986 copy of the 1920 hotel sits below towers whose giant square hole is said to let dragons reach the sea."},"Murray House":{"year":"1846 (rebuilt 2001)","by":"Royal Engineers (Aldrich, Collinson)","fact":"Built in Central in 1846, it was taken apart into 3,000+ numbered blocks in 1982 and rebuilt in Stanley."}};
+const LT = { on: false, auto: false, i: 0, stops: [], t: 0, dwell: 10, arrived: false, sw: false };
+const ltStops = () => { if (LT.stops.length) return LT.stops; const by = new Map(LABELS.list.filter(o => o.focus).map(o => [o.name, o])); return LT.stops = LT_ROUTE.map(n => by.get(n)).filter(Boolean); };
+const ltIndex = o => ltStops().indexOf(o);
+function ltGo(i, auto = LT.auto) {
+  const S = ltStops(), n = S.length; if (!n) return; if (TOUR.on) stopTour();
+  if (i >= n && auto) { ltStop(); return; }   /* the end of the route: stay on the last landmark */
+  LT.i = (i % n + n) % n; LT.on = true; LT.auto = auto; LT.t = 0; LT.arrived = false; const o = S[LT.i];
+  LT.sw = true; if (FOCUS.label !== o || !FOCUS.active) { if (FOCUS.active) exitFocus(); FOCUS.label = o; enterFocus(o); } LT.sw = false;
+  if (auto) setTime(lerp(presetTime('golden'), presetTime('dusk'), LT.i / Math.max(n - 1, 1)), false);
+  const p = { ...((FOCUS.active && FOCUS.label === o && focusBestView(true)) || o.fly) }, asp = innerWidth / Math.max(innerHeight, 1);
+  p.dist *= asp < 1 ? 1.25 + .6 * (1 - asp) : 1.2;   /* step back a little more on a portrait screen so the whole building fits beside the card */
+  flyTo({ ...p, dur: undefined }, () => { LT.arrived = true; return ltOrbit; });
+  focusCard();
+}
+function ltOrbit(dt) { cam.az += dt * .055; if (!LT.auto) return; LT.t += dt; if (LT.t > LT.dwell) ltGo(LT.i + 1, true); }
+function ltPlay() { if (!LT.on) { const k = FOCUS.label ? ltIndex(FOCUS.label) : -1; ltGo(k < 0 ? 0 : k, true); return; }
+  LT.auto = !LT.auto; if (LT.auto) { if (LT.arrived && !cam.fly) cam.tour = ltOrbit; else ltGo(LT.i, true); } focusCard(); }
+function ltStep(d) { const k = LT.on ? LT.i : FOCUS.label ? ltIndex(FOCUS.label) : -1; ltGo(k < 0 ? 0 : k + d, LT.auto); }
+function ltPause() { if (LT.auto) { LT.auto = false; focusCard(); } }
+function ltStop() { LT.on = false; LT.auto = false; LT.t = 0; if (cam.tour === ltOrbit) cam.tour = null; focusCard(); }
+function initLT() {
+  fcEl('ltPrev').onclick = () => ltStep(-1); fcEl('ltNext').onclick = () => ltStep(1); fcEl('ltPlay').onclick = ltPlay;
+  document.getElementById('bLmk').onclick = () => { if (LT.on && LT.auto) exitFocus(); else if (LT.on) ltPlay(); else ltGo(0, true); };
+  /* a sideways swipe across the card steps through the landmarks */
+  const c = fcEl('fc'); let s = null;
+  c.addEventListener('pointerdown', e => { s = e.target.closest('input') ? null : { x: e.clientX, y: e.clientY, id: e.pointerId }; });
+  c.addEventListener('pointermove', e => { if (!s || e.pointerId !== s.id) return; const dx = e.clientX - s.x, dy = e.clientY - s.y;
+    if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.5) { s = null; if (FOCUS.label && ltIndex(FOCUS.label) >= 0) { c.dataset.swiped = Date.now(); ltStep(dx < 0 ? 1 : -1); } } });
+  const end = () => { s = null; }; c.addEventListener('pointerup', end); c.addEventListener('pointercancel', end);
+  /* a swipe that ends over a button is not a press */
+  c.addEventListener('click', e => { if (Date.now() - (+c.dataset.swiped || 0) < 400) { e.stopPropagation(); e.preventDefault(); } }, true);
+  hooks.push(() => { const bar = fcEl('ltBar'); if (bar) bar.style.transform = 'scaleX(' + (LT.on && LT.auto ? clamp(LT.t / LT.dwell, 0, 1) : 0).toFixed(3) + ')';
+    const b = document.getElementById('bLmk'); if (b) b.classList.toggle('on', LT.on && LT.auto); });
+}
 
 let PRESETS = [() => heroState()];
 /* ═════════════ 9. CAMERA ═════════════ */
@@ -3095,7 +3154,7 @@ function pickGround(cx, cy) {
    together to tilt. Double-tap zooms in; double-tap, hold and slide zooms smoothly; a two-finger tap zooms out. ---------- */
 const ptrs = new Map(); let userTouched = false, lastMoveT = 0, moveDt = .016;
 const GS = { mode: null, a: null, two: null, lastTap: null, zp: null, panned: 0 };
-function userInput() { cam.fly = null; cam.tour = null; userTouched = true; if (TOUR.on) stopTour(); }
+function userInput() { cam.fly = null; cam.tour = null; userTouched = true; if (TOUR.on) stopTour(); if (LT.on) ltPause(); }
 canvas.addEventListener('contextmenu', e => e.preventDefault());
 const panBy = (dx, dy) => { const k = cam.dist * 2 * Math.tan(cam.fov * RAD / 2) / canvas.clientHeight, fx = -Math.cos(cam.az), fz = -Math.sin(cam.az), rx = -fz, rz = fx, c = Math.max(Math.cos(cam.pol), .25);
   const mx = (-dx * rx + dy * fx / c) * k, mz = (-dx * rz + dy * fz / c) * k; cam.tx += mx; cam.tz += mz; cam.vx = lerp(cam.vx, mx / moveDt, .4); cam.vz = lerp(cam.vz, mz / moveDt, .4); };
@@ -3213,6 +3272,7 @@ addEventListener('gesturechange', e => { if (e.target !== canvas) return; e.prev
 const keys = {};
 addEventListener('keydown', e => { keys[e.code] = 1; if (e.code.startsWith('Digit')) { const i = +e.code.slice(5) - 1; if (i >= 0 && i < 6) goPreset(i); }
   if (e.code === 'KeyR') goPreset(0); if (e.code === 'KeyP' || (e.code === 'Escape' && document.body.classList.contains('photo'))) togglePhoto(); else if (e.code === 'Escape' && FOCUS.label) exitFocus();
+  if ((e.code === 'KeyN' || e.code === 'BracketRight') && FOCUS.label) ltStep(1); if (e.code === 'BracketLeft' && FOCUS.label) ltStep(-1);
   if (e.code === 'KeyF' && FOCUS.label) FOCUS.active ? exitFocus() : enterFocus(FOCUS.label); if (e.code === 'KeyI' && FOCUS.active) setFocusMode(!FOCUS.iso); if (e.code === 'KeyC' && FOCUS.active) setFocusClay(!FOCUS.clay); if (e.code === 'KeyB' && FOCUS.active) focusBestView(); if (e.code === 'KeyL') setLight({ golden: 'noon', noon: 'dusk', dusk: 'golden' }[L.name]); if (e.code === 'KeyT') TOUR.on ? stopTour() : startTour(); });
 addEventListener('keyup', e => { keys[e.code] = 0; });
 function stepCamera(dt) {
@@ -3383,10 +3443,11 @@ async function boot() {
   initTod(); setQuality(2);
   const shared = readHash(); setTime(shared && shared.h != null ? shared.h : presetTime('golden'), true);
   Object.assign(cam, shared ? shared.pose : heroState()); placeCamera(0);
-  makeLabels(); hooks.push(keepHash); initFocus(); initNav();
+  makeLabels(); hooks.push(keepHash); initFocus(); initNav(); initLT();
   if (shared && shared.f) { let nm = ''; try { nm = decodeURIComponent(shared.f); } catch (e) { } const o = LABELS.list.find(l => l.focus && l.name === nm); if (o) { FOCUS.iso = shared.iso; FOCUS.clay = shared.clay; enterFocus(o); } }
   T.total = performance.now() - t0; ST.timing = T;
-  document.querySelectorAll('#gView button').forEach(b => b.onclick = () => goPreset(+b.dataset.v));
+  document.querySelectorAll('#gView button[data-v]').forEach(b => b.onclick = () => goPreset(+b.dataset.v));
+  document.getElementById('gView').addEventListener('click', e => { if (e.target.closest('button')) document.body.classList.remove('menu'); });
   document.querySelectorAll('#gLight button').forEach(b => b.onclick = () => setLight(b.dataset.l));
   document.getElementById('sTime').oninput = e => { TOD.anim = null; applyTime(+e.target.value); };
   document.getElementById('bTour').onclick = () => TOUR.on ? stopTour() : startTour();
@@ -3410,7 +3471,7 @@ async function boot() {
 }
 window.__hk = {
   THREE, TRAMS, TOD, TOUR, LABELS, setTime, startTour, stopTour, viewHash, flyTo, scene, camera, renderer, cam, U, ST, L, ROADS, DAMS, LAKES, LL, SH, STATS, BI, FA, G, SITES, PATHS, CITY, get GEO() { return GEO; },
-  get terr() { return terr; }, QUALS, resize, get composer() { return composer; }, get scenePass() { return scenePass; }, NEAR, hooks, hAt: (x, z) => hAt(x, z), pick: (x, y) => pickGround(x, y), GS, goPreset, setLight, setQuality,
+  get terr() { return terr; }, QUALS, resize, get composer() { return composer; }, get scenePass() { return scenePass; }, NEAR, hooks, hAt: (x, z) => hAt(x, z), pick: (x, y) => pickGround(x, y), GS, LT, ltGo, FOCUS, goPreset, setLight, setQuality,
   pose(o) { userInput(); Object.assign(cam, o); cam.vaz = cam.vpol = cam.vx = cam.vz = cam.vzoom = 0; placeCamera(0); },
   at(lat, lon, dist, azDeg, polDeg, fov) { const p = LL(lat, lon); this.pose({ tx: p[0], tz: p[1], dist, az: azDeg * RAD, pol: polDeg * RAD, fov: fov || 36, ty: 0 }); },
   step(n = 1, dt = 1 / 60) { for (let i = 0; i < n; i++) frame(dt); },
