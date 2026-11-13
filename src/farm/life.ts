@@ -75,7 +75,7 @@ type Blade = { x: number; y: number; h: number; w: number; lean: number; phase: 
 type Flower = Point & { h: number; r: number; color: string; phase: number; after: number; puff: boolean }
 type Mote = Point & { r: number; vx: number; vy: number; phase: number }
 type Seed = Point & { vx: number; vy: number; age: number; life: number; phase: number }
-type Streak = Point & { age: number }
+type Streak = Point & { age: number; life: number; vx: number; vy: number; len: number }
 type Bird = Point & {
   vx: number
   vy: number
@@ -526,7 +526,20 @@ export function startLife(o: LifeOptions): Life {
   const streaks: Streak[] = []
   const birds: Bird[] = []
 
-  const seed = (x: number, y: number) =>
+  /** A shooting star that crosses near the tap, falling either way at its own slant and pace. */
+  const shoot = (p: Point) => {
+    const dir = rand() < 0.5 ? 1 : -1
+    const slant = 0.12 + rand() * 0.75 // from nearly level to steep, always falling
+    const speed = 340 + rand() * 260
+    const life = 0.7 + rand() * 0.6
+    const vx = dir * Math.cos(slant) * speed
+    const vy = Math.sin(slant) * speed
+    // it passes the tapped point about a third of the way through its flight
+    const lead = life * (0.25 + rand() * 0.15)
+    streaks.push({ x: p.x - vx * lead, y: p.y - vy * lead, age: 0, life, vx, vy, len: 80 + rand() * 70 })
+  }
+
+  const seed =(x: number, y: number) =>
     seeds.push({
       x,
       y,
@@ -761,7 +774,7 @@ export function startLife(o: LifeOptions): Life {
     if (animals.startle(p)) {
       // nothing else: it was the animal they meant
     } else if (p.y < skyline(p.x) - 4) {
-      if (night > 0.5) streaks.push({ x: p.x - 130, y: p.y - 66, age: 0 })
+      if (night > 0.5) shoot(p)
       else flock(p)
     } else if (p.y > 792) burst(p)
     // and wherever it was, the butterfly comes to look
@@ -967,14 +980,17 @@ export function startLife(o: LifeOptions): Life {
     for (let i = streaks.length - 1; i >= 0; i--) {
       const st = streaks[i]
       st.age += dt
-      if (st.age > 1) {
+      if (st.age > st.life) {
         streaks.splice(i, 1)
         continue
       }
-      const hx = st.x + st.age * 420
-      const hy = st.y + st.age * 210
-      const alpha = Math.sin(Math.PI * st.age)
-      const tail = c.createLinearGradient(hx, hy, hx - 110, hy - 55)
+      const hx = st.x + st.age * st.vx
+      const hy = st.y + st.age * st.vy
+      const v = Math.hypot(st.vx, st.vy)
+      const tx = hx - (st.vx / v) * st.len
+      const ty = hy - (st.vy / v) * st.len
+      const alpha = Math.sin((Math.PI * st.age) / st.life)
+      const tail = c.createLinearGradient(hx, hy, tx, ty)
       tail.addColorStop(0, `rgba(255, 250, 230, ${alpha.toFixed(3)})`)
       tail.addColorStop(1, 'rgba(255, 250, 230, 0)')
       c.strokeStyle = tail
@@ -982,7 +998,7 @@ export function startLife(o: LifeOptions): Life {
       c.lineCap = 'round'
       c.beginPath()
       c.moveTo(hx, hy)
-      c.lineTo(hx - 110, hy - 55)
+      c.lineTo(tx, ty)
       c.stroke()
       c.lineCap = 'butt'
     }
