@@ -79,10 +79,7 @@ type Streak = Point & { age: number; life: number; vx: number; vy: number; len: 
 /** a touch in the grass, pushing the blades aside */
 type Part = Point & { at: number; s: number }
 type Hopper = Point & { vx: number; vy: number; ground: number; hops: number; age: number; dir: 1 | -1 }
-/** a firefly, or by day a mote of pollen */
-type Spark = Point & { vx: number; vy: number; age: number; life: number; phase: number; pollen?: boolean }
-/** a breeze running out across the meadow from a touch */
-type Gust = Point & { age: number; vx: number; len: number; life: number }
+type Spark = Point & { vx: number; vy: number; age: number; life: number; phase: number }
 type Bird = Point & {
   vx: number
   vy: number
@@ -607,43 +604,6 @@ export function startLife(o: LifeOptions): Life {
   const parts: Part[] = []
   const hoppers: Hopper[] = []
   const sparks: Spark[] = []
-  const gusts: Gust[] = []
-
-  /**
-   * A touch on the meadow: the land there is a painting and cannot bend, so a breeze
-   * runs out across it instead, a pale wave like wind on a far field, lifting a
-   * little pollen (or, at night, a firefly or two).
-   */
-  function breeze(p: Point) {
-    if (o.still) return
-    // a few pale streaks brushing out from the touch, mostly downwind
-    for (let i = 0; i < 4; i++) {
-      const down = i < 3 ? 1 : -1
-      gusts.push({
-        x: p.x + (rand() - 0.5) * 30,
-        y: p.y + (i - 1.5) * 9 + (rand() - 0.5) * 6,
-        age: -i * 0.07,
-        vx: down * (110 + rand() * 90),
-        len: 34 + rand() * 30,
-        life: 1.2 + rand() * 0.5,
-      })
-    }
-    if (gusts.length > 12) gusts.splice(0, gusts.length - 12)
-    const n = night > 0.5 ? 2 : 6
-    for (let i = 0; i < n; i++) {
-      sparks.push({
-        x: p.x + (rand() - 0.5) * 40,
-        y: p.y - rand() * 10,
-        vx: 12 + rand() * 20,
-        vy: -(14 + rand() * 18),
-        age: -i * 0.08,
-        life: 2.6 + rand() * 1.6,
-        phase: rand() * Math.PI * 2,
-        pollen: night <= 0.5,
-      })
-    }
-    if (sparks.length > 30) sparks.splice(0, sparks.length - 30)
-  }
 
   /** A touch in the grass: the blades around it lean away, then spring back. */
   function part(p: Point, s: number) {
@@ -949,7 +909,7 @@ export function startLife(o: LifeOptions): Life {
       part(p, 1)
       burst(p)
       stir(p)
-    } else breeze(p)
+    }
     // and wherever it was, the butterfly comes to look
     Object.assign(pointer, p, { at: now + 1.5 })
     if (b.mode !== 'wander') leave(now)
@@ -1075,7 +1035,7 @@ export function startLife(o: LifeOptions): Life {
   function paintFx(t: number, dt: number) {
     const glowing = night * (1 - wet)
     const busy =
-      wet > 0.01 || glowing > 0.03 || seeds.length + streaks.length + birds.length + hoppers.length + sparks.length + gusts.length > 0
+      wet > 0.01 || glowing > 0.03 || seeds.length + streaks.length + birds.length + hoppers.length + sparks.length > 0
     if (!busy && !fxUsed) return
     const v = o.getView()
     const c = f!
@@ -1129,44 +1089,7 @@ export function startLife(o: LifeOptions): Life {
       }
     }
 
-    // a breeze across the meadow: soft pale streaks, like wind running over grass
-    // seen from afar, kept to the land and off the sky
-    if (gusts.length) {
-      c.save()
-      c.beginPath()
-      c.moveTo(-v.vis / 2 - 40, 800)
-      for (let x = -v.vis / 2 - 40; x <= v.vis / 2 + 40; x += 20) c.lineTo(x, skyline(x) + 2)
-      c.lineTo(v.vis / 2 + 40, 800)
-      c.closePath()
-      c.clip()
-      const tone = night > 0.5 ? '214, 224, 240' : '252, 248, 222'
-      const strength = (night > 0.5 ? 0.16 : 0.3) * (1 - 0.5 * wet)
-      for (let i = gusts.length - 1; i >= 0; i--) {
-        const g = gusts[i]
-        g.age += dt
-        if (g.age < 0) continue
-        const k = g.age / g.life
-        if (k >= 1) {
-          gusts.splice(i, 1)
-          continue
-        }
-        // it runs out fast and slows, stretching as it goes, swelling in and fading away
-        const x = g.x + g.vx * g.life * 0.6 * (1 - (1 - k) ** 2)
-        const len = g.len * (0.6 + 0.9 * k)
-        const fade = strength * Math.sin(Math.PI * k) ** 1.3
-        // wide and faint to narrow and brighter, for a soft edge
-        for (const [h, a] of [[7, 0.4], [4, 0.6], [1.8, 0.9]] as const) {
-          c.fillStyle = `rgba(${tone}, ${(fade * a).toFixed(3)})`
-          c.beginPath()
-          c.ellipse(x, g.y, len, h, 0, 0, Math.PI * 2)
-          c.fill()
-        }
-      }
-      c.restore()
-    }
-
-    // fireflies stirred up out of the grass, rising slowly and drifting off, and
-    // pollen lifted by a breeze
+    // fireflies stirred up out of the grass, rising slowly and drifting off
     for (let i = sparks.length - 1; i >= 0; i--) {
       const s = sparks[i]
       s.age += dt
@@ -1179,14 +1102,6 @@ export function startLife(o: LifeOptions): Life {
       s.vy *= 1 - 0.22 * dt
       s.x += (s.vx + Math.sin(t * 1.3 + s.phase) * 8) * dt
       s.y += s.vy * dt
-      if (s.pollen) {
-        const a = Math.min(1, s.age * 3, (s.life - s.age) / 1) * 0.85
-        c.fillStyle = `rgba(250, 238, 186, ${a.toFixed(3)})`
-        c.beginPath()
-        c.arc(s.x, s.y, 1.5, 0, 7)
-        c.fill()
-        continue
-      }
       // bright as they lift off, then glowing on and off like the others
       const pulse = Math.max(clamp(1.6 - s.age), 0.45 + 0.55 * Math.max(0, Math.sin(t * 2.2 + s.phase)) ** 2)
       const alpha = Math.min(1, s.age * 2, (s.life - s.age) / 1.2) * pulse * (1 - 0.7 * wet)
