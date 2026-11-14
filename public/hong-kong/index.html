@@ -325,7 +325,7 @@
       <button id="gHere" class="glink">Start where you are</button>
     </div></div>
     <div id="gC" class="gp"><div class="gcard gpick">
-      <div class="ghd"><button id="gBack2" aria-label="Back">‹</button><b>Where to?</b></div>
+      <div class="ghd"><button id="gBack2" aria-label="Back">‹</button><b id="gDestH">Where to?</b></div>
       <canvas id="gMapD" class="gmap" aria-label="Map of destinations"></canvas>
       <div class="gcar"><button id="gDPrev" class="garr" aria-label="Previous place">‹</button><div class="gsel"><b id="gDName"></b><em id="gDSub"></em></div><button id="gDNext" class="garr" aria-label="Next place">›</button></div>
       <div id="gDDots" class="gdots"></div>
@@ -3911,9 +3911,9 @@ const VEHICLES = [
       g.M(C(.85, .06, .05), .3).box(3.3, 1.55, -1.25, .42, .42, .03); g.M(C(1, .5, .05), .9).box(3.88, 2.95, -.9, .06, .14, .22).box(3.88, 2.95, .9, .06, .14, .22);
       vLights(g, 5.52, -5.52, .75, .95, .3); } },
   /* the open cars carry their drivers (modelled in Blender, like the rest: vehicles/<id>.glb); these stand in until the models arrive */
-  { id: 'pink', name: 'Pink Convertible', blurb: 'Pearls, a silk scarf and the hood down.', len: 4.8, wid: 1.8, h: 1.3, top: 70, acc: 12, grip: 11.5,
+  { id: 'pink', name: 'Diva', blurb: 'Pearls, a fancy pink hat and the hood down.', len: 4.8, wid: 1.8, h: 1.3, top: 70, acc: 12, grip: 11.5,
     build(g) { vOpenCar(g, C(.99, .66, .78), C(.96, .94, .9), C(.06, .06, .07), C(.93, .74, .62)); } },
-  { id: 'yellow', name: 'Yellow Convertible', blurb: 'Aviators on, one elbow on the door.', len: 4.8, wid: 1.8, h: 1.35, top: 70, acc: 12, grip: 11.5,
+  { id: 'yellow', name: 'Casanova', blurb: 'Aviators on, one elbow on the door.', len: 4.8, wid: 1.8, h: 1.35, top: 70, acc: 12, grip: 11.5,
     build(g) { vOpenCar(g, C(.98, .78, .05), C(.2, .12, .08), C(.95, .95, .93), C(.8, .58, .43)); } },
   { id: 'tram', name: 'Tram', blurb: 'The ding ding: two decks and a bell.', len: 9, wid: 2.05, h: 4.4, top: 70, acc: 12, grip: 11.5,
     build(g) { const green = C(.05, .3, .16), cream = C(.93, .9, .78);
@@ -4017,17 +4017,25 @@ function dSelect(i) {
 }
 function gStep(s) { const g = document.getElementById('garage'); g.dataset.step = s; DRIVE.gStep = s;
   if (s === 'where') { const i = STARTS.findIndex(q => q.id === DRIVE.start); pickSet('start', i >= 0 ? i : STARTS.findIndex(q => q.id === 'pier')); document.getElementById('gHere').style.display = DRIVE.hereXZ ? '' : 'none'; }
-  if (s === 'dest') { const L = pickList('dest'), cur = PICK.dest.id && L.findIndex(q => q.id === PICK.dest.id); pickSet('dest', cur >= 0 ? cur : (L.findIndex(q => q.id === 'peak') + L.length) % L.length); }
+  if (s === 'dest') { document.getElementById('gDestH').textContent = DRIVE.gNext ? 'Where next?' : 'Where to?'; const L = pickList('dest'), cur = PICK.dest.id && L.findIndex(q => q.id === PICK.dest.id); pickSet('dest', cur >= 0 ? cur : (L.findIndex(q => q.id === 'peak') + L.length) % L.length); }
   if (s === 'mode') { const p = DRIVE.gDest, m = p.km; document.getElementById('gToName').textContent = p.name; document.getElementById('gToDist').textContent = m ? (m < 1 ? Math.round(m * 100) * 10 + ' m' : m.toFixed(1) + ' km') + ' by road' : '';
     const bt = DRIVE.start && DRIVE.start !== 'here' ? bestOf(DRIVE.start, p.id) : {}; document.getElementById('gAutoBest').textContent = bt.a ? 'Best ' + fmtT(bt.a) : ''; document.getElementById('gFreeBest').textContent = bt.m ? 'Your best ' + fmtT(bt.m) : 'Timed: set a best'; } }
+/* after arriving: the same big place picker as at the start (the island map, swipe from place to place), then drive me / I'll drive.
+   The trip starts where the car stands; the place just reached counts as its start for the timed runs */
+function openNext(from) {
+  const car = DRIVE.car; if (!car) return; DRIVE.hereXZ = [car.x, car.z]; if (from) DRIVE.start = from;
+  DRIVE.garage = true; DRIVE.gNext = true; DRIVE.run = null; DRIVE.boosting = false; DRIVE.joy = null; dJoyDraw(); car.v = 0; car.fly = null; document.body.classList.add('garage'); ctlHint.hide(); navClose();
+  PICK.dest.id = undefined; gStep('dest');
+}
 function openGarage() {
+  DRIVE.gNext = false;
   if (DRIVE.started && DRIVE.car) DRIVE.hereXZ = [DRIVE.car.x, DRIVE.car.z]; DRIVE.started = false;
   DRIVE.garage = true; DRIVE.run = null; DRIVE.boosting = false; DRIVE.joy = null; dJoyDraw(); if (DRIVE.car) { DRIVE.car.v = 0; DRIVE.car.fly = null; } document.body.classList.add('garage'); ctlHint.hide(); navClose();
   gStep('ride'); dSelect(DRIVE.vi ?? 0);
 }
 /* leave the start screen: free driving; with a destination, the route shown and either you drive (auto false) or the car does */
 function closeGarage(dest, auto = true) {
-  DRIVE.garage = false; DRIVE.started = true; document.body.classList.remove('garage');
+  DRIVE.garage = false; DRIVE.started = true; DRIVE.gNext = false; document.body.classList.remove('garage');
   DRIVE.run = dest && dest.id && DRIVE.start && DRIVE.start !== 'here' ? { key: runEnd(DRIVE.start) + '>' + runEnd(dest.id) + (auto ? '|a' : '|m'), dest: dest.id, t0: ST.t } : null;
   if (dest && !auto) { setAuto(false); navStart(dest); ctlHint.first = true; ctlHint.show(['Follow the arrows to ' + dest.name].concat(COARSE ? ['Hold anywhere to drive', 'Slide to steer'] : ['↑ drive', '← → steer']), 9000); return; }
   if (dest) { setAuto(true); navStart(dest); ctlHint.first = false; ctlHint.show(['Driving you to ' + dest.name, COARSE ? 'Steer to turn off' : '← → to turn off', 'Auto to take over'], 7000); return; }
@@ -4094,7 +4102,7 @@ function initGarage() {
   q('gGo').onclick = () => gStep('where'); q('gPrev').onclick = () => dSelect(DRIVE.vi - 1); q('gNext').onclick = () => dSelect(DRIVE.vi + 1);
   const pickedDest = () => { const S = pickList('dest')[PICK.dest.i], P = placeXZ(S); return { id: S.id, name: S.name, x: P[0], z: P[1], kind: 'Place', km: PICK.dest.km }; };
   q('gBack').onclick = () => gStep('ride'); q('gTo3').onclick = () => { dStart(STARTS[PICK.start.i].id); gStep('dest'); }; q('gHere').onclick = () => { dStart('here'); gStep('dest'); };
-  q('gBack2').onclick = () => gStep('where'); q('gRoam').onclick = () => closeGarage(); q('gToMode').onclick = () => { DRIVE.gDest = pickedDest(); gStep('mode'); };
+  q('gBack2').onclick = () => DRIVE.gNext ? closeGarage() : gStep('where'); q('gRoam').onclick = () => closeGarage(); q('gToMode').onclick = () => { DRIVE.gDest = pickedDest(); gStep('mode'); };
   q('gSPrev').onclick = () => pickSet('start', PICK.start.i - 1); q('gSNext').onclick = () => pickSet('start', PICK.start.i + 1); q('gDPrev').onclick = () => pickSet('dest', PICK.dest.i - 1); q('gDNext').onclick = () => pickSet('dest', PICK.dest.i + 1);
   pickInput('start', q('gMapS'), true); pickInput('start', document.querySelector('#gB .gcar'), false); pickInput('dest', q('gMapD'), true); pickInput('dest', document.querySelector('#gC .gcar'), false);
   addEventListener('resize', () => { if (DRIVE.garage && DRIVE.gStep === 'where') pickMap('start'); if (DRIVE.garage && DRIVE.gStep === 'dest') pickMap('dest'); });
@@ -4115,7 +4123,7 @@ const AUTO_KMH = [150, 140, 110, 100, 90, 80, 65, 45, 40];   /* self-driving cru
    destination. It does not yield to traffic: anything in the way gets knocked flying. After arriving it stops and asks where next */
 function autoPilot(car, e, plan, vmax, V, dt) {
   const sp = car.v, LAT = 8, DEC = 7, cruise = Math.min(vmax * .95, AUTO_KMH[e.c] / 3.6); let vt = cruise;
-  if (DRIVE.autoStop) { if (sp < .5) { DRIVE.autoStop = false; setAuto(false); DRIVE.autoNext = true; navOpen(); DRIVE.autoNext = true; return { thr: 0, brk: 0 }; } return { thr: 0, brk: sp > 4 ? 1 : 0 }; }
+  if (DRIVE.autoStop) { if (sp < .5) { DRIVE.autoStop = false; setAuto(false); openNext(DRIVE.lastDest); return { thr: 0, brk: 0 }; } return { thr: 0, brk: sp > 4 ? 1 : 0 }; }
   if (!DRIVE.nav) return { thr: 0, brk: 0 };
   /* bends on this road up to 90 m ahead: the speed each one allows (sideways grip LAT), less what there is room to brake off before it */
   /* (the way ahead runs on through the planned turn and along the road it leaves by: a corner just past the junction is seen in time,
@@ -4251,7 +4259,7 @@ function navCheck() {
   const gN = DRIVE.N[R.goal];
   if (Math.hypot(car.x - R.dest.x, car.z - R.dest.z) < 45 || (R.k >= R.steps.length && gN && Math.hypot(car.x - gN.x, car.z - gN.z) < 30)) navArrive();
 }
-function navArrive() { const R = DRIVE.nav; if (!R) return; const tm = runFinish(R); dMsg('You have arrived: ' + R.dest.name + tm, tm ? 5 : 3); navStop(); if (DRIVE.auto) DRIVE.autoStop = true; }
+function navArrive() { const R = DRIVE.nav; if (!R) return; DRIVE.lastDest = R.dest.id; const tm = runFinish(R); dMsg('You have arrived: ' + R.dest.name + tm, tm ? 5 : 3); navStop(); if (DRIVE.auto) DRIVE.autoStop = true; }
 function navLeft() { const R = DRIVE.nav, car = DRIVE.car, E = DRIVE.E; if (!R) return 0; const e = E[car.e]; let m = car.d > 0 ? e.L - car.u : car.u; for (let k = R.k; k < R.steps.length; k++) m += E[R.steps[k].c].L; return m; }
 /* the route as moving chevrons on the road, in the lane you drive in */
 function navMesh() {
