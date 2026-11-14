@@ -330,7 +330,7 @@
       <div class="gmodes"><button id="gAuto" class="gmode auto"><b>Drive me</b><em>Sit back: the car drives itself there, fast</em><i id="gAutoBest"></i></button><button id="gFree" class="gmode"><b>I'll drive</b><em>You steer, following the route on the road</em><i id="gFreeBest"></i></button></div>
       <button id="gBack3" class="glink">‹ Pick another place</button></div></div></div>
 <div id="pm" title="Fly to Central"><b>Central</b><i></i><u></u></div>
-<div id="cr">Buildings: Lands Department, HKSAR Government, via <a href="https://data.gov.hk/en-data/dataset/hk-landsd-openmap-landsd-building" target="_blank" rel="noopener">DATA.GOV.HK</a> · map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors · elevation NASA SRTM</div>
+<div id="cr">Buildings and 3D building models: Lands Department, HKSAR Government, via <a href="https://data.gov.hk/en-data/dataset/hk-landsd-openmap-landsd-building" target="_blank" rel="noopener">DATA.GOV.HK</a> and <a href="https://3d.map.gov.hk/" target="_blank" rel="noopener">Open3Dhk</a> · map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors · elevation NASA SRTM</div>
 <script>window.__errs=[];addEventListener("error",function(e){window.__errs.push(String(e.message).slice(0,300)+" @"+e.lineno)});(function(){var ce=console.error;console.error=function(){try{window.__errs.push(Array.prototype.join.call(arguments," ").slice(0,900))}catch(e){}ce.apply(console,arguments)}})();</script>
 <script type="module">
 import * as THREE from 'three';
@@ -1088,6 +1088,9 @@ void main(){
   { float dth=hash21(floor(gl_FragCoord.xy)+vec2(17.,3.)); if(uLodSide>0.?dth>=uFade:dth<uFade) discard; }
 #endif
   vec3 N=normalize(vN);vec3 V=normalize(cameraPosition-vWp);
+#ifdef FLATN
+  { vec3 fn=cross(dFdx(vWp),dFdy(vWp)); float fl=length(fn); N=fl>1e-12?fn/fl:vec3(0.,1.,0.); }
+#endif
   float seed=vP.x;int type=int(vP.y+.5);int rt=int(vP.z+.5);float base=vP.w,top=vQ.x,litP=vQ.y,hue=vQ.z;int flags=int(vQ.w+.5);
   if(type==6){flags=0;hue=0.;}
   float hh=vWp.y-base;bool roof=N.y>.6;
@@ -2991,7 +2994,7 @@ attribute vec3 aCol;attribute vec4 aP,aQ;uniform vec2 uNearFade;uniform float uT
         col+=alb*vec3(1.,1.15,.6)*uSunCol*sh*pow(max(dot(normalize(cameraPosition-vWp),-uSunDir),0.),4.)*(.35+.5*(1.-tuft));
         gl_FragColor=vec4(applyFog(col,vWp),1.);}` }));
   t.mesh.frustumCulled = false; scene.add(t.mesh);
-  hooks.push(updateNear);
+  hooks.push(updateNear); hooks.push(b3dStep);
 }
 const DC = { ac: C(.62, .63, .62), tank: [C(.50, .52, .55), C(.30, .40, .50), C(.55, .50, .44), C(.66, .66, .64)], steel: C(.25, .26, .27), wall: C(.44, .41, .37), pole: C(.36, .37, .38), root: C(.30, .24, .17),
   cloth: [C(.85, .85, .82), C(.75, .2, .2), C(.2, .35, .7), C(.9, .75, .3), C(.3, .6, .5), C(.85, .5, .6), C(.15, .15, .2)], awn: [C(.70, .12, .10), C(.10, .40, .24), C(.12, .25, .55), C(.85, .70, .20), C(.80, .80, .76), C(.55, .25, .10)],
@@ -3448,6 +3451,8 @@ function carveStreets(E) {
 }
 function flattenRecs(set) {
   if (!set.size) return; const recs = CITY.recs, boxes = [];
+  /* real-shape sheets standing in for any of these are dropped first (they come back without the lowered buildings) */
+  { const ids = new Set(); for (const ri of set) if (recs[ri].gov) ids.add(recs[ri].gov); for (const id of ids) { const T = B3D.tiles.get(id); if (T) b3dDrop(T); } }
   for (const ri of set) { const b = recs[ri]; b.flat = true; let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9; for (const q of b.rings[0]) { x0 = Math.min(x0, q[0]); x1 = Math.max(x1, q[0]); z0 = Math.min(z0, q[1]); z1 = Math.max(z1, q[1]); } boxes.push([x0, z0, x1, z1]); }
   for (const ch of CITY.chunks) { if (!boxes.some(bb => Math.hypot(Math.max(bb[0] - ch.c.x, 0, ch.c.x - bb[2]), Math.max(bb[1] - ch.c.z, 0, ch.c.z - bb[3])) < ch.r + 1)) continue;
     for (const m of ch.lods) { if (!m) continue; const g = m.geometry, pos = g.attributes.position, B = g.attributes.aB; if (!B) continue; let hit = false;
@@ -3455,6 +3460,75 @@ function flattenRecs(set) {
       if (hit) { pos.needsUpdate = true; g.computeBoundingSphere(); } } }
   for (let k = 0; k < FA.n; k++) { const o = k * 10, x = FA.a[o], z = FA.a[o + 1]; for (const ri of set) { const b = recs[ri]; if (Math.abs(b.cx - x) < 80 && Math.abs(b.cz - z) < 80 && inPoly(x, z, b.rings[0])) { FA.a[o + 6] = 0; break; } } }
   SH.farDirty = SH.nearDirty = true; NEAR.fx = NEAR.fz = 1e9;
+}
+/* ---------- real building shapes: the Lands Department's 3D Visualisation Map, one small file per 1:1000 map sheet (b3d/<sheet>.bin, shapes only,
+   converted offline). Near the camera a sheet's models replace the surveyed outlines they stand on, drawn with the same facade shader (so they
+   take the same colour, windows and night lights); hand-built landmarks keep their own models. Sheets far behind are dropped again. ---------- */
+const B3D = { index: null, loading: false, tiles: new Map(), grid: null, mat: null, t: 0, fail: new Set() };
+const b3dURL = f => (/\/$|\.html?$/.test(location.pathname) ? new URL('b3d/' + f, location.href) : new URL('/hong-kong/b3d/' + f, location.href)).href;
+function b3dGrid() { if (B3D.grid) return B3D.grid; const G = new Map(); CITY.recs.forEach((b, i) => { const k = Math.floor(b.cx / 64) * 65536 + Math.floor(b.cz / 64); let a = G.get(k); if (!a) G.set(k, a = []); a.push(i);
+    if (!b.bb) { let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9; for (const q of b.rings[0]) { x0 = Math.min(x0, q[0]); x1 = Math.max(x1, q[0]); z0 = Math.min(z0, q[1]); z1 = Math.max(z1, q[1]); } b.bb = [x0, z0, x1, z1]; } }); return (B3D.grid = G); }
+/* lower the surveyed outlines in `set` out of sight (their near-tier facade detail too), remembering how to put them back */
+function b3dHide(set) {
+  const undo = { v: [], fa: [] }; if (!set.size) return undo; const recs = CITY.recs, mask = new Uint8Array(recs.length); for (const ri of set) mask[ri] = 1; let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9; for (const ri of set) { const b = recs[ri].bb; x0 = Math.min(x0, b[0]); z0 = Math.min(z0, b[1]); x1 = Math.max(x1, b[2]); z1 = Math.max(z1, b[3]); }
+  for (const ch of CITY.chunks) { if (Math.hypot(Math.max(x0 - ch.c.x, 0, ch.c.x - x1), Math.max(z0 - ch.c.z, 0, ch.c.z - z1)) > ch.r + 1) continue;
+    for (const m of ch.lods) { if (!m) continue; const g = m.geometry, pos = g.attributes.position, Bv = g.attributes.aB; if (!Bv) continue; const idx = [], ys = [];
+      for (let v = 0; v < pos.count; v++) { const ri = Math.round(Bv.array[v * 2]); if (mask[ri]) { idx.push(v); ys.push(pos.array[v * 3 + 1]); pos.array[v * 3 + 1] = Math.min(pos.array[v * 3 + 1], recs[ri].base - 400); } }
+      if (idx.length) { pos.needsUpdate = true; undo.v.push([pos, idx, ys]); } } }
+  for (let k = 0; k < FA.n; k++) { const o = k * 10, h = FA.a[o + 6]; if (h <= 0) continue; const x = FA.a[o], z = FA.a[o + 1]; if (x < x0 || x > x1 || z < z0 || z > z1) continue; for (const ri of set) { const b = recs[ri]; if (x >= b.bb[0] && x <= b.bb[2] && z >= b.bb[1] && z <= b.bb[3] && inPoly(x, z, b.rings[0])) { undo.fa.push([o, h]); FA.a[o + 6] = 0; break; } } }
+  return undo;
+}
+function b3dShow(undo) { for (const [pos, idx, ys] of undo.v) { for (let k = 0; k < idx.length; k++) pos.array[idx[k] * 3 + 1] = ys[k]; pos.needsUpdate = true; } for (const [o, h] of undo.fa) FA.a[o + 6] = h; }
+async function b3dLoad(T) {
+  B3D.loading = true; const t0 = performance.now();
+  try { const res = await fetch(b3dURL(T.id + '.bin')); if (!res.ok) throw new Error(res.status); let u8 = new Uint8Array(await res.arrayBuffer());
+    if (u8[0] === 0x1f && u8[1] === 0x8b) u8 = new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
+    const t1 = performance.now();
+    const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength), nb = dv.getUint32(4, true), G = b3dGrid(), recs = CITY.recs, td = CITY.tex.image.data; let o = 8, nv = 0, ni = 0; const list = [];
+    for (let b = 0; b < nb; b++) { const x = dv.getFloat32(o, true), z = dv.getFloat32(o + 4, true), y = dv.getFloat32(o + 8, true), top = dv.getFloat32(o + 12, true), n = dv.getUint32(o + 16, true), nt = dv.getUint32(o + 20, true), wide = dv.getUint8(o + 24), nc = dv.getUint8(o + 25); o += 26; const po = o; o += nc * 6; const vo = o; o += n * 6; const co = o; o += n; const io = o; o += nt * 3 * (wide ? 4 : 2);
+      /* its outline box, and the surveyed buildings it stands for: those with their centre inside it and at least half their own box under it */
+      const V = new Int16Array(u8.buffer.slice(u8.byteOffset + vo, u8.byteOffset + vo + n * 6)); let ix0 = 32767, iz0 = 32767, ix1 = -32768, iz1 = -32768; for (let k = 0; k < n * 3; k += 3) { const vx = V[k], vz = V[k + 2]; if (vx < ix0) ix0 = vx; if (vx > ix1) ix1 = vx; if (vz < iz0) iz0 = vz; if (vz > iz1) iz1 = vz; }
+      const x0 = x + ix0 / 10, x1 = x + ix1 / 10, z0 = z + iz0 / 10, z1 = z + iz1 / 10;
+      const hit = []; let skip = false; for (let gx = Math.floor(x0 / 64); gx <= Math.floor(x1 / 64); gx++) for (let gz = Math.floor(z0 / 64); gz <= Math.floor(z1 / 64); gz++) for (const ri of G.get(gx * 65536 + gz) || []) { const r = recs[ri]; if (r.cx < x0 || r.cx > x1 || r.cz < z0 || r.cz > z1) continue;
+        const bb = r.bb, ov = Math.max(0, Math.min(bb[2], x1) - Math.max(bb[0], x0)) * Math.max(0, Math.min(bb[3], z1) - Math.max(bb[1], z0)), ar = (bb[2] - bb[0]) * (bb[3] - bb[1]) || 1; if (ov / ar < .5) continue; if (r.skip || r.flat) skip = true; else if (!r.gov) hit.push(ri); }
+      if (skip) continue;   /* a hand-built landmark stands here, or a building lowered because it stood on a road */
+      list.push({ x, z, y, top, n, nt, wide, V, io, hit, po, co, nc }); nv += n; ni += nt * 3; }
+    const P = new Float32Array(nv * 3), Cc = new Float32Array(nv * 3), AP = new Float32Array(nv * 4), AQ = new Float32Array(nv * 4), I = new Uint32Array(ni), hide = new Set(); let v0 = 0, i0 = 0;
+    for (const b of list) { let col, type, sd, roof = 0, lit, hue, flags = 0;
+      if (b.hit.length) { let ri = b.hit[0]; for (const q of b.hit) { hide.add(q); recs[q].gov = T.id; if (recs[q].A > recs[ri].A) ri = q; } const k = ri * 12; col = [td[k], td[k + 1], td[k + 2]]; type = td[k + 3]; sd = td[k + 4]; roof = td[k + 5]; lit = td[k + 8]; hue = td[k + 9]; flags = td[k + 10]; }
+      else { sd = hash2(Math.round(b.x * 3), Math.round(b.z * 3)); type = b.top > 70 ? 2 : b.top > 22 ? 1 : 0; const pal = type === 2 ? PAL.glass : type === 1 ? PAL.res : PAL.tong; col = pal[(sd * 997 | 0) % pal.length]; lit = .4 + sd * .3; hue = sd; }
+      /* each part of the building takes its own wall colour, read from the Lands Department's photo textures: for curtain-wall glass towers the mean of the
+         facade, for the rest the mean of its brighter half (the wall rather than its windows, which the facade shader draws itself), lifted by
+         a third: the photos carry their own shade and haze, and read about that much darker than the wall in sunlight */
+      const glassy = type === 2, pal = []; for (let k = 0; k < b.nc; k++) { const q = b.po + k * 6 + (glassy ? 0 : 3), r = u8[q], g2 = u8[q + 1], bl = u8[q + 2]; const gain = glassy ? 1 / 255 : 1.3 / 255; pal.push(r + g2 + bl ? C(Math.min(1, r * gain), Math.min(1, g2 * gain), Math.min(1, bl * gain)) : null); }
+      for (let k = 0; k < b.n; k++) { const q = (v0 + k) * 3, w = (v0 + k) * 4; P[q] = b.x + b.V[k * 3] / 10; P[q + 1] = b.y + b.V[k * 3 + 1] / 10; P[q + 2] = b.z + b.V[k * 3 + 2] / 10;
+        const pc = pal[u8[b.co + k]] || col; Cc[q] = pc[0]; Cc[q + 1] = pc[1]; Cc[q + 2] = pc[2]; AP[w] = sd; AP[w + 1] = type; AP[w + 2] = roof; AP[w + 3] = b.y; AQ[w] = b.y + b.top; AQ[w + 1] = lit; AQ[w + 2] = hue; AQ[w + 3] = flags; }
+      const nI = b.nt * 3, src = u8.buffer.slice(u8.byteOffset + b.io, u8.byteOffset + b.io + nI * (b.wide ? 4 : 2)), J = b.wide ? new Uint32Array(src) : new Uint16Array(src); /* a few of the models hold triangles with no area (three points in a line): left out, as they have no facing */
+      for (let k = 0, V = b.V; k < nI; k += 3) { const a = J[k] * 3, e = J[k + 1] * 3, c = J[k + 2] * 3, ux = V[e] - V[a], uy = V[e + 1] - V[a + 1], uz = V[e + 2] - V[a + 2], wx = V[c] - V[a], wy = V[c + 1] - V[a + 1], wz = V[c + 2] - V[a + 2];
+        if (uy * wz === uz * wy && uz * wx === ux * wz && ux * wy === uy * wx) continue; I[i0++] = v0 + J[k]; I[i0++] = v0 + J[k + 1]; I[i0++] = v0 + J[k + 2]; } v0 += b.n; }
+    const NRM = new Float32Array(nv * 3); for (let k = 1; k < nv * 3; k += 3) NRM[k] = 1;
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setAttribute('aCol', new THREE.BufferAttribute(Cc, 3)); g.setAttribute('aP', new THREE.BufferAttribute(AP, 4)); g.setAttribute('aQ', new THREE.BufferAttribute(AQ, 4));
+    g.setAttribute('aF', new THREE.BufferAttribute(new Float32Array(nv), 1)); g.setAttribute('normal', new THREE.BufferAttribute(NRM, 3)); g.setIndex(new THREE.BufferAttribute(I.subarray(0, i0), 1));
+    const mat = B3D.mat || (B3D.mat = new THREE.ShaderMaterial({ uniforms: U, vertexShader: BLD_VS, fragmentShader: BLD_FS(), defines: { FOC_SINK: 1, FLATN: 1 } }));
+    let ylo = 1e9, yhi = -1e9; for (const b of list) { ylo = Math.min(ylo, b.y - 20); yhi = Math.max(yhi, b.y + b.top + 5); } if (!list.length) ylo = yhi = 0;
+    g.boundingSphere = new THREE.Sphere(new THREE.Vector3((T.box[0] + T.box[2]) / 2, (ylo + yhi) / 2, (T.box[1] + T.box[3]) / 2), Math.hypot(T.box[2] - T.box[0], yhi - ylo, T.box[3] - T.box[1]) / 2 + 30);
+    const mesh = new THREE.Mesh(g, mat); mesh.layers.enable(1); scene.add(mesh);   /* casts shadows; left out of the water's reflection pass */
+    T.mesh = mesh; T.undo = b3dHide(hide); T.hide = hide; T.tris = i0 / 3; T.ms = Math.round(performance.now() - t0); T.sync = Math.round(performance.now() - t1); B3D.tiles.set(T.id, T); SH.farDirty = SH.nearDirty = true; NEAR.fx = NEAR.fz = 1e9;
+  } catch (err) { B3D.fail.add(T.id); console.warn('b3d ' + T.id + ': ' + (err && err.message)); }
+  B3D.loading = false;
+}
+function b3dDrop(T) { if (T.undo) b3dShow(T.undo); for (const ri of T.hide || []) CITY.recs[ri].gov = null; if (T.mesh) { scene.remove(T.mesh); T.mesh.geometry.dispose(); } T.mesh = T.undo = T.hide = null; B3D.tiles.delete(T.id); SH.farDirty = SH.nearDirty = true; NEAR.fx = NEAR.fz = 1e9; }
+B3D.drop = b3dDrop;
+/* a few times a second: bring in the nearest sheet not yet loaded, drop the farthest when too many are held */
+function b3dStep(dt) {
+  if ((B3D.t -= dt) > 0 || !CITY.recs || !CITY.tex) return; B3D.t = .35;
+  if (B3D.index === null) { B3D.index = false; fetch(b3dURL('index.json')).then(r => r.ok ? r.json() : []).then(j => { B3D.index = j; }).catch(() => { B3D.index = []; }); return; }
+  if (!B3D.index || !B3D.index.length || B3D.loading) return;
+  const driving = DRIVE.on && DRIVE.car, cx = driving ? DRIVE.car.x : cam.tx, cz = driving ? DRIVE.car.z : cam.tz; if (!driving && cam.dist > 2600) return;
+  const R = COARSE ? 380 : 700, MAX = COARSE ? 4 : 10, dOf = T => Math.hypot(Math.max(T.box[0] - cx, 0, cx - T.box[2]), Math.max(T.box[1] - cz, 0, cz - T.box[3]));
+  let best = null, bd = R; for (const T of B3D.index) { if (B3D.tiles.has(T.id) || B3D.fail.has(T.id)) continue; const d = dOf(T); if (d < bd) { bd = d; best = T; } }
+  if (B3D.tiles.size >= MAX || (!best && B3D.tiles.size > MAX - 3)) { let far = null, fd = best && B3D.tiles.size >= MAX ? bd + 1 : R + 500; for (const T of B3D.tiles.values()) { const d = dOf(T); if (d > fd) { fd = d; far = T; } } if (far) b3dDrop(far); else if (B3D.tiles.size >= MAX) return; }
+  if (best) b3dLoad(best);
 }
 const DRIVE = { queue: [], lock: null, req: null, nav: null, on: false, ready: false, loading: null, N: null, E: null, names: [], car: null, mesh: null, joy: null, k: { thr: 0, brk: 0, steer: 0 },
   intent: 0, intentT: 0, plan: null, hud: {}, ribbons: null, labelsWas: true, msgT: 0, tun: 0 };
@@ -4878,7 +4952,7 @@ async function boot() {
 }
 window.__hk = {
   THREE, TRAMS, TOD, TOUR, LABELS, setTime, startTour, stopTour, viewHash, flyTo, scene, camera, renderer, cam, U, ST, L, ROADS, DAMS, LAKES, LL, SH, STATS, BI, FA, G, SITES, PATHS, CITY, get GEO() { return GEO; },
-  get terr() { return terr; }, QUALS, resize, get composer() { return composer; }, get scenePass() { return scenePass; }, NEAR, hooks, hAt: (x, z) => hAt(x, z), pick: (x, y) => pickGround(x, y), GS, LT, ltGo, FOCUS, DRIVE, keys, HIT, PROPS, TRAFS, dPlan, navStart, navRoute, navPlaces, dPaths, get TRAF() { return TRAF; }, trafAt, goPreset, setLight, setQuality,
+  get terr() { return terr; }, QUALS, resize, get composer() { return composer; }, get scenePass() { return scenePass; }, NEAR, hooks, hAt: (x, z) => hAt(x, z), pick: (x, y) => pickGround(x, y), GS, LT, ltGo, FOCUS, DRIVE, keys, HIT, PROPS, TRAFS, B3D, dPlan, navStart, navRoute, navPlaces, dPaths, get TRAF() { return TRAF; }, trafAt, goPreset, setLight, setQuality,
   pose(o) { userInput(); Object.assign(cam, o); cam.vaz = cam.vpol = cam.vx = cam.vz = cam.vzoom = 0; placeCamera(0); },
   at(lat, lon, dist, azDeg, polDeg, fov) { const p = LL(lat, lon); this.pose({ tx: p[0], tz: p[1], dist, az: azDeg * RAD, pol: polDeg * RAD, fov: fov || 36, ty: 0 }); },
   step(n = 1, dt = 1 / 60) { for (let i = 0; i < n; i++) frame(dt); },
