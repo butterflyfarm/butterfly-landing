@@ -50,6 +50,16 @@
     border:1px solid rgba(255,196,128,.45);background:rgba(9,20,28,.86);color:#fff4df;font:inherit;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .35s,transform .35s;touch-action:manipulation}
   #tourS.on{opacity:1;pointer-events:auto;transform:translate(-50%,0)} #tourS span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis} #tourS i{font-style:normal;opacity:.7}
   body.photo #tourS,body.driving #tourS{display:none}
+  /* the label that marks where a search has flown to: the name, the address under it, a line down to the spot */
+  #pin{position:fixed;left:0;top:0;z-index:4;display:none;flex-direction:column;align-items:center;pointer-events:none;will-change:transform}
+  #pin.on{display:flex} body.driving #pin,body.photo #pin,body.places #pin{display:none}
+  #pin .pb{display:flex;align-items:center;gap:8px;padding:6px 7px 6px 12px;background:rgba(9,20,28,.88);border:1px solid rgba(255,206,140,.7);border-radius:12px;color:#fff4df;pointer-events:auto;max-width:min(80vw,360px);box-shadow:0 4px 14px rgba(0,0,0,.4)}
+  #pin .pt{display:flex;flex-direction:column;min-width:0;line-height:1.25}
+  #pin b{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #pin em{font-style:normal;font-size:11.5px;opacity:.88;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #pin button{flex:none;width:24px;height:24px;border-radius:50%;border:0;padding:0;background:rgba(255,190,110,.16);color:#f3d9b4;font-size:11px;cursor:pointer}
+  #pin i{width:1px;height:34px;background:linear-gradient(rgba(255,206,140,.95),rgba(255,206,140,.2))}
+  #pin u{width:8px;height:8px;border-radius:50%;background:#4fc3f2;box-shadow:0 0 0 2px rgba(9,20,28,.7),0 0 10px rgba(79,195,242,.9)}
   /* Photo: a camera under the clock. In photo mode everything else goes; the button stays, faint, to come back */
   #bCam{position:fixed;z-index:6;right:calc(max(12px,env(safe-area-inset-right)) + 12px);top:calc(max(12px,env(safe-area-inset-top)) + 228px);width:44px;height:44px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;
     color:#f3d9b4;background:rgba(9,20,28,.72);border:1px solid rgba(255,196,128,.4);cursor:pointer;touch-action:manipulation;transition:opacity .4s}
@@ -74,7 +84,9 @@
   #places .psel b{font-size:clamp(22px,6vw,32px);font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff4df;line-height:1.08}
   #places .psel em{font-style:normal;font-size:clamp(12px,3.2vw,14px);opacity:.88;margin-top:4px;min-height:1.3em}
   #places .pdots{display:flex;justify-content:center;gap:7px;flex-wrap:wrap} #places .pdots i{width:8px;height:8px;border-radius:50%;background:rgba(255,214,160,.28)} #places .pdots i.on{background:#ffc98a}
-  #places .pgo{align-self:center;padding:14px 54px;font-size:16px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;background:rgba(255,176,84,.95);color:#241405;border-color:rgba(255,224,176,.95);border-radius:28px}
+  #places .pl3{display:flex;justify-content:center;gap:9px;flex-wrap:wrap}
+  #places .pgo{padding:13px 22px;font-size:14px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;background:rgba(255,176,84,.95);color:#241405;border-color:rgba(255,224,176,.95);border-radius:26px;white-space:nowrap}
+  #places .pgo.alt{background:rgba(255,190,110,.12);color:#fff4df;border-color:rgba(255,214,160,.7)}
   #places .pl{display:flex;justify-content:center;gap:8px;flex-wrap:wrap} #places .pl button{padding:8px 14px;font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
   #places .pl button.on{background:rgba(255,176,84,.36);color:#fff4df}
   #labels{position:fixed;inset:0;pointer-events:none;overflow:hidden}
@@ -137,6 +149,8 @@
   .big:hover{transform:translateY(-2px)}
   .big i{position:relative;flex:none;width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#ffb054;color:#2a1606}
   #bPlaces i{background:#4fc3f2;color:#05243a} #bPlaces{border-color:rgba(160,220,250,.8)}
+  .big.sm{padding:6px 16px 6px 6px;gap:10px;border-color:rgba(255,214,160,.5)} .big.sm i{width:44px;height:44px;background:rgba(255,214,160,.2);color:#fff4df} .big.sm b{font-size:15px;letter-spacing:.18em} .big.sm em{font-size:9.5px}
+  #bTour.on i{background:#ffb054;color:#2a1606}
   #bigDrive i::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid rgba(255,176,84,.75);animation:bdPulse 2.2s ease-out infinite}
   @keyframes bdPulse{0%{transform:scale(.9);opacity:.9}100%{transform:scale(1.35);opacity:0}}
   .big span{display:flex;flex-direction:column;line-height:1.15}
@@ -312,11 +326,14 @@
     #mini,#mmC{width:118px}
     #mmC{height:118px}
     #mini{top:calc(max(10px,env(safe-area-inset-top)) + 62px)}
-    #bigs{bottom:calc(max(10px,env(safe-area-inset-bottom)) + 66px);flex-direction:column-reverse;align-items:flex-start;gap:9px}   /* (a phone: Places above Drive) */
+    #bigs{bottom:calc(max(10px,env(safe-area-inset-bottom)) + 66px);display:grid;grid-template-columns:auto auto;justify-content:start;align-items:center;gap:8px}   /* (a phone: two rows of two; Drive and Places below, as Tour and Island are placed first) */
+    #bTour{grid-row:1;grid-column:1} #bReset{grid-row:1;grid-column:2} #bigDrive{grid-row:2;grid-column:1} #bPlaces{grid-row:2;grid-column:2}
+    #places .pl3{flex-wrap:nowrap;gap:7px} #places .pgo{padding:13px 13px;font-size:12.5px;letter-spacing:.12em}
+    .big em{display:none} .big.sm{padding:5px 13px 5px 5px} .big.sm i{width:38px;height:38px} .big.sm b{font-size:13px}
     .big{padding:6px 14px 6px 6px;gap:9px}
     .big i{width:50px;height:50px}
     .big b{font-size:17px}
-    .big em{font-size:9px}
+
     #dSt{font-size:12px;letter-spacing:.07em;padding:6px 10px}
     #dTop{gap:8px}
     #hint{bottom:calc(max(12px,env(safe-area-inset-bottom)) + 62px);font-size:10px}
@@ -337,17 +354,16 @@
   <div id="more">
     <div class="mr"><button id="bLabels" class="on" title="Place names on or off">Place names</button><button id="bQ" title="How much detail is drawn">High</button></div>
     <label class="mr">Traffic<input id="sTraf" type="range" min="0" max="100" value="70"></label>
-    <div class="mr"><button id="bLink" title="Copy a link to this view">Copy link</button><button id="bReset" title="Back to the whole island">Whole island</button></div>
+    <div class="mr"><button id="bLink" title="Copy a link to this view">Copy link</button></div>
   </div>
 </div>
 <div id="places" role="dialog" aria-label="Places"><div class="pc">
-  <div class="ph"><b>Fly to a place</b><button id="plX" type="button" aria-label="Close">✕</button></div>
+  <div class="ph"><b>Places</b><button id="plX" type="button" aria-label="Close">✕</button></div>
   <input id="plQ" type="search" placeholder="Search a place, street, building or address" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search a place, street, building or address"><div id="plRes"></div>
   <canvas id="plMap" aria-label="Map of the island with the places to fly to"></canvas>
   <div class="pcar"><button id="plPrev" class="parr" type="button" aria-label="Previous place">‹</button><div class="psel"><b id="plName"></b><em id="plSub"></em></div><button id="plNext" class="parr" type="button" aria-label="Next place">›</button></div>
   <div id="plDots" class="pdots"></div>
-  <button id="plGo" class="pgo" type="button">Fly there</button>
-  <div class="pl"><button id="plRide" type="button" title="Sit back: the car drives you there along the streets, then on to the next place">Ride there by road</button><button id="bTour" type="button" title="Guided tour from the air, golden afternoon into dusk">Play the tour</button><button id="plIsland" type="button">Whole island</button></div>
+  <div class="pl3"><button id="plGo" class="pgo" type="button" title="The view flies there and picks the clearest angle">Fly there</button><button id="plDrive" class="pgo alt" type="button" title="Start driving right there">Drive</button><button id="plRide" class="pgo alt" type="button" title="Sit back: the car drives you there along the streets, then on to the next place">Ride there</button></div>
 </div></div>
 <div id="labels"></div>
 <div id="fc" role="dialog" aria-label="Landmark"><button class="x" id="fcX" title="Close (Esc)" aria-label="Close">✕</button><h3 id="fcN"></h3><p id="fcY" class="yr"></p><p id="fcF" class="fact"></p><p id="fcS"></p>
@@ -364,8 +380,9 @@
   <path d="M34 3.5v4M34 60.5v4M3.5 34h4M60.5 34h4" stroke="rgba(243,217,180,.6)" stroke-width="1.2"/><g id="tcHand"><circle id="tcSun" cx="34" cy="8" r="6.2" fill="#ffd27a" stroke="#1a130a" stroke-width="1.4"/></g>
   <text id="tcTxt" x="34" y="38.5" text-anchor="middle">17:00</text></svg></div>
 <button id="tourS" type="button" title="End the tour" aria-live="polite"><span></span><i>✕</i></button>
+<div id="pin"><div class="pb"><div class="pt"><b></b><em></em></div><button type="button" aria-label="Remove this label">✕</button></div><i></i><u></u></div>
 <div id="hint" aria-live="polite"></div>
-<div id="bigs"><button id="bigDrive" class="big" type="button" aria-label="Drive around Hong Kong Island"><i><svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="24" cy="24" r="4.5" fill="currentColor"/><path d="M8 21.5c5-2.6 10.4-3.6 16-3.6s11 1 16 3.6M24 28.5v11.5M20 26l-9.5 9M28 26l9.5 9" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg></i><span><b>Drive</b><em>Every street on the island</em></span></button><button id="bPlaces" class="big" type="button" aria-label="Places: search, fly or ride anywhere on the island"><i><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 4.2a2.8 2.8 0 1 1 0 5.6 2.8 2.8 0 0 1 0-5.6Z"/></svg></i><span><b>Places</b><em>Search, fly or ride there</em></span></button></div>
+<div id="bigs"><button id="bigDrive" class="big" type="button" aria-label="Drive around Hong Kong Island"><i><svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="24" cy="24" r="4.5" fill="currentColor"/><path d="M8 21.5c5-2.6 10.4-3.6 16-3.6s11 1 16 3.6M24 28.5v11.5M20 26l-9.5 9M28 26l9.5 9" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg></i><span><b>Drive</b><em>Every street on the island</em></span></button><button id="bPlaces" class="big" type="button" aria-label="Places: search, fly or ride anywhere on the island"><i><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 4.2a2.8 2.8 0 1 1 0 5.6 2.8 2.8 0 0 1 0-5.6Z"/></svg></i><span><b>Places</b><em>Search, fly or ride there</em></span></button><button id="bTour" class="big sm" type="button" aria-label="Tour: a flight round the island, golden afternoon into dusk"><i><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l11-6.5-11-6.5Z"/></svg></i><span><b>Tour</b><em>Sit back and watch</em></span></button><button id="bReset" class="big sm" type="button" aria-label="Whole island: back to the full view"><i><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></i><span><b>Island</b><em>The whole view</em></span></button></div>
 <div id="drv"><div id="dTop"><button id="dExit" title="Stop driving (Esc)" aria-label="Stop driving">✕</button><button id="dNavB" title="Go somewhere" aria-label="Navigate"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 1 7 7c0 4.9-5.6 11.2-6.3 12a1 1 0 0 1-1.4 0C10.6 20.2 5 13.9 5 9a7 7 0 0 1 7-7zm0 4.2A2.8 2.8 0 1 0 12 11.8 2.8 2.8 0 0 0 12 6.2z"/></svg></button><button id="dCar" title="Change vehicle (G)" aria-label="Change vehicle"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M5 11l1.5-4.2A2 2 0 0 1 8.4 5.5h7.2a2 2 0 0 1 1.9 1.3L19 11h.5A1.5 1.5 0 0 1 21 12.5V17h-2v1.5a1 1 0 0 1-2 0V17H7v1.5a1 1 0 0 1-2 0V17H3v-4.5A1.5 1.5 0 0 1 4.5 11zm2.2 0h9.6l-1.1-3.2a.5.5 0 0 0-.5-.3H8.8a.5.5 0 0 0-.5.3zM6.5 15a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6zm11 0a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6z"/></svg></button>
   <div id="dInfo"><span id="dSt"></span><span id="dNx"><i id="dArr">↑</i><b id="dNxD"></b><em id="dNxN"></em></span><span id="dGo"><i>➤</i><em></em></span></div>
   <div id="dSide"><div id="dSpdBox"><b id="dSpd">0</b><small>km/h</small></div><button id="dU" title="Turn round (U)">U-turn</button><button id="dAuto" title="Self-driving on or off">Auto</button></div></div>
@@ -3289,8 +3306,8 @@ const sunVec = (azS, el) => { const a = azS * RAD, e = el * RAD; return [-Math.c
 const LIGHTS = {
   /* warm: the afternoon the page opens on. The sun is still well up (about 28 degrees), so streets and waterfront stand in sunlight and not in the
      towers' long shadows, and the light is graded gold: warm sun, warm fill from the ground, a deep sky for it to stand against */
-  warm: { sun: sunVec(40, 28), sunCol: [4.9, 2.7, .78], glow: [2.3, 1.1, .34], zen: [.16, .23, .40], horW: [1.9, 1.0, .36], horE: [.85, .62, .46], ambS: [.42, .33, .25], ambG: [.46, .29, .12],
-    fog: [1.15, .76, .38], fogDen: 2.1e-5, water: [.035, .10, .125], night: 0, sh: 1, cloud: .46, expo: 1.1, bloom: .3 },   /* (gold all through: amber sky and haze, warm shade; the sea keeps its own deep colour and takes the gold in its light) */
+  warm: { sun: sunVec(40, 28), sunCol: [4.9, 2.7, .80], glow: [1.5, .95, .50], zen: [.06, .20, .56], horW: [.86, .80, .70], horE: [.42, .58, .84], ambS: [.33, .36, .43], ambG: [.44, .29, .13],
+    fog: [.70, .76, .86], fogDen: 1.5e-5, water: [.018, .115, .20], night: 0, sh: 1, cloud: .46, expo: 1.08, bloom: .28 },   /* (gold in the sunlight and its bounce; the sky and the sea blue, the air clear) */
   golden: { sun: sunVec(9, 11.5), sunCol: [3.1, 1.80, .80], glow: [1.5, .82, .34], zen: [.10, .22, .50], horW: [1.15, .70, .36], horE: [.46, .50, .66], ambS: [.22, .25, .34], ambG: [.22, .16, .10],
     fog: [.82, .62, .46], fogDen: 2.3e-5, water: [.030, .105, .135], night: .1, sh: 1, cloud: .42, expo: 1.06, bloom: .32 },
   noon: { sun: sunVec(62, 62), sunCol: [3.3, 3.15, 2.9], glow: [.9, .9, .85], zen: [.10, .27, .62], horW: [.62, .74, .88], horE: [.58, .72, .88], ambS: [.34, .44, .60], ambG: [.20, .19, .16],
@@ -3361,8 +3378,34 @@ function plSet(i) { const n = STARTS.length; PLC.sel = null; PLC.i = ((i % n) + 
 function plOpen() { if (DRIVE.on) return; PLC.on = true; plAddr(); { const q = document.getElementById('plQ'); if (q) { q.value = ''; plSearch(''); } } document.body.classList.remove('menu'); document.body.classList.add('places');
   let best = 0, bd = 1e9; STARTS.forEach((S, j) => { const P = placeXZ(S); if (!P) return; const d = Math.hypot(P[0] - cam.tx, P[1] - cam.tz); if (d < bd) { bd = d; best = j; } }); plSet(best); }
 function plClose() { PLC.on = false; document.body.classList.remove('places'); }
-function plFly() { const e = PLC.sel, P = e ? [e.x, e.z] : placeXZ(STARTS[PLC.i]); plClose(); if (TOUR.on) stopTour(); if (FOCUS.label) exitFocus(); userInput();
-  if (e && e.label) { flyTo(e.label.fly); if (e.label.focus) focusOffer(e.label); } else flyTo({ tx: P[0], tz: P[1], dist: e ? e.dist || 800 : 950, pol: (e ? 62 : 64) * RAD }); }
+/* flying to what was chosen: the view goes to the clearest angle on it, and on arrival a label marks it with its name and address.
+   For a building (an address, or a named building) the angle is the one from which least of it is hidden by its neighbours, tried all round at
+   three heights, as for the landmarks; for a place or a street, the same, looking at the spot on the ground */
+function plBestView(x, z, bld) {
+  let rec = null, ri = -1, inside = false, bd = 45; if (bld && CITY.recs) CITY.recs.forEach((r, i) => { if (r.skip || Math.abs(r.cx - x) > 220 || Math.abs(r.cz - z) > 220) return; const ins = inPoly(x, z, r.rings[0]), d = Math.hypot(r.cx - x, r.cz - z);
+    if (ins ? (!inside || r.h > rec.h) : (!inside && d < bd)) { rec = r; ri = i; inside = ins; if (!ins) bd = d; } });
+  const cx = rec ? rec.cx : x, cz = rec ? rec.cz : z, g = groundY(cx, cz); let R = 12, H = 10; const ex = new Set();
+  if (rec) { let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; for (const p of rec.rings[0]) { x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); z0 = Math.min(z0, p[1]); z1 = Math.max(z1, p[1]); } R = Math.max(Math.hypot(x1 - x0, z1 - z0) / 2, 8); H = Math.max(rec.top - g, 6); ex.add(ri);
+    if (rec.nm) CITY.recs.forEach((r, i) => { if (r.nm === rec.nm && Math.hypot(r.cx - cx, r.cz - cz) < 120) ex.add(i); }); }
+  const dist = rec ? clamp(Math.max(H * 2.7, R * 4, 320), 320, 1500) : 700, ty = rec ? H * .5 : 0; let best = null;   /* (far enough back for the whole building, with room above its roof for the label) */
+  for (const pd of [62, 70, 77]) for (let a = 0; a < 24; a++) { const az = a / 24 * TAU, pol = pd * RAD, sp = Math.sin(pol), e = [cx + dist * sp * Math.cos(az), g + ty + dist * Math.cos(pol), cz + dist * sp * Math.sin(az)], lx = -Math.sin(az), lz = Math.cos(az);
+    let vis = 0, tot = 0; for (const fy of rec ? [.15, .5, .85] : [.3]) for (const fl of [-.55, 0, .55]) { tot++; if (sightClear(e, [cx + lx * R * fl, g + H * fy, cz + lz * R * fl], ex)) vis++; }
+    const daz = Math.abs(((az - cam.az) % TAU + TAU + PI) % TAU - PI), score = vis / tot - daz * .02 - Math.abs(pd - 70) * .002; if (!best || score > best.s) best = { s: score, az, pol }; }
+  return { pose: { tx: cx, tz: cz, dist, az: best.az, pol: best.pol, ty }, at: [cx, g + (rec ? H : 0) + 5, cz] };
+}
+const PIN = { on: false, x: 0, y: 0, z: 0, v: null };
+function pinShow(title, sub, x, y, z) { const el = document.getElementById('pin'); if (!el) return; PIN.on = true; PIN.x = x; PIN.y = y; PIN.z = z; el.querySelector('b').textContent = title; const e = el.querySelector('em'); e.textContent = sub || ''; e.style.display = sub ? '' : 'none'; el.classList.add('on'); pinPlace(); }
+function pinClear() { PIN.on = false; const el = document.getElementById('pin'); if (el) el.classList.remove('on'); }
+function pinPlace() { if (!PIN.on) return; const el = document.getElementById('pin'), v = PIN.v || (PIN.v = new THREE.Vector3()); v.set(PIN.x, PIN.y, PIN.z).project(camera); const ok = v.z < 1 && Math.abs(v.x) < 1.1 && Math.abs(v.y) < 1.15;
+  el.style.visibility = ok ? '' : 'hidden'; if (ok) { const hh = el.offsetHeight || 90, hw = (el.offsetWidth || 160) / 2;   /* (kept whole on the screen when the spot is near an edge) */
+    el.style.transform = 'translate(' + clamp((v.x * .5 + .5) * innerWidth, hw + 6, innerWidth - hw - 6).toFixed(1) + 'px,' + Math.max((-v.y * .5 + .5) * innerHeight, hh + 8).toFixed(1) + 'px) translate(-50%,-100%)'; } }
+function plTarget() { const e = PLC.sel, S = STARTS[PLC.i]; if (e) return { name: e.t || e.name, sub: e.a !== undefined ? e.a : e.kind, x: e.x, z: e.z, kind: e.kind, bld: !!e.bld, label: e.label }; const P = placeXZ(S); return { id: S.id, name: S.name, sub: S.blurb || '', x: P[0], z: P[1], kind: 'Place', bld: false }; }
+function plFly() { const T = plTarget(); plClose(); if (TOUR.on) stopTour(); if (FOCUS.label) exitFocus(); userInput();
+  if (T.label) { pinClear(); flyTo(T.label.fly); if (T.label.focus) focusOffer(T.label); return; }   /* (a landmark, district or peak carries its own label and its own view) */
+  const bv = plBestView(T.x, T.z, T.bld); pinClear(); flyTo(bv.pose, () => { pinShow(T.name, T.sub, bv.at[0], bv.at[1], bv.at[2]); }); }
+/* driving from what was chosen: straight into the car, on the nearest street to it, with the wheel yours */
+async function plDrive() { const T = plTarget(); if (DRIVE.on || DRIVE.entering) return; plClose(); pinClear(); await enterDrive(); if (!DRIVE.on || !DRIVE.car) return;
+  if (T.id) dStart(T.id); else { DRIVE.hereXZ = [T.x, T.z]; dStart('here'); } closeGarage(); }
 /* search: the places; the districts, landmarks and peaks that carry a name on the map; every named street (all of them once the streets for driving
    are loaded); and every building the survey names. Choosing a result shows it on the map; Fly there and Ride there then go to it */
 function plIndex() {
@@ -3377,10 +3420,10 @@ function plIndex() {
   /* every address on the island and the building at it (addr.txt, from the government's address register: 20,000 of them, loaded when Places
      is first opened). A building is found by its name or by its number and street */
   const named = new Set(); if (PLC.addr) { const A = PLC.addr; for (let i = 0; i < A.name.length; i++) { const nm = A.name[i], road = A.streets[A.si[i]], at = A.no[i] && road ? A.no[i] + ' ' + road : road; if (nm) named.add(nm.toLowerCase());
-    put(nm ? (at && at.toLowerCase() !== nm.toLowerCase() ? nm + ' · ' + at : nm) : at, nm ? 'Building' : 'Address', nm ? 4 : 5, A.x[i], A.z[i], { dist: 520 }); } }
+    put(nm ? (at && at.toLowerCase() !== nm.toLowerCase() ? nm + ' · ' + at : nm) : at, nm ? 'Building' : 'Address', nm ? 4 : 5, A.x[i], A.z[i], { dist: 520, t: nm || at, a: nm && at && at.toLowerCase() !== nm.toLowerCase() ? at : '', bld: 1 }); } }
   /* buildings the survey names: the tallest record of each name; not one the map already carries as a landmark, or the address list has */
   if (CITY.recs) { const tall = new Map(); for (const b of CITY.recs) { if (!b.nm) continue; const k = b.nm.toLowerCase(), q = tall.get(k); if (!q || b.h > q.h) tall.set(k, b); }
-    for (const [k, b] of tall) { if (seen.has('Landmark|' + k) || seen.has('Place|' + k) || named.has(k)) continue; const nm = b.nm === b.nm.toUpperCase() ? k.replace(/(^|[\s(\-/])[a-z]/g, c => c.toUpperCase()) : b.nm; put(nm, 'Building', 4, b.cx, b.cz, { dist: clamp(b.h * 2.4, 380, 1100) }); } }
+    for (const [k, b] of tall) { if (seen.has('Landmark|' + k) || seen.has('Place|' + k) || named.has(k)) continue; const nm = b.nm === b.nm.toUpperCase() ? k.replace(/(^|[\s(\-/])[a-z]/g, c => c.toUpperCase()) : b.nm; put(nm, 'Building', 4, b.cx, b.cz, { dist: clamp(b.h * 2.4, 380, 1100), t: nm, a: '', bld: 1 }); } }
   return (PLC.idx = out);
 }
 function plSearch(text) {
@@ -3419,9 +3462,9 @@ function rideNext() {
 }
 function initPlaces() {
   const q = id => document.getElementById(id), el = q('places'); if (!el) return;
-  q('plQ').addEventListener('input', e => plSearch(e.target.value)); q('plRide').onclick = () => rideAlong(PLC.sel ? { name: PLC.sel.name, x: PLC.sel.x, z: PLC.sel.z, kind: PLC.sel.kind } : placeObj(STARTS[PLC.i]));
+  q('plQ').addEventListener('input', e => plSearch(e.target.value)); q('plRide').onclick = () => { const T = plTarget(); pinClear(); rideAlong({ id: T.id, name: T.name, x: T.x, z: T.z, kind: T.kind }); }; q('plDrive').onclick = plDrive;
+  document.querySelector('#pin button').onclick = e => { e.stopPropagation(); pinClear(); }; hooks.push(pinPlace);
   q('bPlaces').onclick = () => PLC.on ? plClose() : plOpen(); q('plX').onclick = plClose; q('plPrev').onclick = () => plSet(PLC.i - 1); q('plNext').onclick = () => plSet(PLC.i + 1); q('plGo').onclick = plFly;
-  q('plIsland').onclick = () => { plClose(); stopTour(); goPreset(0); };
   el.addEventListener('pointerup', e => { if (e.target === el) plClose(); });
   for (const t of ['pointerdown', 'pointermove', 'wheel', 'touchstart', 'mousedown', 'click', 'dblclick', 'keyup']) el.addEventListener(t, e => e.stopPropagation(), { passive: true });
   /* swipe across the map or the name for the next place; tap a dot to choose it */
@@ -5477,13 +5520,13 @@ async function boot() {
   if (shared && shared.f) { let nm = ''; try { nm = decodeURIComponent(shared.f); } catch (e) { } const o = LABELS.list.find(l => l.focus && l.name === nm); if (o) { FOCUS.iso = shared.iso; FOCUS.clay = shared.clay; enterFocus(o); } }
   T.total = performance.now() - t0; ST.timing = T;
   initClock(); initPlaces();
-  document.getElementById('bTour').onclick = () => { if (TOUR.on) stopTour(); else { plClose(); startTour(); } };
+  document.getElementById('bTour').onclick = () => { if (TOUR.on) { stopTour(); cam.fly = null; cam.tour = null; } else { plClose(); pinClear(); if (FOCUS.label) exitFocus(); startTour(); } };
   document.getElementById('tourS').onclick = e => { e.stopPropagation(); stopTour(); cam.fly = null; cam.tour = null; };
   document.getElementById('bLabels').onclick = e => { LABELS.on = !LABELS.on; e.currentTarget.classList.toggle('on', LABELS.on); };
   document.getElementById('bMore').onclick = () => document.body.classList.toggle('menu');
   addEventListener('pointerdown', e => { if (document.body.classList.contains('menu') && !e.target.closest('#ui')) document.body.classList.remove('menu'); }, true);   /* a tap anywhere else puts More away */
   document.getElementById('bLink').onclick = async e => { const b = e.currentTarget, url = location.href.split('#')[0] + viewHash(); try { history.replaceState(null, '', viewHash()); await navigator.clipboard.writeText(url); b.textContent = 'Copied'; } catch (err) { b.textContent = 'In URL'; } setTimeout(() => { b.textContent = 'Copy link'; }, 1600); };
-  document.getElementById('bReset').onclick = () => { stopTour(); document.body.classList.remove('menu'); goPreset(0); };
+  document.getElementById('bReset').onclick = () => { stopTour(); pinClear(); if (FOCUS.label) exitFocus(); document.body.classList.remove('menu'); goPreset(0); };
   document.getElementById('bCam').onclick = togglePhoto;
   document.getElementById('bQ').onclick = () => setQuality((qi + 2) % 3, true);
   document.getElementById('sTraf').oninput = e => { ST.traffic = e.target.value / 100; };
