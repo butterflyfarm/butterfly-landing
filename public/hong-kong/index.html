@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>Hong Kong Island — Golden Hour</title>
+<title>Hong Kong: Golden Hour</title>
 <style>
   html,body{margin:0;height:100%;overflow:hidden;background:linear-gradient(#5b7fa6,#d9a878 62%,#27506a 63%,#123448);
     -webkit-user-select:none;user-select:none;font-family:"Avenir Next Condensed","DIN Condensed","Helvetica Neue",Arial,sans-serif}
@@ -20,13 +20,15 @@
   body.photo #ui,body.photo #cr{opacity:0;pointer-events:none}
   #cr{position:fixed;right:8px;bottom:6px;font-size:9px;letter-spacing:.04em;color:rgba(255,236,208,.5);text-shadow:0 0 3px rgba(0,0,0,.6);transition:opacity .5s}
   #cr a{color:inherit}
-  /* the clock: a 24-hour dial, noon at the top, the day's daylight as a gold arc; the sun (the moon by night) is dragged round it to set the hour */
-  #tClock{position:fixed;z-index:6;right:max(12px,env(safe-area-inset-right));top:calc(max(12px,env(safe-area-inset-top)) + 150px);width:68px;height:68px;border-radius:50%;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;outline:none;filter:drop-shadow(0 2px 6px rgba(0,0,0,.45))}
-  #tClock svg{display:block;width:100%;height:100%} #tClock:active{cursor:grabbing} #tClock:focus-visible{box-shadow:0 0 0 2px rgba(255,196,128,.7)}
-  #tcTxt{font:700 12.5px/1 inherit;fill:#f3e6d0;letter-spacing:.02em;font-variant-numeric:tabular-nums}
-  body.driving #tClock{top:calc(max(12px,env(safe-area-inset-top)) + 158px)}
-  body.photo #tClock,body.garage #tClock,body.navopen #tClock{display:none}
-  @media (max-height:520px){body.driving #tClock{top:max(10px,env(safe-area-inset-top));right:calc(max(12px,env(safe-area-inset-right)) + 96px)}}   /* (a phone held sideways: beside the speed, clear of Horn and Boost) */
+  /* the light: one button, three settings (day, golden hour, night). It shows the one that is on; a tap moves to the next */
+  #tMode{position:fixed;z-index:6;right:max(12px,env(safe-area-inset-right));top:calc(max(12px,env(safe-area-inset-top)) + 150px);width:66px;height:66px;border-radius:50%;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+    border:1px solid rgba(255,196,128,.5);background:rgba(9,20,28,.88);color:#ffc46a;font:inherit;cursor:pointer;touch-action:manipulation;box-shadow:0 2px 8px rgba(0,0,0,.45);transition:color .4s,border-color .4s}
+  #tMode b{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#f3e6d0}
+  #tMode g{display:none} #tMode[data-m="day"] .m-day,#tMode[data-m="golden"] .m-golden,#tMode[data-m="night"] .m-night{display:inline}
+  #tMode[data-m="day"]{color:#ffe9a8} #tMode[data-m="night"]{color:#cfe0ff;border-color:rgba(170,195,255,.5)}
+  body.driving #tMode{top:calc(max(12px,env(safe-area-inset-top)) + 158px)}
+  body.photo #tMode,body.garage #tMode,body.navopen #tMode,body.places #tMode{display:none}
+  @media (max-height:520px){body.driving #tMode{top:max(10px,env(safe-area-inset-top));right:calc(max(12px,env(safe-area-inset-right)) + 96px)}}   /* (a phone held sideways: beside the speed, clear of Horn and Boost) */
   .lb.hit b,.lb.hit em{pointer-events:auto}
   #ui .g{display:flex;gap:3px;align-items:center}
   #ui .g+.g{padding-left:10px;border-left:1px solid rgba(255,196,128,.22)}
@@ -50,6 +52,14 @@
     border:1px solid rgba(255,196,128,.45);background:rgba(9,20,28,.86);color:#fff4df;font:inherit;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .35s,transform .35s;touch-action:manipulation}
   #tourS.on{opacity:1;pointer-events:auto;transform:translate(-50%,0)} #tourS span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis} #tourS i{font-style:normal;opacity:.7}
   body.photo #tourS,body.driving #tourS{display:none}
+  /* on a touch screen nothing blurs what is behind it: a blur over the moving picture has to be redone every frame for every button, which slows
+     a phone and, in its browser, can flicker. The panels are made a little more solid instead */
+  @media (pointer:coarse){*{-webkit-backdrop-filter:none !important;backdrop-filter:none !important} #ui{background:rgba(9,20,28,.84)} #zm{background:rgba(9,20,28,.82)} .lb b{background:rgba(9,20,28,.8)} #hint{background:rgba(9,20,28,.82)}}
+  /* the name of the site, and whose it is: top left of the view of the island (the driving screen has its own things there) */
+  #brand{position:fixed;z-index:4;left:max(16px,env(safe-area-inset-left));top:max(14px,env(safe-area-inset-top));display:flex;flex-direction:column;gap:3px;pointer-events:none;text-shadow:0 1px 6px rgba(0,0,0,.65);transition:opacity .4s}
+  #brand b{font-size:17px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#fff4df;white-space:nowrap} #brand b span{color:#ffc46a}
+  #brand em{font-style:normal;font-size:10px;letter-spacing:.06em;color:rgba(255,236,208,.72)}
+  body.driving #brand,body.places #brand{opacity:0}
   /* the label that marks where a search has flown to: the name, the address under it, a line down to the spot */
   #pin{position:fixed;left:0;top:0;z-index:4;display:none;flex-direction:column;align-items:center;pointer-events:none;will-change:transform}
   #pin.on{display:flex} body.driving #pin,body.photo #pin,body.places #pin{display:none}
@@ -60,10 +70,6 @@
   #pin button{flex:none;width:24px;height:24px;border-radius:50%;border:0;padding:0;background:rgba(255,190,110,.16);color:#f3d9b4;font-size:11px;cursor:pointer}
   #pin i{width:1px;height:34px;background:linear-gradient(rgba(255,206,140,.95),rgba(255,206,140,.2))}
   #pin u{width:8px;height:8px;border-radius:50%;background:#4fc3f2;box-shadow:0 0 0 2px rgba(9,20,28,.7),0 0 10px rgba(79,195,242,.9)}
-  /* Photo: a camera under the clock. In photo mode everything else goes; the button stays, faint, to come back */
-  #bCam{position:fixed;z-index:6;right:calc(max(12px,env(safe-area-inset-right)) + 12px);top:calc(max(12px,env(safe-area-inset-top)) + 228px);width:44px;height:44px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;
-    color:#f3d9b4;background:rgba(9,20,28,.72);border:1px solid rgba(255,196,128,.4);cursor:pointer;touch-action:manipulation;transition:opacity .4s}
-  #bCam:hover{background:rgba(40,56,66,.9)} body.driving #bCam,body.places #bCam{display:none} body.photo #bCam{opacity:.38}
   /* Places: the island with every place on it; swipe, or tap one, and fly there */
   #places{position:fixed;inset:0;z-index:9;display:none;align-items:center;justify-content:center;padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));background:rgba(4,10,15,.45)}
   body.places #places{display:flex} body.driving #places,body.photo #places{display:none}
@@ -71,12 +77,13 @@
   #places .ph{display:flex;align-items:center;gap:8px} #places .ph b{flex:1;font-size:clamp(14px,3.6vw,17px);font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#fff4df;padding-left:4px}
   #places button{font:inherit;color:#f3e6d0;background:rgba(255,190,110,.1);border:1px solid rgba(255,196,128,.38);border-radius:18px;cursor:pointer;touch-action:manipulation}
   #plX{width:36px;height:36px;font-size:15px}
-  #plQ{box-sizing:border-box;width:100%;height:42px;padding:0 14px;border-radius:21px;border:1px solid rgba(255,196,128,.38);background:rgba(4,12,18,.6);color:#fff4df;font:inherit;font-size:16px;letter-spacing:.02em;outline:none;-webkit-appearance:none;appearance:none}
-  #plQ::placeholder{color:rgba(243,217,180,.55)} #plQ:focus{border-color:rgba(255,206,140,.85)}
-  #plRes{display:none;flex-direction:column;gap:5px} #plRes.on{display:flex}
-  #plRes button{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:9px 14px;border-radius:12px;text-align:left;font-size:14px}
-  #plRes button em{font-style:normal;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;opacity:.65;white-space:nowrap}
-  #plRes .none{padding:6px 14px;font-size:13px;opacity:.7}
+  #plQ,.gq{box-sizing:border-box;width:100%;height:42px;padding:0 14px;border-radius:21px;border:1px solid rgba(255,196,128,.38);background:rgba(4,12,18,.6);color:#fff4df;font:inherit;font-size:16px;letter-spacing:.02em;outline:none;-webkit-appearance:none;appearance:none}
+  #plQ::placeholder,.gq::placeholder{color:rgba(243,217,180,.55)} #plQ:focus,.gq:focus{border-color:rgba(255,206,140,.85)}
+  #plRes,.gres{display:none;flex-direction:column;gap:5px} #plRes.on,.gres.on{display:flex}
+  #plRes button,#garage .gres button{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:9px 14px;border-radius:12px;text-align:left;font-size:14px}
+  #garage .gres button{width:100%;font-family:inherit;font-weight:400;letter-spacing:.02em;text-transform:none;color:#f3e6d0;background:rgba(255,190,110,.1);border:1px solid rgba(255,196,128,.38);box-shadow:none;cursor:pointer;-webkit-backdrop-filter:none;backdrop-filter:none}
+  #plRes button em,.gres button em{font-style:normal;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;opacity:.65;white-space:nowrap}
+  #plRes .none,.gres .none{padding:6px 14px;font-size:13px;opacity:.7;color:#f3e6d0}
   #plMap{display:block;width:100%;height:min(42vh,340px);border-radius:14px;background:#163a50;touch-action:none;cursor:pointer}
   #places .pcar{display:flex;align-items:center;gap:10px;touch-action:none}
   #places .parr{flex:none;width:50px;height:50px;border-radius:50%;font-size:30px;line-height:1;padding:0 0 5px}
@@ -142,7 +149,7 @@
   /* the two big buttons, side by side at the foot of the view: Drive, and Places */
   #bigs{position:fixed;z-index:5;left:max(16px,env(safe-area-inset-left));bottom:calc(max(14px,env(safe-area-inset-bottom)) + 2px);display:flex;align-items:flex-end;gap:12px;transition:opacity .6s}
   .big{display:flex;align-items:center;gap:12px;padding:8px 18px 8px 8px;
-    border-radius:44px;border:1px solid rgba(255,214,160,.85);background:rgba(9,20,28,.72);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:#fff4df;font-family:inherit;cursor:pointer;
+    border-radius:44px;border:1px solid rgba(255,214,160,.85);background:rgba(9,20,28,.86);color:#fff4df;font-family:inherit;cursor:pointer;
     box-shadow:0 6px 22px rgba(0,0,0,.45);transition:transform .2s,opacity .6s;touch-action:manipulation;text-align:left}
   #bigDrive{opacity:0;pointer-events:none}
   #bigDrive.ready{opacity:1;pointer-events:auto}
@@ -326,7 +333,8 @@
     #mini,#mmC{width:118px}
     #mmC{height:118px}
     #mini{top:calc(max(10px,env(safe-area-inset-top)) + 62px)}
-    #bigs{bottom:calc(max(10px,env(safe-area-inset-bottom)) + 66px);display:grid;grid-template-columns:auto auto;justify-content:start;align-items:center;gap:8px}   /* (a phone: two rows of two; Drive and Places below, as Tour and Island are placed first) */
+    #brand b{font-size:14px;letter-spacing:.16em}
+    #bigs{bottom:calc(max(10px,env(safe-area-inset-bottom)) + 80px);display:grid;grid-template-columns:auto auto;justify-content:start;align-items:center;gap:8px}   /* (a phone: two rows of two; Drive and Places below, as Tour and Island are placed first) */
     #bTour{grid-row:1;grid-column:1} #bReset{grid-row:1;grid-column:2} #bigDrive{grid-row:2;grid-column:1} #bPlaces{grid-row:2;grid-column:2}
     #places .pl3{flex-wrap:nowrap;gap:7px} #places .pgo{padding:13px 13px;font-size:12.5px;letter-spacing:.12em}
     .big em{display:none} .big.sm{padding:5px 13px 5px 5px} .big.sm i{width:38px;height:38px} .big.sm b{font-size:13px}
@@ -337,7 +345,7 @@
     #dSt{font-size:12px;letter-spacing:.07em;padding:6px 10px}
     #dTop{gap:8px}
     #hint{bottom:calc(max(12px,env(safe-area-inset-bottom)) + 62px);font-size:10px}
-    body:not(.driving) #hint{bottom:calc(max(10px,env(safe-area-inset-bottom)) + 210px)}   /* above the two big buttons */
+    body:not(.driving) #hint{bottom:calc(max(10px,env(safe-area-inset-bottom)) + 224px)}   /* above the two big buttons */
     #ui{right:max(8px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));gap:6px;padding:5px;opacity:.92;flex-wrap:nowrap}
     #ui>button{padding:9px 13px}
     body.menu #cr{opacity:0}
@@ -363,7 +371,7 @@
   <canvas id="plMap" aria-label="Map of the island with the places to fly to"></canvas>
   <div class="pcar"><button id="plPrev" class="parr" type="button" aria-label="Previous place">‹</button><div class="psel"><b id="plName"></b><em id="plSub"></em></div><button id="plNext" class="parr" type="button" aria-label="Next place">›</button></div>
   <div id="plDots" class="pdots"></div>
-  <div class="pl3"><button id="plGo" class="pgo" type="button" title="The view flies there and picks the clearest angle">Fly there</button><button id="plDrive" class="pgo alt" type="button" title="Start driving right there">Drive</button><button id="plRide" class="pgo alt" type="button" title="Sit back: the car drives you there along the streets, then on to the next place">Ride there</button></div>
+  <div class="pl3"><button id="plGo" class="pgo" type="button" title="The view flies there and picks the clearest angle">Fly there</button><button id="plDrive" class="pgo alt" type="button" title="Drive there: the route is shown, and you choose whether the car drives or you do">Drive there</button><button id="plRide" class="pgo alt" type="button" title="Sit back: the car drives you there along the streets, then on to the next place">Ride there</button></div>
 </div></div>
 <div id="labels"></div>
 <div id="fc" role="dialog" aria-label="Landmark"><button class="x" id="fcX" title="Close (Esc)" aria-label="Close">✕</button><h3 id="fcN"></h3><p id="fcY" class="yr"></p><p id="fcF" class="fact"></p><p id="fcS"></p>
@@ -374,11 +382,11 @@
   <g id="cpR"><circle r="20" fill="none" stroke="rgba(255,206,140,.3)" stroke-dasharray="2 3.2"/><path d="M0-18L5 0H-5Z" fill="#ff8a52"/><path d="M0 18L5 0H-5Z" fill="rgba(243,217,180,.6)"/><circle r="2" fill="#2a1a0c"/></g>
   <text id="cpN">N</text></svg></div>
   <div id="zm"><button id="zIn" title="Zoom in" aria-label="Zoom in">+</button><button id="zOut" title="Zoom out" aria-label="Zoom out">−</button></div></div>
-<button id="bCam" type="button" title="Photo: just the view, nothing over it (P)" aria-label="Photo: hide the controls"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M9 4 7.6 6H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2.6L15 4H9Zm3 4.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Zm0 2a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z"/></svg></button>
-<div id="tClock" role="slider" tabindex="0" aria-label="Time of day in Hong Kong" title="Time of day: drag the sun round the dial · double-tap for the golden afternoon"><svg viewBox="0 0 68 68" aria-hidden="true">
-  <circle cx="34" cy="34" r="33" fill="rgba(9,20,28,.9)" stroke="rgba(255,196,128,.42)"/><circle cx="34" cy="34" r="26" fill="none" stroke="rgba(120,150,210,.30)" stroke-width="5"/><path id="tcDay" fill="none" stroke="#f0b45a" stroke-width="5" stroke-linecap="round"/>
-  <path d="M34 3.5v4M34 60.5v4M3.5 34h4M60.5 34h4" stroke="rgba(243,217,180,.6)" stroke-width="1.2"/><g id="tcHand"><circle id="tcSun" cx="34" cy="8" r="6.2" fill="#ffd27a" stroke="#1a130a" stroke-width="1.4"/></g>
-  <text id="tcTxt" x="34" y="38.5" text-anchor="middle">17:00</text></svg></div>
+<div id="brand"><b>Hong Kong: <span>Golden Hour</span></b><em>© 2026 Butterfly Farm Studio Limited</em></div>
+<button id="tMode" type="button" data-m="golden" aria-label="Light: golden hour. Tap for night" title="Light: tap to change — day, golden hour, night"><svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true">
+  <g class="m-day" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="16" cy="16" r="5.5" fill="currentColor" stroke="none"/><path d="M16 3.5v3.2M16 25.3v3.2M3.5 16h3.2M25.3 16h3.2M7.2 7.2l2.3 2.3M22.5 22.5l2.3 2.3M7.2 24.8l2.3-2.3M22.5 9.5l2.3-2.3"/></g>
+  <g class="m-golden" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 21a7 7 0 0 1 14 0Z" fill="currentColor" stroke="none"/><path d="M4 21h24M8 26h16M16 7.5v3M6.8 12.3l2.2 2.2M25.2 12.3L23 14.5"/></g>
+  <g class="m-night"><path fill="currentColor" d="M20.5 4.5a11.5 11.5 0 1 0 7 15.3A9.5 9.5 0 0 1 20.5 4.5Z"/></g></svg><b>Golden</b></button>
 <button id="tourS" type="button" title="End the tour" aria-live="polite"><span></span><i>✕</i></button>
 <div id="pin"><div class="pb"><div class="pt"><b></b><em></em></div><button type="button" aria-label="Remove this label">✕</button></div><i></i><u></u></div>
 <div id="hint" aria-live="polite"></div>
@@ -396,6 +404,7 @@
       <button id="gGo" class="gbtn">Next</button></div>
     <div id="gB" class="gp"><div class="gcard gpick">
       <div class="ghd"><button id="gBack" aria-label="Back to vehicles">‹</button><b>Where to start</b></div>
+      <input id="gSQ" class="gq" type="search" placeholder="Search a place, street, building or address" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search where to start"><div id="gSRes" class="gres"></div>
       <canvas id="gMapS" class="gmap" aria-label="Map of start places"></canvas>
       <div class="gcar"><button id="gSPrev" class="garr" aria-label="Previous place">‹</button><div class="gsel"><b id="gSName"></b><em id="gSSub"></em></div><button id="gSNext" class="garr" aria-label="Next place">›</button></div>
       <div id="gSDots" class="gdots"></div>
@@ -404,6 +413,7 @@
     </div></div>
     <div id="gC" class="gp"><div class="gcard gpick">
       <div class="ghd"><button id="gBack2" aria-label="Back">‹</button><b id="gDestH">Where to?</b></div>
+      <input id="gDQ" class="gq" type="search" placeholder="Search a place, street, building or address" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search where to go"><div id="gDRes" class="gres"></div>
       <canvas id="gMapD" class="gmap" aria-label="Map of destinations"></canvas>
       <div class="gcar"><button id="gDPrev" class="garr" aria-label="Previous place">‹</button><div class="gsel"><b id="gDName"></b><em id="gDSub"></em></div><button id="gDNext" class="garr" aria-label="Next place">›</button></div>
       <div id="gDDots" class="gdots"></div>
@@ -414,7 +424,7 @@
       <div class="gto"><em>To</em><b id="gToName"></b><i id="gToDist"></i></div>
       <div class="gmodes"><button id="gAuto" class="gmode auto"><b>Drive me</b><em>Sit back: the car drives itself there, fast</em><i id="gAutoBest"></i></button><button id="gFree" class="gmode"><b>I'll drive</b><em>You steer, following the route on the road</em><i id="gFreeBest"></i></button></div>
       <button id="gBack3" class="glink">‹ Pick another place</button></div></div></div>
-<div id="cr">Buildings and 3D building models: Lands Department, HKSAR Government, via <a href="https://data.gov.hk/en-data/dataset/hk-landsd-openmap-landsd-building" target="_blank" rel="noopener">DATA.GOV.HK</a> and <a href="https://3d.map.gov.hk/" target="_blank" rel="noopener">Open3Dhk</a> · map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors · addresses: <a href="https://data.gov.hk/en-data/dataset/hk-dpo-als_01-als" target="_blank" rel="noopener">Address Lookup Service</a>, HKSAR Government · elevation NASA SRTM</div>
+<div id="cr">© 2026 Butterfly Farm Studio Limited · Buildings and 3D building models: Lands Department, HKSAR Government, via <a href="https://data.gov.hk/en-data/dataset/hk-landsd-openmap-landsd-building" target="_blank" rel="noopener">DATA.GOV.HK</a> and <a href="https://3d.map.gov.hk/" target="_blank" rel="noopener">Open3Dhk</a> · map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors · addresses: <a href="https://data.gov.hk/en-data/dataset/hk-dpo-als_01-als" target="_blank" rel="noopener">Address Lookup Service</a>, HKSAR Government · elevation NASA SRTM</div>
 <script>window.__errs=[];addEventListener("error",function(e){window.__errs.push(String(e.message).slice(0,300)+" @"+e.lineno)});(function(){var ce=console.error;console.error=function(){try{window.__errs.push(Array.prototype.join.call(arguments," ").slice(0,900))}catch(e){}ce.apply(console,arguments)}})();</script>
 <script type="module">
 import * as THREE from 'three';
@@ -2480,12 +2490,14 @@ vec3 waterShade(vec3 wp,float shallow,float sh,vec3 deep){
   float sd=max(dot(R,uSunDir),0.);
   float wav=texture(uNoise,xz/470.+t*vec2(.004,.002)).b*.55+texture(uNoise,mat2(.8,.6,-.6,.8)*xz/173.-t*vec2(.006,.003)).g*.45;
   float hiSun=smoothstep(.25,.7,uSunDir.y);
-  float lobe=(pow(sd,12.)*.45+pow(sd,80.)*.45)*mix(1.,.12,hiSun)+.006+.014*smoothstep(.45,.75,swell*.5+wav*.5);
-  vec2 sc=floor(gl_FragCoord.xy/2.);float slot=uTime*4.+hash21(sc)*7.;float hs=hash21(sc+floor(slot)*17.31);
+  float lobe=(pow(sd,12.)*.45+pow(sd,80.)*.45)*mix(1.,.12,hiSun)+.004+.008*smoothstep(.45,.75,swell*.5+wav*.5);
+  vec2 sc=floor(gl_FragCoord.xy/2.);float slot=uTime*2.2+hash21(sc)*7.;float hs=hash21(sc+floor(slot)*17.31);
   float tw=sin(fract(slot)*3.14159);
   float sheet=smoothstep(.46,.66,wav*.6+swell*.4);
-  float sp=step(1.-lobe*(.3+6.*sheet),hs)*tw*tw;
-  col+=normalize(uSunCol+1e-4)*sp*sh*smoothstep(-.02,.06,uSunDir.y)*(1.5+4.*pow(sd,6.));
+  /* (with the sun well up its reflection covers most of the sea seen from above, and flecks flashing all over it read as flicker: fewer of them the
+     farther the water, each slower and less bright) */
+  float sp=step(1.-lobe*(.3+6.*sheet)*mix(1.,.3,smoothstep(1500.,9000.,dist)),hs)*tw*tw;
+  col+=normalize(uSunCol+1e-4)*sp*sh*smoothstep(-.02,.06,uSunDir.y)*(.9+3.*pow(sd,6.));
   col+=uSunCol*sheet*.012*sh;
   col+=uSunCol*pow(sd,300.)*sh*1.5;
   return col;
@@ -3306,9 +3318,9 @@ const sunVec = (azS, el) => { const a = azS * RAD, e = el * RAD; return [-Math.c
 const LIGHTS = {
   /* warm: the afternoon the page opens on. The sun is still well up (about 28 degrees), so streets and waterfront stand in sunlight and not in the
      towers' long shadows, and the light is graded gold: warm sun, warm fill from the ground, a deep sky for it to stand against */
-  warm: { sun: sunVec(40, 28), sunCol: [4.9, 2.7, .80], glow: [1.5, .95, .50], zen: [.06, .20, .56], horW: [.86, .80, .70], horE: [.42, .58, .84], ambS: [.33, .36, .43], ambG: [.44, .29, .13],
-    fog: [.70, .76, .86], fogDen: 1.5e-5, water: [.018, .115, .20], night: 0, sh: 1, cloud: .46, expo: 1.08, bloom: .28 },   /* (gold in the sunlight and its bounce; the sky and the sea blue, the air clear) */
-  golden: { sun: sunVec(9, 11.5), sunCol: [3.1, 1.80, .80], glow: [1.5, .82, .34], zen: [.10, .22, .50], horW: [1.15, .70, .36], horE: [.46, .50, .66], ambS: [.22, .25, .34], ambG: [.22, .16, .10],
+  warm: { sun: sunVec(40, 28), sunCol: [4.9, 2.7, .80], glow: [1.5, .95, .50], zen: [.06, .20, .56], horW: [.86, .80, .70], horE: [.42, .58, .84], ambS: [.80, .82, .90], ambG: [.70, .52, .32],
+    fog: [.70, .76, .86], fogDen: 1.5e-5, water: [.018, .115, .20], night: 0, sh: 1, cloud: .46, expo: 1.02, bloom: .28 },   /* (the sky's own light is strong: a street in a tower's shadow is in open shade, about a third as bright as one in the sun, not black) */   /* (gold in the sunlight and its bounce; the sky and the sea blue, the air clear) */
+  golden: { sun: sunVec(9, 11.5), sunCol: [3.1, 1.80, .80], glow: [1.5, .82, .34], zen: [.10, .22, .50], horW: [1.15, .70, .36], horE: [.46, .50, .66], ambS: [.42, .44, .52], ambG: [.36, .26, .16],
     fog: [.82, .62, .46], fogDen: 2.3e-5, water: [.030, .105, .135], night: .1, sh: 1, cloud: .42, expo: 1.06, bloom: .32 },
   noon: { sun: sunVec(62, 62), sunCol: [3.3, 3.15, 2.9], glow: [.9, .9, .85], zen: [.10, .27, .62], horW: [.62, .74, .88], horE: [.58, .72, .88], ambS: [.34, .44, .60], ambG: [.20, .19, .16],
     fog: [.66, .75, .86], fogDen: 1.5e-5, water: [.020, .13, .19], night: 0, sh: 1, cloud: .5, expo: .92, bloom: .2 },
@@ -3350,7 +3362,7 @@ function lightAtTime(h) {
 }
 const fmtH = h => { const m = Math.round(h * 60); return String(Math.floor(m / 60) % 24).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
 function applyTime(h, force) {
-  TOD.h = h; const p = lightAtTime(h); L.cur = p; applyLight(p); L.name = p.el >= 38 ? 'noon' : p.el >= -1 ? 'golden' : 'dusk'; todDial(h);
+  TOD.h = h; const p = lightAtTime(h); L.cur = p; applyLight(p); L.name = p.el >= 38 ? 'noon' : p.el >= -1 ? 'golden' : 'dusk'; todBtn(p.el);
   if (force || ST.t - TOD.shT > (COARSE ? .5 : .25)) { SH.farDirty = true; TOD.shT = ST.t; }   /* (while the hour is moving: the island's shadow redrawn a few times a second, fewer on a phone) */
 }
 /* ---------- Places: the island with every place on it; choose one and the view flies there ---------- */
@@ -3403,9 +3415,12 @@ function plTarget() { const e = PLC.sel, S = STARTS[PLC.i]; if (e) return { name
 function plFly() { const T = plTarget(); plClose(); if (TOUR.on) stopTour(); if (FOCUS.label) exitFocus(); userInput();
   if (T.label) { pinClear(); flyTo(T.label.fly); if (T.label.focus) focusOffer(T.label); return; }   /* (a landmark, district or peak carries its own label and its own view) */
   const bv = plBestView(T.x, T.z, T.bld); pinClear(); flyTo(bv.pose, () => { pinShow(T.name, T.sub, bv.at[0], bv.at[1], bv.at[2]); }); }
-/* driving from what was chosen: straight into the car, on the nearest street to it, with the wheel yours */
-async function plDrive() { const T = plTarget(); if (DRIVE.on || DRIVE.entering) return; plClose(); pinClear(); await enterDrive(); if (!DRIVE.on || !DRIVE.car) return;
-  if (T.id) dStart(T.id); else { DRIVE.hereXZ = [T.x, T.z]; dStart('here'); } closeGarage(); }
+/* driving to what was chosen: into the car at the place nearest the view, the route to it laid, and the question asked: shall the car drive you,
+   or will you drive? (the same screen as when a destination is chosen from the car) */
+function tripFrom(to) { const far = cam.dist > 2600; let from = null, bd = 1e9; for (const S of STARTS) { const P = placeXZ(S); if (!P || Math.hypot(P[0] - to.x, P[1] - to.z) < 400) continue; const d = far ? (S.id === 'pier' ? 0 : 1e8) : Math.hypot(P[0] - cam.tx, P[1] - cam.tz); if (d < bd) { bd = d; from = S; } } return from; }
+async function plDrive() { const T = plTarget(); if (DRIVE.on || DRIVE.entering) return; const from = tripFrom(T); plClose(); pinClear(); await enterDrive(); if (!DRIVE.on || !DRIVE.car || !from) return;
+  dStart(from.id); const car = DRIVE.car, r = navRoute(car.e, car.d, car.u, T.x, T.z); let km = 0; if (r) for (const st of r.steps) km += DRIVE.E[st.c].L / 1000;
+  DRIVE.gNext = false; DRIVE.gMid = null; DRIVE.gDest = { id: T.id, name: T.name, x: T.x, z: T.z, kind: T.kind, km }; gStep('mode'); }
 /* search: the places; the districts, landmarks and peaks that carry a name on the map; every named street (all of them once the streets for driving
    are loaded); and every building the survey names. Choosing a result shows it on the map; Fly there and Ride there then go to it */
 function plIndex() {
@@ -3426,10 +3441,11 @@ function plIndex() {
     for (const [k, b] of tall) { if (seen.has('Landmark|' + k) || seen.has('Place|' + k) || named.has(k)) continue; const nm = b.nm === b.nm.toUpperCase() ? k.replace(/(^|[\s(\-/])[a-z]/g, c => c.toUpperCase()) : b.nm; put(nm, 'Building', 4, b.cx, b.cz, { dist: clamp(b.h * 2.4, 380, 1100), t: nm, a: '', bld: 1 }); } }
   return (PLC.idx = out);
 }
+function findRows(t) { const sc = e => e.low === t ? 0 : e.low.startsWith(t) ? 1 : e.low.includes(' ' + t) ? 2 : e.low.includes(t) ? 3 : 9;
+  return plIndex().map(e => [sc(e), e]).filter(q => q[0] < 9).sort((a, b) => a[0] - b[0] || a[1].rank - b[1].rank || a[1].name.length - b[1].name.length).slice(0, 8).map(q => q[1]); }
 function plSearch(text) {
   const box = document.getElementById('plRes'), t = text.trim().toLowerCase(); box.innerHTML = ''; PLC.hits = []; box.classList.toggle('on', !!t); if (!t) return;
-  const sc = e => e.low === t ? 0 : e.low.startsWith(t) ? 1 : e.low.includes(' ' + t) ? 2 : e.low.includes(t) ? 3 : 9;
-  PLC.hits = plIndex().map(e => [sc(e), e]).filter(q => q[0] < 9).sort((a, b) => a[0] - b[0] || a[1].rank - b[1].rank || a[1].name.length - b[1].name.length).slice(0, 8).map(q => q[1]);
+  PLC.hits = findRows(t);
   if (!PLC.hits.length) { const d = document.createElement('div'); d.className = 'none'; d.textContent = PLC.addr ? 'Nothing by that name' : 'Nothing yet: the address list is still loading'; box.appendChild(d); }
   plRows(box, PLC.hits);
 }
@@ -3439,7 +3455,7 @@ function plAddr() {
   if (PLC.addrP) return; PLC.addrP = fetch(new URL('addr.txt', location.href.split(/[?#]/)[0])).then(r => { if (!r.ok) throw new Error(r.status); return r.text(); }).then(t => {
     const L = t.split('\n'), S = +L[0], streets = L.slice(1, 1 + S), n = L.length - 1 - S, A = { streets, name: [], no: [], si: new Uint16Array(n), x: new Int16Array(n), z: new Int16Array(n) }; let k = 0;
     for (let i = 1 + S; i < L.length; i++) { const q = L[i].split('\t'); if (q.length < 5) continue; A.name.push(q[0]); A.no.push(q[1]); A.si[k] = +q[2]; A.x[k] = +q[3]; A.z[k] = +q[4]; k++; }
-    PLC.addr = A; const el = document.getElementById('plQ'); if (PLC.on && el && el.value.trim()) plSearch(el.value); }).catch(() => { PLC.addrP = null; });
+    PLC.addr = A; for (const id of ['plQ', 'gSQ', 'gDQ']) { const el = document.getElementById(id); if (el && el.value.trim()) el.dispatchEvent(new Event('input')); } }).catch(() => { PLC.addrP = null; });
 }
 /* a result is chosen: it is marked on the map and named below it, and the buttons under the map act on it */
 function plPick(e) { const q = document.getElementById('plQ'); q.value = ''; q.blur(); plSearch(''); if (e.place !== undefined) { plSet(e.place); return; }
@@ -3449,8 +3465,7 @@ function plPick(e) { const q = document.getElementById('plQ'); q.value = ''; q.b
    wheel (Auto), choose somewhere yourself, or leave */
 const placeObj = S => { const P = placeXZ(S); return { id: S.id, name: S.name, x: P[0], z: P[1], kind: 'Place' }; };
 async function rideAlong(to) {   /* to: { name, x, z } and, for one of the places, its id */
-  if (DRIVE.on || DRIVE.entering || !to) return; const far = cam.dist > 2600; let from = null, bd = 1e9;
-  for (const S of STARTS) { const P = placeXZ(S); if (!P || Math.hypot(P[0] - to.x, P[1] - to.z) < 400) continue; const d = far ? (S.id === 'pier' ? 0 : 1e8) : Math.hypot(P[0] - cam.tx, P[1] - cam.tz); if (d < bd) { bd = d; from = S; } }
+  if (DRIVE.on || DRIVE.entering || !to) return; const from = tripFrom(to);
   plClose(); await enterDrive(); if (!DRIVE.on || !DRIVE.car || !from) return;
   dStart(from.id); closeGarage(to, true); DRIVE.ride = true; ctlHint.first = false; ctlHint.show(['Riding to ' + to.name, 'Auto to take the wheel', '✕ to leave'], 8000);
 }
@@ -3477,27 +3492,13 @@ function initPlaces() {
   addEventListener('keydown', e => { if (!PLC.on) return; if (e.target && e.target.id === 'plQ') { e.stopPropagation(); if (e.code === 'Escape') { e.preventDefault(); if (e.target.value) { e.target.value = ''; plSearch(''); } else plClose(); } else if (e.code === 'Enter') { e.preventDefault(); if (PLC.hits && PLC.hits.length) plPick(PLC.hits[0]); } return; }   /* typing: none of the page's own keys */
     if (e.code === 'Escape') plClose(); else if (e.code === 'ArrowLeft') plSet(PLC.i - 1); else if (e.code === 'ArrowRight') plSet(PLC.i + 1); else if (e.code === 'Enter') plFly(); else return; e.stopPropagation(); e.preventDefault(); }, true);
 }
-/* the round clock on the screen: shows the hour, and sets it */
-function todDial(h) {
-  const hand = document.getElementById('tcHand'); if (!hand) return; const q = Math.round(h * 12);   /* (redrawn when the time moves five minutes) */
-  if (todDial.q !== q) { todDial.q = q; hand.setAttribute('transform', 'rotate(' + ((h - 12) * 15).toFixed(1) + ' 34 34)'); document.getElementById('tcTxt').textContent = fmtH(Math.round(h * 12) / 12);
-    const day = h > TOD.rise && h < TOD.set, sun = document.getElementById('tcSun'); sun.setAttribute('fill', day ? '#ffd27a' : '#dfe8ff'); sun.setAttribute('r', day ? 6.2 : 5); document.getElementById('tClock').setAttribute('aria-valuetext', fmtH(h)); }
-  if (todDial.r !== TOD.rise) { todDial.r = TOD.rise; const pt = t => { const a = (t - 12) * 15 * RAD; return (34 + 26 * Math.sin(a)).toFixed(1) + ' ' + (34 - 26 * Math.cos(a)).toFixed(1); };
-    document.getElementById('tcDay').setAttribute('d', 'M' + pt(TOD.rise) + 'A26 26 0 ' + (TOD.set - TOD.rise > 12 ? 1 : 0) + ' 1 ' + pt(TOD.set)); }
-}
-function initClock() {
-  const el = document.getElementById('tClock'); if (!el) return; let drag = false, moved = false, lastTap = 0;
-  const at = e => { const r = el.getBoundingClientRect(), a = Math.atan2(e.clientX - r.left - r.width / 2, -(e.clientY - r.top - r.height / 2)); return (Math.round((a / TAU * 24 + 12 + 24) % 24 * 12) / 12); };
-  const set = h => { TOD.anim = null; applyTime(h); U.uIgnite.value = lightAtTime(h).el < 1.5 ? 1 : 0; };
-  el.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); drag = true; moved = false; try { el.setPointerCapture(e.pointerId); } catch (_) {} });
-  el.addEventListener('pointermove', e => { if (!drag) return; e.stopPropagation(); if (!moved && Math.abs(e.movementX) + Math.abs(e.movementY) < 1) return; moved = true; set(at(e)); });
-  const up = e => { if (!drag) return; drag = false; e.stopPropagation(); const now = performance.now();
-    if (!moved) { if (now - lastTap < 380) { lastTap = 0; setTime(presetTime('golden'), false); return; } lastTap = now; set(at(e)); } };
-  el.addEventListener('pointerup', up); el.addEventListener('pointercancel', () => { drag = false; });
-  for (const t of ['click', 'dblclick', 'touchstart', 'mousedown']) el.addEventListener(t, e => e.stopPropagation(), { passive: true });
-  el.addEventListener('keydown', e => { const d = e.code === 'ArrowRight' || e.code === 'ArrowUp' ? 1 : e.code === 'ArrowLeft' || e.code === 'ArrowDown' ? -1 : 0; if (!d) return; e.preventDefault(); e.stopPropagation(); set(((TOD.h + d / 6) % 24 + 24) % 24); });
-}
-const presetTime = n => n === 'noon' ? 12.5 : n === 'dusk' ? TOD.set + .45 : TOD.gold;
+/* the light button: day (late morning), golden hour, night. It shows what the light now is, however it came to be so (the tour moves the hour too) */
+const TOD_MODES = ['day', 'golden', 'night'], TOD_NAMES = { day: 'Day', golden: 'Golden', night: 'Night' };
+function todBtn(el) { const b = document.getElementById('tMode'); if (!b) return; const m = el < -4 ? 'night' : el < 34 ? 'golden' : 'day'; if (b.dataset.m === m) return; b.dataset.m = m; b.lastChild.textContent = TOD_NAMES[m];
+  const nx = TOD_MODES[(TOD_MODES.indexOf(m) + 1) % 3]; b.setAttribute('aria-label', 'Light: ' + (m === 'golden' ? 'golden hour' : m) + '. Tap for ' + (nx === 'golden' ? 'golden hour' : nx)); }
+function initLightBtn() { const b = document.getElementById('tMode'); if (!b) return; for (const t of ['pointerdown', 'touchstart', 'mousedown']) b.addEventListener(t, e => e.stopPropagation(), { passive: true });
+  b.onclick = e => { e.stopPropagation(); const cur = TOD.anim ? TOD.goal || b.dataset.m : b.dataset.m, nx = TOD_MODES[(TOD_MODES.indexOf(cur) + 1) % 3]; TOD.goal = nx; if (TOUR.on) stopTour(); setTime(presetTime(nx), false); }; }
+const presetTime = n => n === 'noon' ? 12.5 : n === 'day' ? 11 : n === 'night' ? TOD.set + 1.6 : n === 'dusk' ? TOD.set + .45 : TOD.gold;
 function setLight(name, instant) { setTime(presetTime(name), instant); }
 function setTime(h, instant) { if (instant) { TOD.anim = null; applyTime(h, true); U.uIgnite.value = lightAtTime(h).el < 1.5 ? 1 : 0; } else TOD.anim = { a: TOD.h, b: h, t: 0, d: clamp(Math.abs(h - TOD.h) * .9, 2.5, 6) }; }
 function stepLight(dt) {
@@ -4359,8 +4360,9 @@ function dSelect(i) {
   if (DRIVE.car) driveStep(0);
 }
 function gStep(s) { const g = document.getElementById('garage'); g.dataset.step = s; DRIVE.gStep = s;
+  if (s === 'where' || s === 'dest') { plAddr(); for (const id of ['gSQ', 'gDQ']) { const el = document.getElementById(id); if (el && el.value) { el.value = ''; gSearch(id === 'gSQ' ? 'start' : 'dest', ''); } } }
   if (s === 'where') { const i = STARTS.findIndex(q => q.id === DRIVE.start); pickSet('start', i >= 0 ? i : STARTS.findIndex(q => q.id === 'pier')); document.getElementById('gHere').style.display = DRIVE.hereXZ ? '' : 'none'; }
-  if (s === 'dest') { document.getElementById('gDestH').textContent = DRIVE.gMid ? (DRIVE.nav ? 'Change destination' : 'Where to?') : DRIVE.gNext ? 'Where next?' : 'Where to?'; const L = pickList('dest'), cur = PICK.dest.id && L.findIndex(q => q.id === PICK.dest.id); pickSet('dest', cur >= 0 ? cur : (L.findIndex(q => q.id === 'peak') + L.length) % L.length); }
+  if (s === 'dest') { document.getElementById('gDestH').textContent = DRIVE.gMid ? (DRIVE.nav ? 'Change destination' : 'Where to?') : DRIVE.gNext ? 'Where next?' : 'Where to?'; const L = pickList('dest'), cur = PICK.dest.id && L.findIndex(q => q.id === PICK.dest.id), keep = PICK.dest.sel; if (keep && DRIVE.gKeep) pickCustom('dest', { t: keep.name, x: keep.x, z: keep.z, kind: keep.kind, a: keep.sub === keep.kind ? '' : keep.sub }); else pickSet('dest', cur >= 0 ? cur : (L.findIndex(q => q.id === 'peak') + L.length) % L.length); DRIVE.gKeep = false; }
   if (s === 'mode') { const p = DRIVE.gDest, m = p.km; document.getElementById('gToName').textContent = p.name; document.getElementById('gToDist').textContent = m ? (m < 1 ? Math.round(m * 100) * 10 + ' m' : m.toFixed(1) + ' km') + ' by road' : '';
     const bt = DRIVE.start && DRIVE.start !== 'here' ? bestOf(DRIVE.start, p.id) : {}; document.getElementById('gAutoBest').textContent = bt.a ? 'Best ' + fmtT(bt.a) : ''; document.getElementById('gFreeBest').textContent = bt.m ? 'Your best ' + fmtT(bt.m) : 'Timed: set a best'; } }
 /* after arriving: the same big place picker as at the start (the island map, swipe from place to place), then drive me / I'll drive.
@@ -4398,7 +4400,7 @@ const PICK = { start: { i: 0 }, dest: { i: 0 }, box: null };
 /* destinations: every place except where you are now */
 function pickList(kind) { if (kind === 'start') return STARTS; const c = DRIVE.car; return STARTS.filter(S => { const P = placeXZ(S); return P && (!c || Math.hypot(P[0] - c.x, P[1] - c.z) > 300); }); }
 function pickSet(kind, i) {
-  const L = pickList(kind), k = PICK[kind]; if (!L.length) return; k.i = ((i % L.length) + L.length) % L.length; const S = L[k.i]; k.id = S.id;
+  const L = pickList(kind), k = PICK[kind]; if (!L.length) return; k.sel = null; k.i = ((i % L.length) + L.length) % L.length; const S = L[k.i]; k.id = S.id;
   const pre = kind === 'start' ? 'gS' : 'gD'; document.getElementById(pre + 'Name').textContent = S.name;
   k.route = null; let sub = S.blurb;
   if (kind === 'dest' && DRIVE.car) { const P = placeXZ(S), car = DRIVE.car, r = navRoute(car.e, car.d, car.u, P[0], P[1]);
@@ -4423,12 +4425,27 @@ function pickMap(kind) {
   /* where you start, when choosing where to go */
   if (kind === 'dest' && DRIVE.car) { const x = X(DRIVE.car.x), z = Z(DRIVE.car.z); g.fillStyle = '#ffb054'; g.strokeStyle = '#241405'; g.lineWidth = 2; g.beginPath(); g.arc(x, z, 7, 0, TAU); g.fill(); g.stroke(); }
   /* every place; the chosen one big, with its name */
-  L.forEach((S, j) => { if (j === k.i) return; const P = placeXZ(S); g.fillStyle = col; g.strokeStyle = 'rgba(9,20,28,.9)'; g.lineWidth = 2; g.beginPath(); g.arc(X(P[0]), Z(P[1]), 5.5, 0, TAU); g.fill(); g.stroke(); });
-  const S = L[k.i], P = placeXZ(S), x = X(P[0]), z = Z(P[1]);
+  L.forEach((S, j) => { if (j === k.i && !k.sel) return; const P = placeXZ(S); g.fillStyle = col; g.strokeStyle = 'rgba(9,20,28,.9)'; g.lineWidth = 2; g.beginPath(); g.arc(X(P[0]), Z(P[1]), 5.5, 0, TAU); g.fill(); g.stroke(); });
+  const S = k.sel || L[k.i], P = k.sel ? [k.sel.x, k.sel.z] : placeXZ(S), x = X(P[0]), z = Z(P[1]);
   g.fillStyle = col; g.strokeStyle = '#fff4df'; g.lineWidth = 3; g.beginPath(); g.arc(x, z, 11, 0, TAU); g.fill(); g.stroke();
   g.font = '700 13px ' + getComputedStyle(document.body).fontFamily; const tw = g.measureText(S.name.toUpperCase()).width + 16, bx = clamp(x - tw / 2, 4, T.w - tw - 4), by = z - 17 - 24 < 4 ? z + 17 : z - 17 - 24;
   g.fillStyle = 'rgba(9,20,28,.88)'; g.beginPath(); g.roundRect ? g.roundRect(bx, by, tw, 24, 12) : g.rect(bx, by, tw, 24); g.fill(); g.fillStyle = '#fff4df'; g.textBaseline = 'middle'; g.fillText(S.name.toUpperCase(), bx + 8, by + 12.5);
 }
+/* search on the two drive pickers, as in Places: any place, street, building or address can be where the drive starts or where it goes.
+   One of the listed places is chosen in the list as usual; anything else becomes the chosen spot, marked on the map (with the route to it, for a destination) */
+function pickCustom(kind, e) {
+  const k = PICK[kind], pre = kind === 'start' ? 'gS' : 'gD'; k.sel = { name: e.t || e.name, x: e.x, z: e.z, kind: e.kind, sub: e.a ? e.a : e.kind }; k.id = undefined; k.route = null; k.km = 0; let sub = k.sel.sub;
+  if (kind === 'dest' && DRIVE.car) { const car = DRIVE.car, r = navRoute(car.e, car.d, car.u, e.x, e.z);
+    if (r) { const E = DRIVE.E, pts = []; let L2 = 0; for (const st of r.steps) { const ed = E[st.c]; L2 += ed.L; for (let j = 0; j <= ed.n; j += 2) { const q = st.d > 0 ? j : ed.n - j; pts.push(ed.xs[q], ed.zs[q]); } } k.route = pts; k.km = L2 / 1000; sub = (k.km < 1 ? Math.round(k.km * 100) * 10 + ' m' : k.km.toFixed(1) + ' km') + ' by road · ' + sub; } else sub = 'No way there by road'; }
+  document.getElementById(pre + 'Name').textContent = k.sel.name; document.getElementById(pre + 'Sub').textContent = sub; [...document.getElementById(pre + 'Dots').children].forEach(d => d.classList.remove('on')); pickMap(kind);
+}
+function gSearch(kind, text) {
+  const box = document.getElementById(kind === 'start' ? 'gSRes' : 'gDRes'), t = text.trim().toLowerCase(), k = PICK[kind]; box.innerHTML = ''; k.hits = []; box.classList.toggle('on', !!t); if (!t) return; k.hits = findRows(t);
+  if (!k.hits.length) { const d = document.createElement('div'); d.className = 'none'; d.textContent = PLC.addr ? 'Nothing by that name' : 'Nothing yet: the address list is still loading'; box.appendChild(d); }
+  for (const e of k.hits) { const b = document.createElement('button'); b.type = 'button'; b.innerHTML = '<span></span><em></em>'; b.firstChild.textContent = e.name; b.lastChild.textContent = e.kind; b.onclick = ev => { ev.stopPropagation(); gPick(kind, e); }; box.appendChild(b); }
+}
+function gPick(kind, e) { const inp = document.getElementById(kind === 'start' ? 'gSQ' : 'gDQ'); inp.value = ''; inp.blur(); gSearch(kind, '');
+  if (e.place !== undefined) { const j = pickList(kind).indexOf(STARTS[e.place]); if (j >= 0) { pickSet(kind, j); return; } } pickCustom(kind, e); }
 /* swipe across the map or the name to go to the next place; tap a dot on the map to jump to it */
 function pickInput(kind, el, isMap) {
   let s = null; el.addEventListener('pointerdown', e => { s = { x: e.clientX, y: e.clientY }; try { el.setPointerCapture(e.pointerId); } catch (err) { /* synthetic */ } });
@@ -4451,13 +4468,17 @@ function initGarage() {
   VEHICLES.forEach((V, i) => { const b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-label', V.name); b.onclick = () => dSelect(i); dots.appendChild(b); });
   const q = id => document.getElementById(id);
   q('gGo').onclick = () => gStep('where'); q('gPrev').onclick = () => dSelect(DRIVE.vi - 1); q('gNext').onclick = () => dSelect(DRIVE.vi + 1);
-  const pickedDest = () => { const S = pickList('dest')[PICK.dest.i], P = placeXZ(S); return { id: S.id, name: S.name, x: P[0], z: P[1], kind: 'Place', km: PICK.dest.km }; };
-  q('gBack').onclick = () => gStep('ride'); q('gTo3').onclick = () => { dStart(STARTS[PICK.start.i].id); gStep('dest'); }; q('gHere').onclick = () => { dStart('here'); gStep('dest'); };
+  const pickedDest = () => { const c = PICK.dest.sel; if (c) return { name: c.name, x: c.x, z: c.z, kind: c.kind, km: PICK.dest.km }; const S = pickList('dest')[PICK.dest.i], P = placeXZ(S); return { id: S.id, name: S.name, x: P[0], z: P[1], kind: 'Place', km: PICK.dest.km }; };
+  q('gBack').onclick = () => gStep('ride'); q('gTo3').onclick = () => { const c = PICK.start.sel; if (c) { DRIVE.hereXZ = [c.x, c.z]; dStart('here'); } else dStart(STARTS[PICK.start.i].id); gStep('dest'); };
+  for (const [kind, id] of [['start', 'gSQ'], ['dest', 'gDQ']]) { const el = q(id); el.addEventListener('input', e => gSearch(kind, e.target.value)); for (const t of ['pointerdown', 'pointerup', 'touchstart', 'mousedown', 'click']) el.addEventListener(t, e => e.stopPropagation(), { passive: true }); }
+  /* typing in a search field: none of the page's or the car's own keys; Enter takes the first result, Escape clears */
+  for (const t of ['keydown', 'keyup']) addEventListener(t, e => { const el = e.target; if (!el || !el.classList || !el.classList.contains('gq')) return; e.stopPropagation(); if (t !== 'keydown') return; const kind = el.id === 'gSQ' ? 'start' : 'dest';
+    if (e.code === 'Enter') { e.preventDefault(); const hs = PICK[kind].hits; if (hs && hs.length) gPick(kind, hs[0]); } else if (e.code === 'Escape') { e.preventDefault(); el.value = ''; gSearch(kind, ''); el.blur(); } }, true); q('gHere').onclick = () => { dStart('here'); gStep('dest'); };
   q('gBack2').onclick = () => DRIVE.gMid ? resumeDrive() : DRIVE.gNext ? closeGarage() : gStep('where'); q('gRoam').onclick = () => closeGarage(); q('gToMode').onclick = () => { DRIVE.gDest = pickedDest(); gStep('mode'); };
   q('gSPrev').onclick = () => pickSet('start', PICK.start.i - 1); q('gSNext').onclick = () => pickSet('start', PICK.start.i + 1); q('gDPrev').onclick = () => pickSet('dest', PICK.dest.i - 1); q('gDNext').onclick = () => pickSet('dest', PICK.dest.i + 1);
   pickInput('start', q('gMapS'), true); pickInput('start', document.querySelector('#gB .gcar'), false); pickInput('dest', q('gMapD'), true); pickInput('dest', document.querySelector('#gC .gcar'), false);
   addEventListener('resize', () => { if (DRIVE.garage && DRIVE.gStep === 'where') pickMap('start'); if (DRIVE.garage && DRIVE.gStep === 'dest') pickMap('dest'); });
-  q('gBack3').onclick = () => gStep('dest'); q('gAuto').onclick = () => closeGarage(DRIVE.gDest, true); q('gFree').onclick = () => closeGarage(DRIVE.gDest, false);
+  q('gBack3').onclick = () => { DRIVE.gKeep = true; gStep('dest'); }; q('gAuto').onclick = () => closeGarage(DRIVE.gDest, true); q('gFree').onclick = () => closeGarage(DRIVE.gDest, false);
   q('dCar').onclick = openGarage; q('dAuto').onclick = () => { DRIVE.run = null; setAuto(!DRIVE.auto); dMsg(DRIVE.auto ? 'Self-driving' : 'You are driving'); };
   /* swipe across the view to change vehicle */
   { let sx = null; addEventListener('pointerdown', e => { if (DRIVE.on && DRIVE.garage && DRIVE.gStep === 'ride' && e.target.tagName === 'CANVAS') sx = e.clientX; });
@@ -5343,8 +5364,8 @@ let gsc = 1, gro = 0;
 addEventListener('gesturestart', e => { if (e.target !== canvas || ptrs.size) return; e.preventDefault(); userInput(); gsc = e.scale; gro = e.rotation; });
 addEventListener('gesturechange', e => { if (e.target !== canvas) return; e.preventDefault(); if (ptrs.size || DRIVE.on) return; if (e.scale > 0) cam.dist = clamp(cam.dist * gsc / e.scale, 30, 42000); gsc = e.scale; cam.az += (e.rotation - gro) * RAD; gro = e.rotation; });
 const keys = {};
-addEventListener('keydown', e => { keys[e.code] = 1; if (DRIVE.on && !['KeyP', 'KeyL'].includes(e.code)) { if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault(); return; } if (e.code.startsWith('Digit')) { const i = +e.code.slice(5) - 1; if (i >= 0 && i < 6) goPreset(i); }
-  if (e.code === 'KeyR') goPreset(0); if (e.code === 'KeyP' || (e.code === 'Escape' && document.body.classList.contains('photo'))) togglePhoto(); else if (e.code === 'Escape' && FOCUS.label) exitFocus();
+addEventListener('keydown', e => { keys[e.code] = 1; if (DRIVE.on && e.code !== 'KeyL') { if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault(); return; } if (e.code.startsWith('Digit')) { const i = +e.code.slice(5) - 1; if (i >= 0 && i < 6) goPreset(i); }
+  if (e.code === 'KeyR') goPreset(0); if (e.code === 'Escape' && FOCUS.label) exitFocus();
   if (e.code === 'KeyF' && FOCUS.label) FOCUS.active ? exitFocus() : enterFocus(FOCUS.label); if (e.code === 'KeyI' && FOCUS.active) setFocusMode(!FOCUS.iso); if (e.code === 'KeyC' && FOCUS.active) setFocusClay(!FOCUS.clay); if (e.code === 'KeyB' && FOCUS.active) focusBestView(); if (e.code === 'KeyL') setLight({ golden: 'noon', noon: 'dusk', dusk: 'golden' }[L.name]); if (e.code === 'KeyT') TOUR.on ? stopTour() : startTour(); });
 addEventListener('keyup', e => { keys[e.code] = 0; });
 function stepCamera(dt) {
@@ -5468,7 +5489,6 @@ addEventListener('resize', resize);
 function setQuality(i, manual) { qi = clamp(i, 0, 2); Q = QUALS[qi]; U.uDetail.value = Q.detail;
   if (SH.nearRT && SH.nearRT.width !== Q.sh) { SH.nearRT.dispose(); SH.nearRT = SH.mk(Q.sh, Q.sh, THREE.UnsignedIntType); U.uShNear.value = SH.nearRT.depthTexture; U.uShRes.value.z = U.uShRes.value.w = Q.sh; SH.nearDirty = true; } document.getElementById('bQ').textContent = Q.name; if (manual) { drs = 1; drsUp = 0; } resize(); }
 let autoQ = true;
-function togglePhoto() { const on = document.body.classList.toggle('photo'); document.body.classList.remove('menu'); const b = document.getElementById('bCam'); if (b) b.title = on ? 'Back to the controls (P)' : 'Photo: just the view, nothing over it (P)'; }
 
 const ST = { t: 0, frame: 0, fps: 60, paused: false, ft: [], traffic: .7 };
 const hooks = [], _sz = new THREE.Vector2();   // per-frame updaters added by later sections
@@ -5519,7 +5539,7 @@ async function boot() {
   makeLabels(); hooks.push(keepHash); initFocus(); initNav(); initDrive();
   if (shared && shared.f) { let nm = ''; try { nm = decodeURIComponent(shared.f); } catch (e) { } const o = LABELS.list.find(l => l.focus && l.name === nm); if (o) { FOCUS.iso = shared.iso; FOCUS.clay = shared.clay; enterFocus(o); } }
   T.total = performance.now() - t0; ST.timing = T;
-  initClock(); initPlaces();
+  initLightBtn(); initPlaces();
   document.getElementById('bTour').onclick = () => { if (TOUR.on) { stopTour(); cam.fly = null; cam.tour = null; } else { plClose(); pinClear(); if (FOCUS.label) exitFocus(); startTour(); } };
   document.getElementById('tourS').onclick = e => { e.stopPropagation(); stopTour(); cam.fly = null; cam.tour = null; };
   document.getElementById('bLabels').onclick = e => { LABELS.on = !LABELS.on; e.currentTarget.classList.toggle('on', LABELS.on); };
@@ -5527,11 +5547,9 @@ async function boot() {
   addEventListener('pointerdown', e => { if (document.body.classList.contains('menu') && !e.target.closest('#ui')) document.body.classList.remove('menu'); }, true);   /* a tap anywhere else puts More away */
   document.getElementById('bLink').onclick = async e => { const b = e.currentTarget, url = location.href.split('#')[0] + viewHash(); try { history.replaceState(null, '', viewHash()); await navigator.clipboard.writeText(url); b.textContent = 'Copied'; } catch (err) { b.textContent = 'In URL'; } setTimeout(() => { b.textContent = 'Copy link'; }, 1600); };
   document.getElementById('bReset').onclick = () => { stopTour(); pinClear(); if (FOCUS.label) exitFocus(); document.body.classList.remove('menu'); goPreset(0); };
-  document.getElementById('bCam').onclick = togglePhoto;
   document.getElementById('bQ').onclick = () => setQuality((qi + 2) % 3, true);
   document.getElementById('sTraf').oninput = e => { ST.traffic = e.target.value / 100; };
   hooks.push(() => { DYN.uTraffic.value = ST.traffic * Q.traffic; DYN.uPx.value = 2 * Math.tan(camera.fov * RAD / 2) / renderer.getDrawingBufferSize(_sz).y; });
-  addEventListener('pointerdown', e => { if (document.body.classList.contains('photo') && e.target !== canvas && !(e.target.closest && e.target.closest('#bCam'))) togglePhoto(); });
   requestAnimationFrame(t => { lastT = t; loop(t); });
 }
 window.__hk = {
