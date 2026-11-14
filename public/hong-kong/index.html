@@ -1408,6 +1408,8 @@ void main(){
       vec3 shop=mix(vec3(.05,.045,.04),sgn,bx(fract(hh/4.2),.72,.96,.02));shop=mix(shop,wall*.6,step(.93,sfx));
       wall=mix(wall,shop,street*(.4+.6*det));w*=1.-street;
       emis+=street*uNight*ign*(bx(fract(hh/4.2),.72,.96,.02)*sgn*1.6+vec3(1.,.8,.55)*bx(fract(hh/4.2),.05,.7,.02)*step(sfx,.93)*.8)*(.35+.65*det);}
+    { float under=1.-smoothstep(-.45,-.1,hh);   /* below the building's own base: the plinth or retaining wall it stands on, plain and a little weathered */
+      if(under>0.){wall=mix(wall,vec3(.215,.205,.19)*(.86+.22*stain),under);w*=1.-under;emis*=1.-under;} }
     float aoc=mix(.5,1.,smoothstep(0.,48.,hh));
     vec3 wallLit=wall*(uSunCol*ndl*sh+hemi*aoc+uSunCol*.045*aoc);
     /* glass */
@@ -3924,6 +3926,33 @@ function b3dBand(V, J, nI, y0, y1, out) {
     for (const sd of [1, -1]) for (let i = 1; i < poly.length - 1; i++) for (const q of [poly[0], poly[i], poly[i + 1]]) out.push((q[0] + ox * sd) / 10, q[1] / 10, (q[2] + oz * sd) / 10); }
 }
 function b3dShow(undo) { for (const [pos, idx, ys] of undo.v) { for (let k = 0; k < idx.length; k++) pos.array[idx[k] * 3 + 1] = ys[k]; pos.needsUpdate = true; } for (const [o, h] of undo.fa) FA.a[o + 6] = h; }
+/* walls down to the ground. The models stand at their surveyed heights, on the platforms that were cut for them; the ground drawn here is a smooth 12 m
+   grid that knows nothing of those platforms, so on a slope the downhill side of a building hangs in the air (measured over the island: two models in five
+   with a wall foot more than a metre up, some by 10–20 m). So each foot of a model's base that stands above the drawn ground is brought down into it, as the
+   plinth or retaining wall the real building has; the shader draws that part as plain wall. A foot = the lowest point at one plan position with wall
+   above it, within 3 m of the model's lowest point. Left alone: feet already in the ground, feet more than 30 m up (a raised structure, not a base), and
+   feet that stand at the edge of another model's roof (a tower flush with the side of its podium: another model has a wall within about 3 m that begins
+   lower and ends at the foot's level; brought down, the tower's wall would lie in the podium's and the two would flicker). A tower standing well inside
+   its podium is brought down too, out of sight within it; a taller neighbour in a terrace is no support. Returns how many feet were moved. */
+function b3dFeet(list, hand) {
+  const C = 2, G = new Map(); let moved = 0;
+  /* every wall position of every model, by 2 m cell: model, lowest and highest point there */
+  list.forEach((b, bi) => { const V = b.V, n = b.n, foot = b.ft = new Map(); let ymin = 32767;
+    for (let k = 0; k < n * 3; k += 3) { const vy = V[k + 1], key = (V[k] + 32768) * 65536 + (V[k + 2] + 32768), f = foot.get(key); if (f === undefined) foot.set(key, [vy, vy]); else { if (vy < f[0]) f[0] = vy; if (vy > f[1]) f[1] = vy; } if (vy < ymin) ymin = vy; }
+    b.ymin = ymin;
+    for (const [key, f] of foot) { if (f[1] - f[0] < 5) continue; const X = b.x + (Math.floor(key / 65536) - 32768) / 10, Z = b.z + (key % 65536 - 32768) / 10, ck = Math.floor(X / C) * 65536 + Math.floor(Z / C); let a = G.get(ck); if (!a) G.set(ck, a = []); a.push(bi, b.y + f[0] / 10, b.y + f[1] / 10); } });
+  list.forEach((b, bi) => { const V = b.V, n = b.n; let drop = null;
+    for (const [key, f] of b.ft) { if (f[1] - f[0] < 5 || f[0] > b.ymin + 30) continue; const X = b.x + (Math.floor(key / 65536) - 32768) / 10, Z = b.z + (key % 65536 - 32768) / 10, fy = b.y + f[0] / 10;
+      const g = Math.min(groundY(X, Z), groundY(X + 2.5, Z), groundY(X - 2.5, Z), groundY(X, Z + 2.5), groundY(X, Z - 2.5)), lift = fy - g; if (lift <= .15 || lift > 30) continue;
+      let on = false; const cx = Math.floor(X / C), cz = Math.floor(Z / C);
+      for (let dx = -1; dx <= 1 && !on; dx++) for (let dz = -1; dz <= 1 && !on; dz++) { const a = G.get((cx + dx) * 65536 + cz + dz); if (!a) continue; for (let q = 0; q < a.length; q += 3) if (a[q] !== bi && a[q + 1] <= fy - 1 && Math.abs(a[q + 2] - fy) <= 1.5) { on = true; break; } }
+      if (!on) for (const q of hand) if (X > q.bb[0] - .5 && X < q.bb[2] + .5 && Z > q.bb[1] - .5 && Z < q.bb[3] + .5 && q.y <= fy - 1 && Math.abs(q.y + q.top - fy) <= 1.5) { on = true; break; }
+      if (on) continue; (drop || (drop = new Map())).set(key, [f[0], Math.max(-32768, Math.round((g - .4 - b.y) * 10))]); }
+    b.ft = null; if (!drop) return;
+    for (let k = 0; k < n * 3; k += 3) { const d = drop.get((V[k] + 32768) * 65536 + (V[k + 2] + 32768)); if (d && V[k + 1] <= d[0] + 1) V[k + 1] = d[1]; }
+    moved += drop.size; });
+  return moved;
+}
 async function b3dLoad(T) {
   B3D.loading = true; const t0 = performance.now();
   try { const res = await fetch(b3dURL(T.id + '.bin')); if (!res.ok) throw new Error(res.status); let u8 = new Uint8Array(await res.arrayBuffer());
@@ -3949,6 +3978,7 @@ async function b3dLoad(T) {
       let lk = (GOV_LOOK.find(([re]) => own.some(q => re.test(recs[q].nm))) || [])[1]; if (lk && top < (lk.min ?? 60)) lk = null; let xP = null;
       if (lk && lk.belts) { xP = []; const J = wide ? new Uint32Array(u8.buffer.slice(u8.byteOffset + io, u8.byteOffset + io + nt * 12)) : new Uint16Array(u8.buffer.slice(u8.byteOffset + io, u8.byteOffset + io + nt * 6)); for (const yb of lk.belts) b3dBand(V, J, nt * 3, (yb - y) * 10, (yb + lk.bh - y) * 10, xP); }
       const xn = xP ? xP.length / 3 : 0; list.push({ x, z, y, top, n, nt, wide, V, io, hit, po, co, nc, bb: [x0, z0, x1, z1], lk, xP, xn }); nv += n + xn; ni += nt * 3 + xn; }
+    { const tf = performance.now(); T.feet = b3dFeet(list, hand); T.feetMs = Math.round(performance.now() - tf); }
     const NRM = new Float32Array(nv * 3);   /* not facings: each building's own origin (x, z) and main wall direction (y); see the shader */
     const P = new Float32Array(nv * 3), Cc = new Float32Array(nv * 3), AP = new Float32Array(nv * 4), AQ = new Float32Array(nv * 4), I = new Uint32Array(ni), hide = new Set(); let v0 = 0, i0 = 0, cut = 0;
     for (const b of list) { let col, type, sd, roof = 0, lit, hue, flags = 0;
@@ -3977,7 +4007,7 @@ async function b3dLoad(T) {
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setAttribute('aCol', new THREE.BufferAttribute(Cc, 3)); g.setAttribute('aP', new THREE.BufferAttribute(AP, 4)); g.setAttribute('aQ', new THREE.BufferAttribute(AQ, 4));
     g.setAttribute('aF', new THREE.BufferAttribute(new Float32Array(nv), 1)); g.setAttribute('normal', new THREE.BufferAttribute(NRM, 3)); g.setIndex(new THREE.BufferAttribute(I.subarray(0, i0), 1));
     const mat = B3D.mat || (B3D.mat = new THREE.ShaderMaterial({ uniforms: U, vertexShader: BLD_VS, fragmentShader: BLD_FS(), defines: { FOC_SINK: 1, FLATN: 1 } }));
-    let ylo = 1e9, yhi = -1e9; for (const b of list) { ylo = Math.min(ylo, b.y - 20); yhi = Math.max(yhi, b.y + b.top + 5); } if (!list.length) ylo = yhi = 0;
+    let ylo = 1e9, yhi = -1e9; for (const b of list) { ylo = Math.min(ylo, b.y - 35); yhi = Math.max(yhi, b.y + b.top + 5); } if (!list.length) ylo = yhi = 0;
     g.boundingSphere = new THREE.Sphere(new THREE.Vector3((T.box[0] + T.box[2]) / 2, (ylo + yhi) / 2, (T.box[1] + T.box[3]) / 2), Math.hypot(T.box[2] - T.box[0], yhi - ylo, T.box[3] - T.box[1]) / 2 + 30);
     const mesh = new THREE.Mesh(g, mat); mesh.layers.enable(1); scene.add(mesh);   /* casts shadows; left out of the water's reflection pass */
     T.mesh = mesh; if (T.st && !/[?&]nost\b/.test(location.search)) b3dStreet(T, list.concat(hand)); T.undo = b3dHide(hide); T.hide = hide; T.tris = i0 / 3; T.cut = cut; T.ms = Math.round(performance.now() - t0); T.sync = Math.round(performance.now() - t1); B3D.tiles.set(T.id, T); SH.farDirty = SH.nearDirty = true; NEAR.fx = NEAR.fz = 1e9;
