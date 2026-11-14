@@ -74,7 +74,8 @@ type Row = { y: number; hMin: number; hMax: number; gap: number; colors: readonl
 type Blade = { x: number; y: number; h: number; w: number; lean: number; phase: number }
 type Flower = Point & { h: number; r: number; color: string; phase: number; after: number; puff: boolean }
 type Mote = Point & { r: number; vx: number; vy: number; phase: number }
-type Seed = Point & { vx: number; vy: number; age: number; life: number; phase: number }
+/** `k` is its size (smaller further off); `held` is the way it points while still on its clock */
+type Seed = Point & { vx: number; vy: number; age: number; life: number; phase: number; k: number; held: number | null }
 type Streak = Point & { age: number; life: number; vx: number; vy: number; len: number }
 /** a touch in the grass, pushing the blades aside */
 type Part = Point & { at: number; s: number }
@@ -674,7 +675,37 @@ export function startLife(o: LifeOptions): Life {
       age: 0,
       life: 7 + rand() * 4,
       phase: rand() * Math.PI * 2,
+      k: 1,
+      held: null,
     })
+  /**
+   * A dandelion clock where the meadow was touched: a ball of seeds that lets go
+   * a few at a time, downwind side first, and drifts off over the farm.
+   */
+  function clock(p: Point) {
+    if (o.still) return
+    const k = 0.55 + 0.4 * clamp((p.y - 640) / 150)
+    const n = 18 + Math.floor(rand() * 5)
+    const ways = Array.from({ length: n }, (_, i) => (i / n) * Math.PI * 2 + (rand() - 0.5) * 0.2)
+    ways.sort((a, b) => Math.cos(b) - Math.cos(a))
+    ways.forEach((a, i) => {
+      // each lets go at its own pace, so they scatter rather than keep their ring
+      const push = 8 + rand() * 38
+      const off = a + (rand() - 0.5) * 1.4
+      seeds.push({
+        x: p.x + Math.cos(a) * 5.5 * k,
+        y: p.y + Math.sin(a) * 5.5 * k,
+        vx: Math.cos(off) * push + 4 + rand() * 18,
+        vy: Math.sin(off) * push - 12 - rand() * 22,
+        age: -(0.35 + i * 0.045 + rand() * 0.12),
+        life: 7 + rand() * 4,
+        phase: rand() * Math.PI * 2,
+        k,
+        held: a,
+      })
+    })
+    if (seeds.length > 260) seeds.splice(0, seeds.length - 260)
+  }
   function burst(p: Point) {
     // every dandelion clock near the touch lets go
     for (const fl of garden.flowers) {
@@ -909,6 +940,8 @@ export function startLife(o: LifeOptions): Life {
       part(p, 1)
       burst(p)
       stir(p)
+    } else {
+      clock(p)
     }
     // and wherever it was, the butterfly comes to look
     Object.assign(pointer, p, { at: now + 1.5 })
@@ -1145,22 +1178,38 @@ export function startLife(o: LifeOptions): Life {
         seeds.splice(i, 1)
         continue
       }
-      sd.vx += (14 + wind(sd.x, t) * 70 - sd.vx) * Math.min(1, dt * 0.8)
-      sd.vy += (-12 + Math.sin(t * 1.3 + sd.phase) * 9 + wet * 60 - sd.vy) * Math.min(1, dt * 0.9)
-      sd.x += sd.vx * dt
-      sd.y += sd.vy * dt
-      const alpha = Math.min(1, sd.age * 4, (sd.life - sd.age) / 2) * pale
-      const tilt = Math.sin(t * 1.7 + sd.phase) * 0.3 + sd.vx * 0.006
+      let tilt = Math.sin(t * 1.7 + sd.phase) * 0.3 + sd.vx * 0.006
+      let alpha: number
+      if (sd.held !== null && sd.age < 0) {
+        // still on the clock, its parachute pointing outward
+        tilt = Math.atan2(Math.cos(sd.held), -Math.sin(sd.held))
+        alpha = 1
+      } else {
+        // each seed rides its own little current, so a cloud of them spreads as it goes
+        const own = sd.held === null ? 0 : 1
+        sd.vx += (14 + wind(sd.x, t) * 70 + own * Math.sin(sd.phase * 3) * 16 - sd.vx) * Math.min(1, dt * 0.8)
+        sd.vy += (-12 + Math.sin(t * 1.3 + sd.phase) * 9 + own * Math.cos(sd.phase * 5) * 9 + wet * 60 - sd.vy) * Math.min(1, dt * 0.9)
+        sd.x += sd.vx * dt
+        sd.y += sd.vy * dt
+        if (sd.held !== null) {
+          // a loosed seed turns its parachute up to the sky
+          const from = Math.atan2(Math.cos(sd.held), -Math.sin(sd.held))
+          tilt = from + (tilt - from) * clamp(sd.age / 0.6)
+          alpha = Math.min(1, (sd.life - sd.age) / 2)
+        } else alpha = Math.min(1, sd.age * 4, (sd.life - sd.age) / 2)
+      }
+      alpha *= pale
+      const r = 5.2 * sd.k
       c.strokeStyle = `rgba(250, 247, 232, ${(alpha * 0.9).toFixed(3)})`
-      c.lineWidth = 0.7
+      c.lineWidth = 0.7 * Math.sqrt(sd.k)
       c.beginPath()
       for (let k = -2; k <= 2; k++) {
         const a = -Math.PI / 2 + tilt + k * 0.42
         c.moveTo(sd.x, sd.y)
-        c.lineTo(sd.x + Math.cos(a) * 5.2, sd.y + Math.sin(a) * 5.2)
+        c.lineTo(sd.x + Math.cos(a) * r, sd.y + Math.sin(a) * r)
       }
       c.moveTo(sd.x, sd.y)
-      c.lineTo(sd.x - Math.sin(tilt) * 5.5, sd.y + Math.cos(tilt) * 5.5)
+      c.lineTo(sd.x - Math.sin(tilt) * r * 1.06, sd.y + Math.cos(tilt) * r * 1.06)
       c.stroke()
     }
 
