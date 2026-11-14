@@ -63,6 +63,32 @@
      a phone and, in its browser, can flicker. The panels are made a little more solid instead */
   @media (pointer:coarse){*{-webkit-backdrop-filter:none !important;backdrop-filter:none !important} #ui{background:rgba(9,20,28,.84)} #zm{background:rgba(9,20,28,.82)} .lb b{background:rgba(9,20,28,.8)} #hint{background:rgba(9,20,28,.82)}}
   /* the name of the site, and whose it is: top left of the view of the island (the driving screen has its own things there) */
+  /* the loading screen: the island drawn in outline, filling with gold from the west as the page is made ready; under it a bar and what is being done */
+  #boot{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#f3e6d0;overflow:hidden;
+    background:radial-gradient(95% 75% at 8% 14%,rgba(255,176,84,.5),rgba(255,150,70,.12) 45%,transparent 68%),linear-gradient(165deg,#24486a 0%,#12304a 45%,#081a2c 100%);transition:opacity .8s ease .15s,visibility 0s linear 1s}
+  #boot.out{opacity:0;visibility:hidden;pointer-events:none} #boot.out .bw{transform:scale(1.08);transition:transform 1s ease-in}
+  #boot .bw{width:min(760px,92vw);display:flex;flex-direction:column;align-items:center;padding-bottom:3vh}
+  #bootMap{width:100%;height:auto;max-height:54vh;overflow:visible;font-size:31px;animation:bmIn 1s ease-out both}
+  @keyframes bmIn{from{opacity:.25;transform:translateY(10px) scale(.97)}}
+  #bootMap .bmW{fill:none;stroke:rgba(190,220,240,.13);stroke-width:3;stroke-linecap:round}
+  #bootMap .bmB{fill:rgba(255,224,176,.07)} #bootMap .bmR{fill:rgba(255,224,176,.07);stroke:rgba(255,206,140,.3);stroke-width:2}
+  #bootMap .bmL{fill:url(#bmG);filter:drop-shadow(0 0 16px rgba(255,170,80,.55))} #bootMap .bmL.r{fill:#e0a258;filter:none}
+  #bootMap .bmS{fill:none;stroke:#ffd9a0;stroke-width:3.2;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;animation:bmDraw 1.4s ease-in-out forwards}   /* (drawn quickly, while the page is still being fetched: once the heavy work starts nothing but the bar can move smoothly) */
+  @keyframes bmDraw{to{stroke-dashoffset:0}}
+  #bmCR{transition:transform .6s ease-out}
+  #bootMap .bd circle{fill:#0d2438;stroke:rgba(255,224,176,.55);stroke-width:3;transition:fill .5s,stroke .5s}
+  #bootMap .bd text{fill:rgba(243,230,208,.5);font-weight:700;letter-spacing:.14em;text-transform:uppercase;transition:fill .5s;paint-order:stroke;stroke:rgba(8,26,44,.55);stroke-width:5}
+  #bootMap .bd.on circle{fill:#fff4df;stroke:#5a3a12} #bootMap .bd.on text{fill:#fff4df}
+  #boot h1{margin:2.2vh 0 0;font-size:clamp(20px,3.6vw,34px);font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:#fff4df;white-space:nowrap;text-shadow:0 2px 14px rgba(0,0,0,.45)} #boot h1 span{color:#ffc46a}
+  #boot .bb{width:min(420px,78vw);height:6px;margin-top:2.6vh;border-radius:3px;background:rgba(255,224,176,.16);overflow:hidden;position:relative}
+  #bootBar{position:absolute;inset:0;border-radius:3px;background:linear-gradient(90deg,#e9a455,#ffe0a0);transform-origin:0 50%;transform:scaleX(0);transition:transform .6s ease-out}
+  #boot .bb::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);transform:translateX(-100%);animation:bmSh 1.6s linear infinite}
+  @keyframes bmSh{to{transform:translateX(100%)}}
+  #boot .bs{width:min(420px,78vw);display:flex;justify-content:space-between;gap:12px;margin-top:10px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(243,230,208,.82)} #bootPct{font-variant-numeric:tabular-nums;color:#ffc46a}
+  #boot.err #bootMsg{color:#ffb4a0} #boot.err .bb::after{animation:none;opacity:0}
+  #boot>em{position:absolute;bottom:max(14px,env(safe-area-inset-bottom));font-style:normal;font-size:10px;letter-spacing:.06em;color:rgba(255,236,208,.6)}
+  @media (max-width:560px){#bootMap{font-size:46px} #bootMap .bd.s text{display:none} #bootMap .bd circle{r:14px} #bootMap .bmS{stroke-width:5}}
+  @media (prefers-reduced-motion:reduce){#bootMap,#bootMap .bmS,#boot .bb::after{animation:none} #bootMap .bmS{stroke-dashoffset:0}}
   #brand{position:fixed;z-index:4;left:max(16px,env(safe-area-inset-left));top:max(14px,env(safe-area-inset-top));display:flex;flex-direction:column;gap:3px;pointer-events:none;text-shadow:0 1px 6px rgba(0,0,0,.65);transition:opacity .4s}
   #brand b{font-size:17px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#fff4df;white-space:nowrap} #brand b span{color:#ffc46a}
   #brand em{font-style:normal;font-size:10px;letter-spacing:.06em;color:rgba(255,236,208,.72)}
@@ -240,8 +266,8 @@
   /* start and destination pickers: the island map with every place on it, and a big swipeable name under it */
   #garage .gpick{align-items:stretch;gap:10px;touch-action:pan-y}
   #garage .gmap{display:block;width:100%;height:min(46vh,380px);border-radius:14px;background:#163a50;touch-action:none;cursor:pointer}
-  #garage .gcar{display:flex;align-items:center;gap:10px;touch-action:none}
-  #garage .gsel{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;text-align:center}
+  #garage .gcar{display:flex;align-items:center;gap:10px}
+  #garage .gsel{touch-action:none;flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;text-align:center}
   #garage .gsel b{font-size:clamp(24px,6.4vw,36px);font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff4df;line-height:1.08}
   #garage .gsel em{font-style:normal;font-size:clamp(12px,3.3vw,14px);color:#f3e2c6;opacity:.88;margin-top:5px;min-height:1.3em}
   #drv .gpick .garr{flex:none;width:52px;height:52px;font-size:32px}
@@ -326,8 +352,8 @@
   #dJoy::before{content:"";position:absolute;left:-62px;top:-62px;width:124px;height:124px;border-radius:50%;border:2px solid rgba(255,206,140,.55);background:rgba(9,20,28,.2)}
   #dJoy i{position:absolute;left:-25px;top:-25px;width:50px;height:50px;border-radius:50%;background:rgba(255,201,138,.85);box-shadow:0 2px 10px rgba(0,0,0,.4)}
   #dJoy.brk i{background:rgba(255,104,84,.9)}
-  #dTun{position:fixed;z-index:4;inset:0;opacity:0;pointer-events:none;display:flex;align-items:center;justify-content:center;
-    background:radial-gradient(ellipse at 50% 55%,rgba(70,48,18,.86),rgba(6,6,8,.97) 70%);color:#ffc98a;font-size:13px;letter-spacing:.32em;text-transform:uppercase}
+  #dTun{position:fixed;z-index:4;inset:0;opacity:0;pointer-events:none;display:flex;align-items:flex-start;justify-content:center;padding-top:22vh;box-sizing:border-box;
+    color:#ffc98a;font-size:13px;letter-spacing:.32em;text-transform:uppercase;text-shadow:0 1px 6px rgba(0,0,0,.8)}   /* (the name of the tunnel; the darkness itself is drawn in the picture, under the road and the car: dVeilMesh) */
   #dMsg{position:fixed;z-index:6;left:50%;top:38%;transform:translate(-50%,6px);padding:7px 14px;border-radius:16px;background:rgba(9,20,28,.75);color:#fff4df;font-size:12px;letter-spacing:.1em;text-transform:uppercase;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s}
   #dMsg.show{opacity:1;transform:translate(-50%,0)}
   @media (max-width:760px){
@@ -363,6 +389,21 @@
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 </head>
 <body>
+<div id="boot" role="status" aria-label="Loading Hong Kong: Golden Hour"><div class="bw">
+  <svg id="bootMap" viewBox="-880 -570 1680 1260" aria-hidden="true"><defs>
+    <linearGradient id="bmG" x1="0" y1="0" x2="1" y2=".35"><stop offset="0" stop-color="#ffdc94"/><stop offset=".55" stop-color="#e9a455"/><stop offset="1" stop-color="#a8683a"/></linearGradient>
+    <linearGradient id="bmM"><stop offset="0" stop-color="#fff"/><stop offset=".9" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <mask id="bmC" maskUnits="userSpaceOnUse" x="-880" y="-570" width="1680" height="1260"><rect id="bmCR" x="-2740" y="-570" width="1860" height="1260" fill="url(#bmM)"/></mask>
+    <path id="bmI" pathLength="1" d="M-759 -278 -728 -243 -694 -223 -653 -138 -598 -60 -595 -24 -585 -24 -557 11 -477 21 -466 48 -475 22 -446 19 -368 31 -361 37 -325 33 -293 53 -266 51 -262 58 -271 66 -272 77 -251 95 -252 113 -263 129 -282 134 -264 131 -256 152 -235 156 -234 170 -246 187 -196 222 -171 215 -152 132 -126 96 -111 61 -44 47 -28 58 -19 81 -34 93 -35 111 -15 142 -1 154 14 156 44 136 76 164 74 172 86 171 83 221 65 233 80 265 76 278 68 287 39 285 67 312 112 322 124 357 121 366 90 378 75 395 74 437 104 436 125 408 158 417 176 397 170 381 181 369 210 358 209 348 221 350 228 368 241 373 256 417 245 430 235 431 224 455 225 509 214 553 219 594 247 620 258 613 328 606 340 601 351 580 341 559 343 547 327 530 321 511 302 497 311 493 312 479 301 475 292 456 297 444 314 442 322 416 338 413 335 391 331 381 318 382 317 372 299 371 278 360 262 341 253 342 250 312 260 296 258 284 291 260 296 234 309 237 325 226 341 203 342 189 349 189 361 213 374 221 406 221 413 204 399 137 375 125 355 127 349 91 353 88 344 80 352 78 340 72 343 56 326 58 345 46 340 41 351 33 361 35 357 46 370 69 366 85 374 96 391 88 423 96 448 121 452 97 462 106 462 146 450 157 473 207 474 251 482 270 477 300 469 303 478 321 496 329 504 308 528 315 524 342 490 345 498 350 522 346 535 354 548 420 538 432 528 432 542 465 588 479 632 471 641 462 655 482 663 478 671 487 679 462 690 475 717 467 726 478 732 458 704 449 706 431 671 434 664 427 677 411 670 412 672 398 666 388 672 374 666 345 670 336 665 336 666 324 657 323 658 307 635 280 633 261 621 247 645 227 647 234 680 244 683 232 654 208 640 206 637 197 655 158 646 144 634 144 633 131 621 126 628 104 621 101 626 95 621 87 600 82 587 70 583 52 592 38 605 44 616 39 624 29 621 19 631 17 634 7 652 16 662 13 666 1 656 -18 668 -26 670 -39 671 -33 676 -37 675 -58 684 -61 686 -71 681 -85 674 -86 670 -105 679 -122 696 -126 606 -213 592 -199 567 -263 573 -216 547 -202 533 -220 560 -251 548 -276 546 -269 532 -286 526 -321 462 -380 415 -366 374 -365 359 -380 371 -395 364 -391 358 -397 362 -404 356 -399 332 -423 262 -444 218 -465 136 -486 116 -482 111 -497 112 -482 104 -480 99 -492 102 -479 63 -473 31 -453 24 -458 -17 -416 -26 -422 -1 -390 -45 -377 -70 -358 -69 -388 -79 -394 -76 -386 -88 -382 -84 -368 -100 -360 -104 -368 -94 -380 -113 -365 -140 -366 -141 -374 -143 -366 -158 -364 -162 -390 -162 -384 -182 -384 -193 -366 -204 -361 -276 -381 -287 -402 -312 -412 -358 -425 -369 -414 -405 -426 -414 -437 -456 -448 -527 -450 -573 -434 -600 -438 -572 -430 -570 -420 -594 -424 -643 -376 -666 -377 -666 -372 -698 -360 -701 -366 -691 -377 -705 -367 -701 -359 -733 -348 -757 -312Z"/><path id="bmO" d="M-473 70 -438 91 -425 118 -393 125 -362 162 -318 177 -310 166 -304 153 -277 150 -304 150 -297 119 -303 101 -319 87 -311 65 -322 49 -335 47 -371 60 -404 47 -428 48 -462 57Z M-66 197 -46 195 -40 181 -21 186 -6 174 -3 160 -16 155 -42 160 -76 152 -84 170Z M-52 402 -19 384 -23 369 -62 361 -68 369Z M-817 -372 -811 -363 -791 -370 -768 -380 -786 -403 -812 -396Z M-321 186 -320 203 -300 231 -283 234 -294 222 -293 192 -313 183Z M684 226 715 230 711 227 720 226 723 217 717 209 702 217 680 216 676 222Z M708 275 709 262 678 263Z"/></defs>
+    <g class="bmW"><path d="M-860 -520h220M-520 -545h150M120 -530h260M560 -470h180M-840 300h200M-700 420h260M-300 500h220M-80 590h300M420 560h260M-560 610h180M600 -40h140"/></g>
+    <use href="#bmO" class="bmR"/><use href="#bmI" class="bmB"/>
+    <g mask="url(#bmC)"><use href="#bmI" class="bmL"/><use href="#bmO" class="bmL r"/></g>
+    <use href="#bmI" class="bmS"/>
+    <g class="bmD"><g class="bd s" data-x="-634"><circle cx="-634" cy="-359" r="10"/><text x="-634" y="-389" text-anchor="middle">Kennedy Town</text></g><g class="bd" data-x="-478"><circle cx="-478" cy="-286" r="10"/><text x="-478" y="-224" text-anchor="middle">The Peak</text></g><g class="bd" data-x="-310"><circle cx="-310" cy="-362" r="10"/><text x="-310" y="-392" text-anchor="middle">Central</text></g><g class="bd s" data-x="-180"><circle cx="-180" cy="-321" r="10"/></g><g class="bd s" data-x="-9"><circle cx="-9" cy="-355" r="10"/><text x="-9" y="-385" text-anchor="middle">Causeway Bay</text></g><g class="bd s" data-x="92"><circle cx="92" cy="-450" r="10"/></g><g class="bd" data-x="-346"><circle cx="-346" cy="12" r="10"/><text x="-346" y="74" text-anchor="middle">Aberdeen</text></g><g class="bd s" data-x="65"><circle cx="65" cy="132" r="10"/><text x="65" y="194" text-anchor="middle">Repulse Bay</text></g><g class="bd" data-x="267"><circle cx="267" cy="394" r="10"/><text x="241" y="406" text-anchor="end">Stanley</text></g><g class="bd" data-x="494"><circle cx="494" cy="-173" r="10"/><text x="494" y="-203" text-anchor="middle">Chai Wan</text></g><g class="bd s" data-x="618"><circle cx="618" cy="186" r="10"/><text x="598" y="156" text-anchor="middle">Shek O</text></g></g></svg>
+  <h1>Hong Kong: <span>Golden Hour</span></h1>
+  <div class="bb"><i id="bootBar"></i></div>
+  <div class="bs"><span id="bootMsg">Opening the map</span><b id="bootPct">0%</b></div>
+</div><em>© 2026 Butterfly Farm Studio Limited</em></div>
 <canvas id="c"></canvas>
 <div id="ui">
   <button id="bMore" title="Settings and extras" aria-haspopup="true">More</button>
@@ -564,10 +605,26 @@ function signedDist(cov, w, h, cell) {
    Coastline, roads, rail, land cover and other features: © OpenStreetMap contributors (ODbL), simplified. Elevation: NASA SRTM 30 m; ground in town
    rebuilt from the surveyed base level of every building. Positions are metres east / south of 22.25°N 114.19°E, packed as zig-zag varints. */
 let GEO = null;
+/* the loading screen. bootStep(share, what): the bar and the gold on the map go to `share` (0..1) and the line under the bar says what is being done; it resolves
+   once that has been painted, so the heavy step that follows does not hold an old picture on the screen. `ms` is about how long the step takes: the bar glides
+   that long (it keeps moving while the script is busy). */
+const BOOT = { p: 0, el: document.getElementById('boot') };
+function bootSet(p, msg, ms) { if (!BOOT.el) return; p = Math.max(0, Math.min(1, p)); BOOT.p = p; const q = id => document.getElementById(id);
+  if (ms) { q('bootBar').style.transitionDuration = q('bmCR').style.transitionDuration = Math.round(ms * (matchMedia('(pointer: coarse)').matches ? 2.5 : 1)) + 'ms'; }
+  q('bootBar').style.transform = 'scaleX(' + p.toFixed(3) + ')'; q('bmCR').style.transform = 'translateX(' + (1860 * p).toFixed(0) + 'px)'; q('bootPct').textContent = Math.round(p * 100) + '%'; if (msg) q('bootMsg').textContent = msg;
+  for (const d of BOOT.el.querySelectorAll('.bd')) d.classList.toggle('on', (+d.dataset.x + 880) / 1680 < p * 1.1 - .1); }
+function bootStep(p, msg, ms) { bootSet(p, msg, ms); if (!BOOT.el) return Promise.resolve(); const t0 = performance.now(); return new Promise(r => { let d = 0; const go = () => { if (!d) { d = 1; BOOT.wait = (BOOT.wait || 0) + performance.now() - t0; r(); } }; requestAnimationFrame(() => setTimeout(go, 0)); setTimeout(go, 50); }); }   /* (the timer: a tab in the background gets no frames, and a machine that is busy gets them slowly; neither should hold the loading up. Three such waits in all: about 30 ms on a desk, measured in ST.timing.wait) */
+function bootDone() { const b = BOOT.el; if (!b) return; bootSet(1, 'Ready', 250); BOOT.el = null; setTimeout(() => { b.classList.add('out'); setTimeout(() => b.remove(), 1400); }, 260); }
+function bootFail() { const b = BOOT.el; if (!b) return; b.classList.add('err'); document.getElementById('bootMsg').textContent = 'Could not load. Please reload the page.'; document.getElementById('bootPct').textContent = ''; }
 async function loadGeo() {
   const rel = /\/$|\.html?$/.test(location.pathname), url = rel ? new URL('hk-data.bin', location.href) : new URL('/hong-kong/hk-data.bin', location.href);
   const res = await fetch(url); if (!res.ok) throw new Error('hk-data.bin ' + res.status);
-  let u8 = new Uint8Array(await res.arrayBuffer());
+  let u8;
+  if (res.body && res.body.getReader) {   /* (read in pieces, so the bar can show how much of the map has come) */
+    const rd = res.body.getReader(), parts = []; let got = 0; const total = Math.max(+res.headers.get('content-length') || 0, 860000);
+    for (;;) { const { done, value } = await rd.read(); if (done) break; parts.push(value); got += value.length; bootSet(.06 + .16 * Math.min(1, got / total), 'Fetching the map', 200); }
+    u8 = new Uint8Array(got); let o = 0; for (const c of parts) { u8.set(c, o); o += c.length; }
+  } else u8 = new Uint8Array(await res.arrayBuffer());
   if (u8[0] === 0x1f && u8[1] === 0x8b) u8 = new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
   if (String.fromCharCode(u8[0], u8[1], u8[2], u8[3]) !== 'HKD1') throw new Error('hk-data.bin: bad container');
   const hl = u8[4] | u8[5] << 8 | u8[6] << 16 | u8[7] << 24, head = JSON.parse(new TextDecoder().decode(u8.subarray(8, 8 + hl))), body = 8 + hl;
@@ -4375,6 +4432,67 @@ function dGhost() {
     vertexShader: 'void main(){gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}', fragmentShader: 'void main(){gl_FragColor=vec4(.42,.80,1.,.62);}' }));
   m.frustumCulled = false; m.matrixAutoUpdate = false; m.renderOrder = 26; m.visible = false; scene.add(m); return m;
 }
+/* the road under cover. Beneath a flyover, a podium, a roof or a canopy of trees the road the car is on cannot be seen from the chase camera; so the road is
+   drawn again as a pale translucent ribbon (its edges and its centre line), only where something stands in front of it: about 150 m ahead along the way
+   the car will take (the route, or the planned turn, then straight on), 30 m behind, and the first metres of every side road, so that junctions can be read.
+   "In front" means at least 3 m nearer the eye: the ribbon's depth is taken 3 m towards the camera, so the road's own surface, a kerb or a bump never trip it.
+   It is drawn before the car (and the car's own blue shape seen through cover), so those stay on top of it.
+   And only under cover: a small map of how high things stand round the car (the scene's shadow casters seen from straight above, 420 m square, drawn
+   again when the car has gone 40 m or 4 s have passed) is walked from each point of the road towards the camera, up to 45 m: if something stands there at
+   least 4.5 m above the road and as high as the line of sight, the road is taken to be under cover. (Straight overhead is not the test: from a slanting
+   camera the stretch a flyover hides lies beyond the flyover, not beneath it.) Elsewhere the ribbon is not drawn, so a lorry or a lamp post that merely
+   stands in front of the road does not get a wash of it. */
+const RG = { AHEAD: 150, BACK: 30, MAX: 1400, t: -9, R: 210, cx: 1e9, cz: 1e9, ct: -9, M: { value: new THREE.Matrix4() } };
+function dCoverMap(car) {
+  if (!SH.mk) return; if (!RG.rt) { RG.rt = SH.mk(512, 512, THREE.UnsignedIntType); RG.cam = new THREE.OrthographicCamera(-RG.R, RG.R, RG.R, -RG.R, 1, 3001); RG.cam.layers.set(1); RG.cam.up.set(0, 0, -1); }
+  if (Math.hypot(car.x - RG.cx, car.z - RG.cz) < 40 && ST.t - RG.ct < 4) return; RG.cx = car.x; RG.cz = car.z; RG.ct = ST.t;
+  RG.cam.position.set(car.x, 2500, car.z); RG.cam.lookAt(car.x, 0, car.z); RG.cam.updateMatrixWorld(true); renderShadow(RG.rt, RG.cam, RG.M);
+}
+/* in a tunnel or a road through a building the camera is inside the hill or the building, and what it sees is dimmed almost to black. The dimming is drawn
+   in the picture (a sheet over the whole view), and after it the ribbon of the road, the side roads and the car: so the way ahead reads clearly in the dark */
+function dVeilMesh() {
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute([-1, -1, 0, 3, -1, 0, -1, 3, 0], 3));
+  const m = new THREE.Mesh(g, new THREE.ShaderMaterial({ uniforms: { uA: { value: 0 } }, transparent: true, depthTest: false, depthWrite: false,
+    vertexShader: 'varying vec2 vP;void main(){vP=position.xy;gl_Position=vec4(position.xy,0.,1.);}',
+    fragmentShader: 'varying vec2 vP;uniform float uA;void main(){float r=smoothstep(0.,1.,length((vP-vec2(0.,-.1))*vec2(.9,1.15)));gl_FragColor=vec4(mix(vec3(.085,.058,.024),vec3(.010,.010,.014),r),uA*mix(.93,.985,r));}' }));
+  m.frustumCulled = false; m.renderOrder = 24; m.visible = false; scene.add(m); return m;
+}
+function dRoadGhostMesh() {
+  const g = new THREE.BufferGeometry(); RG.P = new Float32Array(RG.MAX * 3); RG.S = new Float32Array(RG.MAX * 4); RG.I = new Uint16Array(RG.MAX * 3);
+  g.setAttribute('position', new THREE.BufferAttribute(RG.P, 3).setUsage(THREE.DynamicDrawUsage)); g.setAttribute('aS', new THREE.BufferAttribute(RG.S, 4).setUsage(THREE.DynamicDrawUsage)); g.setIndex(new THREE.BufferAttribute(RG.I, 1).setUsage(THREE.DynamicDrawUsage)); g.setDrawRange(0, 0);
+  const m = new THREE.Mesh(g, new THREE.ShaderMaterial({ uniforms: { uCov: { value: null }, uCovM: RG.M, uTun: { value: 0 } }, transparent: true, depthWrite: false, depthFunc: THREE.GreaterDepth, side: THREE.DoubleSide,
+    vertexShader: 'attribute vec4 aS;varying vec4 vS;varying vec3 vW;void main(){vS=aS;vW=position;vec4 mv=viewMatrix*vec4(position,1.);vec4 c=projectionMatrix*mv;vec4 n=projectionMatrix*vec4(mv.xyz*max(.05,1.-3./length(mv.xyz)),1.);c.z=n.z/n.w*c.w;gl_Position=c;}',
+    fragmentShader: 'varying vec4 vS;varying vec3 vW;uniform sampler2D uCov;uniform mat4 uCovM;uniform float uTun;void main(){vec3 tc=cameraPosition-vW;float hd=max(length(tc.xz),.001),te=tc.y/hd,k=0.;vec2 dr=tc.xz/hd;for(int i=0;i<8;i++){float t=float(i)*float(i)*.75+float(i)*1.2;if(t>hd)break;vec3 c=(uCovM*vec4(vW.x+dr.x*t,vW.y+max(4.5,t*te-1.),vW.z+dr.y*t,1.)).xyz;if(c.x>0.&&c.x<1.&&c.y>0.&&c.y<1.)k=max(k,step(texture2D(uCov,c.xy).r,c.z));}k=max(k,uTun);if(k<.01)discard;float v=abs(vS.x),edge=smoothstep(.80,.87,v),dash=(1.-smoothstep(.035,.07,v))*step(.5,fract(vS.y/8.));float fade=(1.-smoothstep(' + (RG.AHEAD * .6).toFixed(1) + ',' + RG.AHEAD.toFixed(1) + ',vS.z))*(1.-smoothstep(' + (RG.BACK * .45).toFixed(1) + ',' + RG.BACK.toFixed(1) + ',-vS.z));float a=min(1.,(.30+.55*edge+.5*dash)*fade*vS.w*k*(1.+.45*uTun));if(a<.012)discard;gl_FragColor=vec4(mix(mix(vec3(.60,.70,.82),vec3(.40,.47,.58),uTun),vec3(1.,.95,.82),max(edge,dash)),a);}' }));
+  m.frustumCulled = false; m.matrixAutoUpdate = false; m.renderOrder = 25; m.visible = false; scene.add(m); DRIVE.rg = RG; return m;
+}
+function dRoadGhost(plan) {
+  const car = DRIVE.car, E = DRIVE.E, N = DRIVE.N, m = DRIVE.roadGhost || (DRIVE.roadGhost = dRoadGhostMesh()), P = RG.P, S = RG.S, I = RG.I; let nv = 0, ni = 0;
+  dCoverMap(car); if (!RG.rt) { m.visible = false; return; } m.material.uniforms.uCov.value = RG.rt.depthTexture;
+  /* a stretch of one road: samples ia..ib (either way), `s` its distance from the car at ia (negative behind), `k` its strength, `skip` metres left out at its start */
+  const piece = (e, ia, ib, s, k, skip, sgn = 1) => { const step = ib >= ia ? 1 : -1; let cnt = 0;
+    for (let i = ia; step > 0 ? i <= ib : i >= ib; i += step) { const run = Math.abs(i - ia) * e.st; if (run < skip) continue; if (nv + 2 > RG.MAX || ni + 6 > RG.I.length) return;
+      const j = Math.min(i + 1, e.n), q = Math.max(i - 1, 0); let hx = e.xs[j] - e.xs[q], hz = e.zs[j] - e.zs[q]; const l = Math.hypot(hx, hz) || 1; hx /= l; hz /= l; const y = e.ys[i] + (e.br ? .2 : .4), w = e.hw, d = s + run * sgn, al = i * e.st;   /* (d: how far from the car, for the fading; al: how far along its own road, so the centre dashes stay put on the road) */
+      P[nv * 3] = e.xs[i] + hz * w; P[nv * 3 + 1] = y; P[nv * 3 + 2] = e.zs[i] - hx * w; P[nv * 3 + 3] = e.xs[i] - hz * w; P[nv * 3 + 4] = y; P[nv * 3 + 5] = e.zs[i] + hx * w;
+      S[nv * 4] = -1; S[nv * 4 + 1] = al; S[nv * 4 + 2] = d; S[nv * 4 + 3] = k; S[nv * 4 + 4] = 1; S[nv * 4 + 5] = al; S[nv * 4 + 6] = d; S[nv * 4 + 7] = k;
+      if (cnt) { const b = nv - 2; I[ni++] = b; I[ni++] = b + 1; I[ni++] = b + 2; I[ni++] = b + 1; I[ni++] = b + 3; I[ni++] = b + 2; } cnt++; nv += 2; } };
+  const e0 = E[car.e], ic = clamp(Math.round(car.u / e0.st), 0, e0.n), nb = Math.ceil(RG.BACK / e0.st);
+  /* behind the car, then on to the end of its road */
+  piece(e0, ic, clamp(ic - nb * car.d, 0, e0.n), 0, 1, 0, -1);
+  { const end = car.d > 0 ? e0.n : 0; piece(e0, ic, end, 0, 1, 0); }
+  let s = Math.abs((car.d > 0 ? e0.n : 0) - ic) * e0.st, node = car.d > 0 ? e0.b : e0.a, prev = car.e, hIn = car.d > 0 ? dTan(e0, e0.L - .01) : dTan(e0, 0) + PI;
+  const steps = DRIVE.nav ? DRIVE.nav.steps.slice(DRIVE.nav.k, DRIVE.nav.k + 24) : plan && plan.path && plan.path.steps ? plan.path.steps : []; let sk = 0;
+  for (let guard = 0; guard < 30 && s < RG.AHEAD; guard++) {
+    const adj = N[node].adj; let nx = -1;
+    if (steps[sk] && steps[sk].nd === node && !E[steps[sk].c].dead) nx = steps[sk++].c;
+    else { let bd = 9; for (const c of adj) { const e = E[c]; if (c === prev || e.dead || e.a === e.b || (e.ow && e.a !== node)) continue; const r = Math.abs(wrapA(dLeave15(c, node) - hIn)); if (r < bd) { bd = r; nx = c; } } }
+    /* the side roads at this junction: their first 22 m, fainter */
+    if (s < RG.AHEAD * .8) for (const c of adj) { if (c === prev || c === nx) continue; const e = E[c]; if (e.dead || e.a === e.b) continue; const n2 = Math.min(e.n, Math.ceil(22 / e.st)); if (e.a === node) piece(e, 0, n2, s, .55, 5); else piece(e, e.n, e.n - n2, s, .55, 5); }
+    if (nx < 0) break; const e = E[nx], d = e.a === node ? 1 : -1, n2 = Math.min(e.n, Math.ceil((RG.AHEAD - s) / e.st));
+    if (d > 0) piece(e, 0, n2, s, 1, 0); else piece(e, e.n, e.n - n2, s, 1, 0);
+    s += e.L; hIn = d > 0 ? dTan(e, e.L - .01) : dTan(e, 0) + PI; prev = nx; node = d > 0 ? e.b : e.a;
+  }
+  const g = m.geometry; g.attributes.position.needsUpdate = true; g.attributes.aS.needsUpdate = true; g.index.needsUpdate = true; g.setDrawRange(0, ni); m.visible = true; RG.t = ST.t; RG.n = ni / 3;
+}
 function dSelect(i) {
   i = (i + VEHICLES.length) % VEHICLES.length; const V = VEHICLES[i]; DRIVE.vi = i; DRIVE.V = V;
   DRIVE.meshes = DRIVE.meshes || []; if (!DRIVE.meshes[i]) DRIVE.meshes[i] = buildVehicle(V); loadVehicleModel(i);
@@ -4501,7 +4619,7 @@ function initGarage() {
     if (e.code === 'Enter') { e.preventDefault(); const hs = PICK[kind].hits; if (hs && hs.length) gPick(kind, hs[0]); } else if (e.code === 'Escape') { e.preventDefault(); el.value = ''; gSearch(kind, ''); el.blur(); } }, true); q('gHere').onclick = () => { dStart('here'); gStep('dest'); };
   q('gBack2').onclick = () => DRIVE.gMid ? resumeDrive() : DRIVE.gNext ? closeGarage() : gStep('where'); q('gRoam').onclick = () => closeGarage(); q('gToMode').onclick = () => { DRIVE.gDest = pickedDest(); gStep('mode'); };
   q('gSPrev').onclick = () => pickSet('start', PICK.start.i - 1); q('gSNext').onclick = () => pickSet('start', PICK.start.i + 1); q('gDPrev').onclick = () => pickSet('dest', PICK.dest.i - 1); q('gDNext').onclick = () => pickSet('dest', PICK.dest.i + 1);
-  pickInput('start', q('gMapS'), true); pickInput('start', document.querySelector('#gB .gcar'), false); pickInput('dest', q('gMapD'), true); pickInput('dest', document.querySelector('#gC .gcar'), false);
+  pickInput('start', q('gMapS'), true); pickInput('start', document.querySelector('#gB .gsel'), false); pickInput('dest', q('gMapD'), true); pickInput('dest', document.querySelector('#gC .gsel'), false);   /* (the swipe is on the name, not on the whole row: a row that captures the pointer takes the taps meant for its arrows) */
   addEventListener('resize', () => { if (DRIVE.garage && DRIVE.gStep === 'where') pickMap('start'); if (DRIVE.garage && DRIVE.gStep === 'dest') pickMap('dest'); });
   q('gBack3').onclick = () => { DRIVE.gKeep = true; gStep('dest'); }; q('gAuto').onclick = () => closeGarage(DRIVE.gDest, true); q('gFree').onclick = () => closeGarage(DRIVE.gDest, false);
   q('dCar').onclick = openGarage; q('dAuto').onclick = () => { DRIVE.run = null; setAuto(!DRIVE.auto); dMsg(DRIVE.auto ? 'Self-driving' : 'You are driving'); };
@@ -4793,7 +4911,8 @@ function driveStep(dt) {
   const yD = (car.fly ? Math.max(car.fly.y, car.yR) : car.yR) + (car.sq || 0); car.yD = yD;
   /* drawn after the roads, with its outline first: wherever a deck, a crest or a lorry covers the car, a pale shape of it shows through */
   { const gh = DRIVE.ghost || (DRIVE.ghost = dGhost()); if (DRIVE.mesh.material === propMat) DRIVE.mesh.material = DRIVE.carMat || (DRIVE.carMat = new THREE.ShaderMaterial({ uniforms: U, vertexShader: BLD_VS, fragmentShader: PROP_FS(), side: THREE.DoubleSide, transparent: true, blending: THREE.NoBlending }));
-    DRIVE.mesh.renderOrder = 27; gh.geometry = DRIVE.mesh.geometry; gh.visible = !G0; }
+    DRIVE.mesh.renderOrder = 27; gh.geometry = DRIVE.mesh.geometry; gh.visible = !G0;
+    if (G0) { if (DRIVE.roadGhost) DRIVE.roadGhost.visible = false; } else if (ST.t - RG.t > .1 || RG.e !== car.e) { RG.e = car.e; dRoadGhost(plan); } }
   M.setPosition(car.x, yD + (e.br ? .14 : .32), car.z); DRIVE.ghost.matrix.copy(M); DRIVE.ghost.matrixWorldNeedsUpdate = true;   /* road surfaces are drawn just above the height profile (0.3 m, 0.12 m on decks) */ DRIVE.mesh.matrixWorldNeedsUpdate = true;
   if (!G0) { crashStep(); propStep(dt, car, V, sp, h0); }
   /* the combo runs out a couple of seconds after the last knock */
@@ -4827,6 +4946,9 @@ function driveStep(dt) {
   /* the tunnel veil: while the car (or the camera trailing it) is below the hillside */
   const under = Math.max(e.tun && car.u > 6 && car.u < e.L - 6 ? 1 : 0, e.cov && e.cov[clamp(Math.round(car.u / e.st), 0, e.n)] ? 1 : 0, clamp((dGround(car.x, car.z) - car.y - 3) / 2.5, 0, 1), clamp((groundY(camera.position.x, camera.position.z) - car.y - 4) / 4, 0, 1) * (e.tun ? 1 : 0));
   DRIVE.tun = lerp(DRIVE.tun, under, 1 - Math.exp(-dt * 6));
+  DRIVE.deep = DRIVE.tun > .9 && !!e.tun;
+  { const vm = DRIVE.veil || (DRIVE.veil = dVeilMesh()); vm.visible = DRIVE.tun > .01; vm.material.uniforms.uA.value = DRIVE.tun;
+    if (DRIVE.roadGhost) { const mt = DRIVE.roadGhost.material; mt.uniforms.uTun.value = DRIVE.tun; mt.depthFunc = DRIVE.tun > .25 ? THREE.AlwaysDepth : THREE.GreaterDepth; } }   /* (in the dark the ribbon is drawn whatever stands before it) */
   dHud(e, sp);
 }
 /* ---------- things in the road to drive through: cones, boxes, barrels, bins and crates that scatter, and stunt ramps that throw the car into
@@ -5054,9 +5176,10 @@ function camSmooth(dt) {
   /* the ground under the camera is looked up ahead of time along its path and eased too, so a slope arriving under it lifts it gently */
   const gl = Math.max(groundY(p.x, p.z), groundY(p.x + (p.x - car.x) * .15, p.z + (p.z - car.z) * .15));
   DRIVE.camG = DRIVE.camG === undefined || !dt ? gl : DRIVE.camG + (gl - DRIVE.camG) * (1 - Math.exp(-dt * 4));
-  const want = Math.max(p.y, DRIVE.camG + 2.5);
+  /* deep in a tunnel (the view already dark) the camera stays down behind the car, under the hill: held up on the hillside it saw the tunnel as a thread far below */
+  const deep = DRIVE.deep, want = deep ? p.y : Math.max(p.y, DRIVE.camG + 2.5);
   DRIVE.camY = DRIVE.camY === undefined || !dt || Math.abs(want - DRIVE.camY) > 25 ? want : DRIVE.camY + (want - DRIVE.camY) * (1 - Math.exp(-dt * 4));
-  p.y = Math.max(DRIVE.camY, groundY(p.x, p.z) + .6);
+  p.y = deep ? DRIVE.camY : Math.max(DRIVE.camY, groundY(p.x, p.z) + .6);
   if ((DRIVE.camK ?? 1) < .999) camera.lookAt(car.x + Math.cos(car.yaw) * 4, (car.yR ?? car.y) + 1.2, car.z + Math.sin(car.yaw) * 4); else camera.lookAt(cam.tx, cam.tyS, cam.tz);
   camera.updateMatrixWorld(true);
 }
@@ -5136,7 +5259,7 @@ async function enterDrive0() {
   document.body.classList.add('driving'); DYN.uNoNear.value = 12; trafDetail(true); U.uDrv.value = 1; cam.dist = 30; openGarage(); dStart(DRIVE.pendingStart);
 }
 function exitDrive() {
-  if (!DRIVE.on) return; DRIVE.on = false; DRIVE.joy = null; dJoyDraw(); LABELS.on = DRIVE.labelsWas; document.body.classList.remove('driving', 'garage'); DRIVE.garage = false; if (DRIVE.ghost) DRIVE.ghost.visible = false; if (DRIVE.mesh) DRIVE.mesh.visible = false; DYN.uNoNear.value = 0; trafDetail(false); U.uDrv.value = 0; for (let i = 0; i < HITN; i++) hitFree(i); for (const k of [...PROPS.spots.keys()]) propDrop(k); if (TRL.mesh) { TRL.hist.length = 0; TRL.mesh.visible = false; } dFx(0, 0, 0); DRIVE.boosting = false; DRIVE.combo = 0; DRIVE.run = null; if (DRIVE.car) DRIVE.car.fly = null; navStop(); navClose(); setAuto(false); DRIVE.autoStop = false;
+  if (!DRIVE.on) return; DRIVE.on = false; DRIVE.joy = null; dJoyDraw(); LABELS.on = DRIVE.labelsWas; document.body.classList.remove('driving', 'garage'); DRIVE.garage = false; if (DRIVE.ghost) DRIVE.ghost.visible = false; if (DRIVE.roadGhost) DRIVE.roadGhost.visible = false; if (DRIVE.veil) DRIVE.veil.visible = false; if (DRIVE.mesh) DRIVE.mesh.visible = false; DYN.uNoNear.value = 0; trafDetail(false); U.uDrv.value = 0; for (let i = 0; i < HITN; i++) hitFree(i); for (const k of [...PROPS.spots.keys()]) propDrop(k); if (TRL.mesh) { TRL.hist.length = 0; TRL.mesh.visible = false; } dFx(0, 0, 0); DRIVE.boosting = false; DRIVE.combo = 0; DRIVE.run = null; if (DRIVE.car) DRIVE.car.fly = null; navStop(); navClose(); setAuto(false); DRIVE.autoStop = false;
   const c = DRIVE.car; flyTo({ tx: c.x, tz: c.z, dist: 700, pol: 62 * RAD, az: cam.az, fov: 40, ty: 0, dur: 2.2 });
 }
 function dUturn() { const c = DRIVE.car; if (!c) return; c.d = -c.d; c.lat = -c.lat; c.v = 0; c.yaw += PI; DRIVE.req = null; DRIVE.queue = []; DRIVE.lock = null; if (DRIVE.nav) navStart(DRIVE.nav.dest); }
@@ -5254,7 +5377,7 @@ function placeCamera(dt) {
   const gy = groundY(cam.tx, cam.tz) + cam.ty; cam.tyS = dt ? lerp(cam.tyS, gy, 1 - Math.exp(-dt * 6)) : gy;
   const sp = Math.sin(cam.pol), cp = Math.cos(cam.pol);
   let x = cam.tx + cam.dist * sp * Math.cos(cam.az), y = cam.tyS + cam.dist * cp, z = cam.tz + cam.dist * sp * Math.sin(cam.az);
-  const clear = clamp(cam.dist * .03, 2.2, 60), minY = groundY(x, z) + clear; if (y < minY) y = minY;
+  const clear = clamp(cam.dist * .03, 2.2, 60), minY = groundY(x, z) + clear; if (y < minY && !(DRIVE.on && DRIVE.deep)) y = minY;   /* (deep in a tunnel the camera goes under the hill with the car) */
   camera.position.set(x, y, z); camera.fov = cam.fov; camera.lookAt(cam.tx, cam.tyS, cam.tz);
   const hg = Math.max(y - groundY(x, z), 2); camera.near = clamp(hg * .08, .6, 400); camera.far = 190000; camera.updateProjectionMatrix(); camera.updateMatrixWorld(true);
 }
@@ -5547,15 +5670,16 @@ function loop(now) {
 
 async function boot() {
   const t0 = performance.now(), T = {};
-  await loadGeo(); T.load = performance.now() - t0; decodeGeo(); bakeIsland(); T.bake = performance.now() - t0;
+  bootSet(.06, 'Fetching the map');
+  await loadGeo(); T.load = performance.now() - t0; await bootStep(.44, 'Raising the hills, laying the roads', 500); decodeGeo(); bakeIsland(); T.bake = performance.now() - t0;
   buildRoads(); T.roads = performance.now() - t0;
-  finalizeTerrain(); T.ctx = performance.now() - t0;
+  finalizeTerrain(); T.ctx = performance.now() - t0; await bootStep(.82, 'Building the city', 900);
   U.uNoise.value = tileNoiseTex(); U.uH.value = TEX.h; U.uGeo.value = TEX.geo;
   if (typeof buildCity === 'function') buildCity(T, t0);
   else {
     const blank = new THREE.DataTexture(new Uint8Array(4), 1, 1); blank.needsUpdate = true; TEX.land = blank; TEX.mask = blank;
   }
-  U.uLand.value = TEX.land; U.uMask.value = TEX.mask;
+  U.uLand.value = TEX.land; U.uMask.value = TEX.mask; await bootStep(.97, 'Filling the harbour, lighting the golden hour', 500);
   makeTerrain(); makeStaticTerrains(); makeWaterSky(); makeShadows();
   makeRibbons(); makeTraffic(); makeHarbour(); makeTrams(); makeAir(); makeNear(); makePresets(); T.life = performance.now() - t0;
   initTod(); setQuality(2);
@@ -5563,7 +5687,7 @@ async function boot() {
   Object.assign(cam, shared ? shared.pose : heroState()); placeCamera(0);
   makeLabels(); hooks.push(keepHash); initFocus(); initNav(); initDrive();
   if (shared && shared.f) { let nm = ''; try { nm = decodeURIComponent(shared.f); } catch (e) { } const o = LABELS.list.find(l => l.focus && l.name === nm); if (o) { FOCUS.iso = shared.iso; FOCUS.clay = shared.clay; enterFocus(o); } }
-  T.total = performance.now() - t0; ST.timing = T;
+  T.total = performance.now() - t0; T.wait = BOOT.wait || 0; ST.timing = T;
   initClock(); initPlaces();
   document.getElementById('bTour').onclick = () => { if (TOUR.on) { stopTour(); cam.fly = null; cam.tour = null; } else { plClose(); pinClear(); if (FOCUS.label) exitFocus(); startTour(); } };
   document.getElementById('tourS').onclick = e => { e.stopPropagation(); stopTour(); cam.fly = null; cam.tour = null; };
@@ -5575,7 +5699,7 @@ async function boot() {
   document.getElementById('bQ').onclick = () => setQuality((qi + 2) % 3, true);
   document.getElementById('sTraf').oninput = e => { ST.traffic = e.target.value / 100; };
   hooks.push(() => { DYN.uTraffic.value = ST.traffic * Q.traffic; DYN.uPx.value = 2 * Math.tan(camera.fov * RAD / 2) / renderer.getDrawingBufferSize(_sz).y; });
-  requestAnimationFrame(t => { lastT = t; loop(t); });
+  requestAnimationFrame(t => { lastT = t; loop(t); bootDone(); }); setTimeout(bootDone, 1500);   /* (the screen lifts once the first picture is drawn; the timer is for a tab in the background) */
 }
 window.__hk = {
   THREE, TRAMS, TOD, TOUR, LABELS, HAND, GOVX, setTime, startTour, stopTour, viewHash, flyTo, scene, camera, renderer, cam, U, ST, L, ROADS, DAMS, LAKES, LL, SH, STATS, BI, FA, G, SITES, PATHS, CITY, get GEO() { return GEO; },
@@ -5587,7 +5711,7 @@ window.__hk = {
   renderAt(w, h, dpr) { forced = w ? { w, h, dpr: dpr || 1 } : null; resize(); }, get drs() { return drs; },
   info() { const i = renderer.info; return { fps: +ST.fps.toFixed(1), calls: i.render.calls, tris: i.render.triangles, nodes: terr.count, timing: ST.timing, q: Q.name, buf: renderer.getDrawingBufferSize(new THREE.Vector2()).toArray() }; },
 };
-boot().catch(e => { console.error(e); window.__hk.err = String(e && e.stack || e); });
+boot().catch(e => { console.error(e); window.__hk.err = String(e && e.stack || e); bootFail(); });
 </script>
 </body>
 </html>
