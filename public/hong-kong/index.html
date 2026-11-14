@@ -936,8 +936,13 @@ function genDistricts(R) {
    look (colour, facade type, roof, levels, lighting) sits in a float texture the vertex shader reads by building id. */
 const CITY = { recs: [], chunks: [], CH: 640, tex: null, TW: 4096, near0: 1500, near1: 2300, nSkip: 0, tris: [0, 0] };
 /* hand-built silhouettes and building-part massing replace these surveyed outlines; [name pattern, only above this height] */
+/* ?gov=ifc2 : a comparison. The landmark named is not hand-built; the Lands Department's own model of it is drawn like any other building's */
+const GOV_ONLY = { ifc2: 'Two International Finance Centre' }, GOVX = new Set(((location.search.match(/[?&]gov=([^&]*)/) || [])[1] || '').toLowerCase().split(',').map(k => GOV_ONLY[k]).filter(Boolean));
+/* hand-built towers that begin on top of a podium, where the real model is kept below them (see b3dLoad) */
+const UNDER = /^two international finance centre$/i;
 const SKIP_GOV = [[/^two international finance centre$/i, 60], [/^central plaza$/i, 60], [/^central government offices$/i, 0], [/^the peak tower$/i, 0], [/^hong kong stadium$/i, 0],
   [/^bank of china tower$/i, 60], [/^hsbc main building$/i, 60], [/^the center$/i, 60], [/^jardine house$/i, 60], [/^the henderson$/i, 60]];
+for (let i = SKIP_GOV.length - 1; i >= 0; i--) if ([...GOVX].some(n => SKIP_GOV[i][0].test(n))) SKIP_GOV.splice(i, 1);
 const LOOKI = {};   // lower-case name → [colour, facade type, flags]; filled from LOOK below
 const isClockwise = r => { let s = 0; for (let i = 0; i < r.length; i++) { const a = r[i], b = r[(i + 1) % r.length]; s += a[0] * b[1] - b[0] * a[1]; } return s < 0; };
 const ringArea = r => { let s = 0; for (let i = 0; i < r.length; i++) { const a = r[i], b = r[(i + 1) % r.length]; s += a[0] * b[1] - b[0] * a[1]; } return Math.abs(s) / 2; };
@@ -2038,7 +2043,7 @@ function buildLandmarks(R) {
     LB.fid = 0; STATS.central = { drawn: nB, estimatedHeight: nEst, records: G.cbld.length }; }
   /* — Central: bespoke silhouettes — */
   LB.fid = PB.fid = 0;   /* Two IFC, HSBC, Bank of China, Lippo Centre and The Center are hand models in HAND */
-  for (const d of HAND) { LB.fid = PB.fid = tagOf(d.name); d.build(LB, PB, R); }
+  for (const d of HAND) { if (GOVX.has(d.name)) continue; LB.fid = PB.fid = tagOf(d.name); d.build(LB, PB, R); }
   LB.fid = PB.fid = tagOf('Central Yards'); buildCentralYards(LB, PB, R);
   LB.fid = PB.fid = tagOf('The Henderson'); buildHenderson(LB, PB);
   LB.fid = PB.fid = tagOf('Central Government Offices');
@@ -3600,18 +3605,23 @@ async function b3dLoad(T) {
       /* its outline box, and the surveyed buildings it stands for: those with their centre inside it and at least half their own box under it */
       const V = new Int16Array(u8.buffer.slice(u8.byteOffset + vo, u8.byteOffset + vo + n * 6)); let ix0 = 32767, iz0 = 32767, ix1 = -32768, iz1 = -32768; for (let k = 0; k < n * 3; k += 3) { const vx = V[k], vz = V[k + 2]; if (vx < ix0) ix0 = vx; if (vx > ix1) ix1 = vx; if (vz < iz0) iz0 = vz; if (vz > iz1) iz1 = vz; }
       const x0 = x + ix0 / 10, x1 = x + ix1 / 10, z0 = z + iz0 / 10, z1 = z + iz1 / 10;
-      const hit = [], mar = (x1 - x0) * (z1 - z0) || 1; let skip = false, flat = false; for (let gx = Math.floor(x0 / 64); gx <= Math.floor(x1 / 64); gx++) for (let gz = Math.floor(z0 / 64); gz <= Math.floor(z1 / 64); gz++) for (const ri of G.get(gx * 65536 + gz) || []) { const r = recs[ri]; if (r.cx < x0 || r.cx > x1 || r.cz < z0 || r.cz > z1) continue;
+      const hit = [], mar = (x1 - x0) * (z1 - z0) || 1; let skip = false, flat = false, under = null; for (let gx = Math.floor(x0 / 64); gx <= Math.floor(x1 / 64); gx++) for (let gz = Math.floor(z0 / 64); gz <= Math.floor(z1 / 64); gz++) for (const ri of G.get(gx * 65536 + gz) || []) { const r = recs[ri]; if (r.cx < x0 || r.cx > x1 || r.cz < z0 || r.cz > z1) continue;
         const bb = r.bb, ov = Math.max(0, Math.min(bb[2], x1) - Math.max(bb[0], x0)) * Math.max(0, Math.min(bb[3], z1) - Math.max(bb[1], z0)), ar = (bb[2] - bb[0]) * (bb[3] - bb[1]) || 1; if (ov / ar < .5) continue;
         /* a hand-built landmark (or a building lowered off a road) takes this model's place only if the model is that building: a tower standing
            in or on a much larger one (Two IFC in its mall) leaves the larger one to be drawn */
-        if (r.skip || r.flat) { if (ov / mar >= .3) { skip = true; if (r.flat) flat = true; } } else if (!r.gov) hit.push(ri); }
+        if (r.skip || r.flat) { if (ov / mar >= .3) { skip = true; if (r.flat) flat = true; else if (UNDER.test(r.nm) && r.base - y > 6) under = r; } } else if (!r.gov) hit.push(ri); }
+      /* a hand-built tower that begins on a podium (Two IFC starts 21 m up, on the roof of its mall) would leave nothing between the street and its
+         own foot: there the real model is kept up to that level. Its points above are brought down to the level, which cuts every wall off cleanly
+         there and lays what was higher flat inside the hand-built shaft, out of sight */
+      if (skip && under && !flat) { const cy = Math.round((under.base - y) * 10); for (let k = 1; k < n * 3; k += 3) if (V[k] > cy) V[k] = cy;
+        list.push({ x, z, y, top: under.base - y, tall: top, n, nt, wide, V, io, hit, po, co, nc, bb: [x0, z0, x1, z1] }); nv += n; ni += nt * 3; continue; }
       if (skip) { if (!flat) hand.push({ x, z, y, top, bb: [x0, z0, x1, z1], at: [hash2(Math.round(x * 3), Math.round(z * 3)), .3, .5, 0] }); continue; }   /* a hand-built landmark stands here (its street-level walls can still be the real ones), or a building lowered because it stood on a road */
       list.push({ x, z, y, top, n, nt, wide, V, io, hit, po, co, nc, bb: [x0, z0, x1, z1] }); nv += n; ni += nt * 3; }
     const NRM = new Float32Array(nv * 3);   /* not facings: each building's own origin (x, z) and main wall direction (y); see the shader */
     const P = new Float32Array(nv * 3), Cc = new Float32Array(nv * 3), AP = new Float32Array(nv * 4), AQ = new Float32Array(nv * 4), I = new Uint32Array(ni), hide = new Set(); let v0 = 0, i0 = 0, cut = 0;
     for (const b of list) { let col, type, sd, roof = 0, lit, hue, flags = 0;
       if (b.hit.length) { let ri = b.hit[0]; for (const q of b.hit) { hide.add(q); recs[q].gov = T.id; if (recs[q].A > recs[ri].A) ri = q; } const k = ri * 12; col = [td[k], td[k + 1], td[k + 2]]; type = td[k + 3]; sd = td[k + 4]; roof = td[k + 5]; lit = td[k + 8]; hue = td[k + 9]; flags = td[k + 10]; }
-      else { sd = hash2(Math.round(b.x * 3), Math.round(b.z * 3)); type = b.top > 70 ? 2 : b.top > 22 ? 1 : 0; const pal = type === 2 ? PAL.glass : type === 1 ? PAL.res : PAL.tong; col = pal[(sd * 997 | 0) % pal.length]; lit = .4 + sd * .3; hue = sd; }
+      else { sd = hash2(Math.round(b.x * 3), Math.round(b.z * 3)); const ht = b.tall || b.top; type = ht > 70 ? 2 : ht > 22 ? 1 : 0; const pal = type === 2 ? PAL.glass : type === 1 ? PAL.res : PAL.tong; col = pal[(sd * 997 | 0) % pal.length]; lit = .4 + sd * .3; hue = sd; }
       /* each part of the building takes its own wall colour, read from the Lands Department's photo textures: for curtain-wall glass towers the mean of the
          facade, for the rest the mean of its brighter half (the wall rather than its windows, which the facade shader draws itself), lifted by
          a third: the photos carry their own shade and haze, and read about that much darker than the wall in sunlight */
