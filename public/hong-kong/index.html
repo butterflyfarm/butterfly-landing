@@ -2388,13 +2388,21 @@ function selectTerrain() {
   terr.geo.instanceCount = n; terr.count = n; terr.attr.needsUpdate = true;
 }
 let shadowTerr;
+/* the copy's heights: each point takes the lowest ground within one of its own steps, so the copy never rides above the real surface.
+   (Taking the ground's height at the point alone left the copy spanning hollows, gullies and road cuttings, which then lay in its shadow.) */
+function shadowTerrFit() {
+  const ST = 3, w = Math.floor((GW - 1) / ST) + 1, h = Math.floor((GH - 1) / ST) + 1, pos = shadowTerr.geometry.attributes.position.array, row = new Float32Array(GW * h);
+  for (let j = 0; j < h; j++) { const j0 = Math.max(0, j * ST - ST), j1 = Math.min(GH - 1, j * ST + ST); for (let i = 0; i < GW; i++) { let m = 1e9; for (let q = j0; q <= j1; q++) { const v = HGT[q * GW + i]; if (v < m) m = v; } row[j * GW + i] = m; } }
+  for (let j = 0, k = 0; j < h; j++) for (let i = 0; i < w; i++, k++) { const i0 = Math.max(0, i * ST - ST), i1 = Math.min(GW - 1, i * ST + ST); let m = 1e9; for (let q = i0; q <= i1; q++) { const v = row[j * GW + q]; if (v < m) m = v; } pos[k * 3 + 1] = m - .3; }
+  shadowTerr.geometry.attributes.position.needsUpdate = true; SH.farDirty = SH.nearDirty = true;
+}
 function makeStaticTerrains() {
   /* coarse shadow-casting copy of the island (layer 1 only) */
   const ST = 3, w = Math.floor((GW - 1) / ST) + 1, h = Math.floor((GH - 1) / ST) + 1, pos = new Float32Array(w * h * 3), idx = new Uint32Array((w - 1) * (h - 1) * 6);
-  for (let j = 0, k = 0; j < h; j++) for (let i = 0; i < w; i++, k++) { pos[k * 3] = X0 + i * ST * CELL; pos[k * 3 + 1] = HGT[j * ST * GW + i * ST]; pos[k * 3 + 2] = Z0 + j * ST * CELL; }
+  for (let j = 0, k = 0; j < h; j++) for (let i = 0; i < w; i++, k++) { pos[k * 3] = X0 + i * ST * CELL; pos[k * 3 + 2] = Z0 + j * ST * CELL; }
   for (let j = 0, k = 0; j < h - 1; j++) for (let i = 0; i < w - 1; i++) { const a = j * w + i, b = a + 1, c = a + w, d = c + 1; idx[k++] = a; idx[k++] = c; idx[k++] = b; idx[k++] = b; idx[k++] = c; idx[k++] = d; }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setIndex(new THREE.BufferAttribute(idx, 1));
-  shadowTerr = new THREE.Mesh(g, new THREE.MeshBasicMaterial()); shadowTerr.layers.set(1); shadowTerr.frustumCulled = false; scene.add(shadowTerr);
+  shadowTerr = new THREE.Mesh(g, new THREE.MeshBasicMaterial()); shadowTerr.layers.set(1); shadowTerr.frustumCulled = false; scene.add(shadowTerr); shadowTerrFit();
 }
 
 /* ---------- water, sky ---------- */
@@ -3459,6 +3467,7 @@ function flattenRecs(set) {
       for (let v = 0; v < pos.count; v++) { const ri = Math.round(B.array[v * 2]); if (set.has(ri)) { pos.array[v * 3 + 1] = Math.min(pos.array[v * 3 + 1], recs[ri].base - .6); hit = true; } }
       if (hit) { pos.needsUpdate = true; g.computeBoundingSphere(); } } }
   for (let k = 0; k < FA.n; k++) { const o = k * 10, x = FA.a[o], z = FA.a[o + 1]; for (const ri of set) { const b = recs[ri]; if (Math.abs(b.cx - x) < 80 && Math.abs(b.cz - z) < 80 && inPoly(x, z, b.rings[0])) { FA.a[o + 6] = 0; break; } } }
+  shadowTerrFit();   /* the shadow-casting copy follows the reshaped ground */
   SH.farDirty = SH.nearDirty = true; NEAR.fx = NEAR.fz = 1e9;
 }
 /* ---------- real building shapes: the Lands Department's 3D Visualisation Map, one small file per 1:1000 map sheet (b3d/<sheet>.bin, shapes only,
