@@ -1109,6 +1109,9 @@ varying vec3 vRel;
 #endif
 #ifdef STREET
 uniform sampler2D uAtlas; varying vec2 vUv;
+#ifdef DRAWN
+uniform float uAtlasPx;
+#endif
 #endif
 void main(){
 #ifdef LODFADE
@@ -1132,7 +1135,14 @@ void main(){
 #ifdef STREET
   /* the lowest floors of a real building, in the Lands Department's own photographs of them (lit by the scene's sun and sky; glowing a
      little at night, as shopfronts do) */
-  { vec3 tx=pow(texture(uAtlas,vUv).rgb,vec3(2.2))*1.25; float aoc=mix(.62,1.,smoothstep(0.,14.,hh)); col=tx*(uSunCol*ndl*sh+hemi*aoc+uSunCol*.045*aoc); emis=tx*vec3(1.,.84,.62)*uNight*ign*.5; }
+#ifdef DRAWN
+  /* (drawn facades: flat colour blocks taken from those photographs, kept crisp. Each block of the atlas is sampled at its centre, and only
+     within a screen pixel of the line between two blocks do they blend, so an edge is sharp at any distance and never jagged) */
+  vec2 dpa=vUv*uAtlasPx, dsm=floor(dpa+.5); vec3 tx0=textureGrad(uAtlas,(dsm+clamp((dpa-dsm)/max(fwidth(dpa),vec2(1e-5)),-.5,.5))/uAtlasPx,dFdx(vUv),dFdy(vUv)).rgb;
+#else
+  vec3 tx0=texture(uAtlas,vUv).rgb;
+#endif
+  { vec3 tx=pow(tx0,vec3(2.2))*1.25; float aoc=mix(.62,1.,smoothstep(0.,14.,hh)); col=tx*(uSunCol*ndl*sh+hemi*aoc+uSunCol*.045*aoc); emis=tx*vec3(1.,.84,.62)*uNight*ign*.5; }
   if(true){}else
 #endif
   if(roof){
@@ -3633,10 +3643,12 @@ async function b3dLoad(T) {
    ones. Models of the roads themselves (flyover decks) are left out: the drive map has its own, graded to be driven on. */
 async function b3dStreet(T, list) {
   try {
-    const sfx = /[?&]sthi\b/.test(location.search) ? '.hi' : /[?&]stmid\b/.test(location.search) ? '.mid' : '';      /* (pilot: a 1024 px atlas by default, the overall look and no more; ?stmid=1 loads the 2048 px one, ?sthi=1 the 4096 px one, to compare) */
+    const qs = location.search, sfx = /[?&]sthi\b/.test(qs) ? '.hi' : /[?&]stmid\b/.test(qs) ? '.mid' : '', drawn = sfx !== '.hi' && !/[?&]stphoto\b/.test(qs);
+    /* (pilot: by default the walls are drawn, not photographed: flat colour blocks derived from the photos, on a 1024 px sheet. ?stphoto=1 shows the photos
+       themselves at the same size; ?stmid=1 the 2048 px sheet, drawn, or with stphoto its photos; ?sthi=1 the 4096 px photos) */
     const res = await fetch(b3dURL(T.id + sfx + '.st.bin')); if (!res.ok) throw new Error(res.status); let u8 = new Uint8Array(await res.arrayBuffer());
     if (u8[0] === 0x1f && u8[1] === 0x8b) u8 = new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
-    const tex = await new THREE.TextureLoader().loadAsync(b3dURL(T.id + sfx + '.st.webp')); tex.flipY = false; tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy()); tex.needsUpdate = true;
+    const tex = await new THREE.TextureLoader().loadAsync(b3dURL(T.id + sfx + (drawn ? '.dr.png' : '.st.webp'))); tex.flipY = false; tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy()); tex.needsUpdate = true;
     if (B3D.tiles.get(T.id) !== T || !T.mesh) { tex.dispose(); return; }
     const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength), by = new Map(), cut = (o, n) => u8.buffer.slice(u8.byteOffset + o, u8.byteOffset + o + n); for (const b of list) by.set(Math.round(b.x * 10) + '_' + Math.round(b.z * 10), b);
     let o = 4; const nb = dv.getUint32(o, true); o += 4; const P = [], UV = [], AP = [], AQ = [], OR = [], I = []; let v0 = 0;
@@ -3650,7 +3662,7 @@ async function b3dStreet(T, list) {
     if (I.length) { const g = new THREE.BufferGeometry(), nv = P.length / 3, F = (a, n) => new THREE.BufferAttribute(new Float32Array(a), n);
       g.setAttribute('position', F(P, 3)); g.setAttribute('aUv', F(UV, 2)); g.setAttribute('aP', F(AP, 4)); g.setAttribute('aQ', F(AQ, 4)); g.setAttribute('normal', F(OR, 3)); g.setAttribute('aCol', new THREE.BufferAttribute(new Float32Array(nv * 3).fill(1), 3)); g.setAttribute('aF', new THREE.BufferAttribute(new Float32Array(nv), 1));
       g.setIndex(new THREE.BufferAttribute(new Uint32Array(I), 1)); g.boundingSphere = T.mesh.geometry.boundingSphere;
-      S.mat = new THREE.ShaderMaterial({ uniforms: Object.assign({}, U, { uAtlas: { value: tex } }), vertexShader: BLD_VS, fragmentShader: BLD_FS(), defines: { FOC_SINK: 1, FLATN: 1, STREET: 1 }, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4 });
+      S.mat = new THREE.ShaderMaterial({ uniforms: Object.assign({}, U, { uAtlas: { value: tex }, uAtlasPx: { value: tex.image.width } }), vertexShader: BLD_VS, fragmentShader: BLD_FS(), defines: Object.assign({ FOC_SINK: 1, FLATN: 1, STREET: 1 }, drawn ? { DRAWN: 1 } : {}), polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4 });
       S.mesh = new THREE.Mesh(g, S.mat); scene.add(S.mesh); }
     /* footbridges and walkways: only once the streets are known, so that models of the roads themselves can be told apart and left out */
     const ni = dv.getUint32(o, true); o += 4;
