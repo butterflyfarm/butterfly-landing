@@ -3633,7 +3633,7 @@ async function b3dLoad(T) {
    ones. Models of the roads themselves (flyover decks) are left out: the drive map has its own, graded to be driven on. */
 async function b3dStreet(T, list) {
   try {
-    const sfx = /[?&]stlo\b/.test(location.search) ? '' : '.hi';      /* (pilot: the 4096 px atlas by default; ?stlo=1 loads the 2048 px one to compare) */
+    const sfx = /[?&]sthi\b/.test(location.search) ? '.hi' : /[?&]stmid\b/.test(location.search) ? '.mid' : '';      /* (pilot: a 1024 px atlas by default, the overall look and no more; ?stmid=1 loads the 2048 px one, ?sthi=1 the 4096 px one, to compare) */
     const res = await fetch(b3dURL(T.id + sfx + '.st.bin')); if (!res.ok) throw new Error(res.status); let u8 = new Uint8Array(await res.arrayBuffer());
     if (u8[0] === 0x1f && u8[1] === 0x8b) u8 = new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
     const tex = await new THREE.TextureLoader().loadAsync(b3dURL(T.id + sfx + '.st.webp')); tex.flipY = false; tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy()); tex.needsUpdate = true;
