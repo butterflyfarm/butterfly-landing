@@ -1063,6 +1063,9 @@ attribute vec3 aCol; attribute vec4 aP,aQ; attribute float aF; uniform float uFo
 #ifdef FLATN
 varying vec3 vRel;
 #endif
+#ifdef STREET
+attribute vec2 aUv; varying vec2 vUv;
+#endif
 void main(){
 #ifdef USE_INSTANCING
   vec4 w=instanceMatrix*vec4(position,1.);vN=normalize(mat3(instanceMatrix)*normal);
@@ -1080,6 +1083,9 @@ void main(){
   /* models without stored facings: the position is also handed on measured from the camera (small numbers, so the facing worked out from
      it per face is exact), and the normal slot carries the building's own origin, to measure along its walls from, and its main direction */
   vRel=w.xyz-cameraPosition;vN=normal;
+#endif
+#ifdef STREET
+  vUv=aUv;
 #endif
 }`;
 const BLD_FS = () => /* glsl */`
@@ -1101,6 +1107,9 @@ uniform float uFade,uLodSide;
 #ifdef FLATN
 varying vec3 vRel;
 #endif
+#ifdef STREET
+uniform sampler2D uAtlas; varying vec2 vUv;
+#endif
 void main(){
 #ifdef LODFADE
   { float dth=hash21(floor(gl_FragCoord.xy)+vec2(17.,3.)); if(uLodSide>0.?dth>=uFade:dth<uFade) discard; }
@@ -1120,6 +1129,12 @@ void main(){
   vec3 hemi=mix(uAmbG,uAmbS,N.y*.5+.5);
   vec3 col;vec3 emis=vec3(0.);
   float ign=smoothstep(0.,.07,uIgnite*1.12-(clamp(vWp.y/620.,0.,1.)*.55+seed*.25));
+#ifdef STREET
+  /* the lowest floors of a real building, in the Lands Department's own photographs of them (lit by the scene's sun and sky; glowing a
+     little at night, as shopfronts do) */
+  { vec3 tx=pow(texture(uAtlas,vUv).rgb,vec3(2.2))*1.25; float aoc=mix(.62,1.,smoothstep(0.,14.,hh)); col=tx*(uSunCol*ndl*sh+hemi*aoc+uSunCol*.045*aoc); emis=tx*vec3(1.,.84,.62)*uNight*ign*.5; }
+  if(true){}else
+#endif
   if(roof){
     vec3 alb=vec3(.30,.29,.27)*(.75+.5*hash11(seed*91.7));
     vec2 rc=floor(vWp.xz/3.5);float rh=hash21(rc+seed*7.);float fw=fwidth(vWp.x)/3.5+fwidth(vWp.z)/3.5;float det=1.-smoothstep(.3,1.1,fw);
@@ -2111,10 +2126,11 @@ function buildLandmarks(R) {
   /* footbridges over the harbour-front trunk roads and the tram streets */
   for (const r of roadsNamed('Connaught Road Central', 'Harcourt Road', 'Gloucester Road', 'Hennessy Road', 'Queensway', "King's Road", 'Des Voeux Road Central')) {
     for (let i = 20; i < r.n - 20; i += r.ow ? 64 : 52) { if (r.el[i] > 1) continue; const x = r.pts[i * 3], y = r.pts[i * 3 + 1], z = r.pts[i * 3 + 2], yaw = Math.atan2(r.pts[i * 3 + 5] - z, r.pts[i * 3 + 3] - x) + PI / 2, L = r.w + (r.ow ? 26 : 14);
-      PB.at(x, z, yaw, y).M(C(.70, .70, .68)).box(0, 6, 0, L, .9, 4.2).M(C(.45, .55, .6), 0, 1).box(0, 6.9, 0, L, 2.6, 4.4).M(C(.62, .62, .6));
+      const fv0 = PB.p.length / 3; PB.at(x, z, yaw, y).M(C(.70, .70, .68)).box(0, 6, 0, L, .9, 4.2).M(C(.45, .55, .6), 0, 1).box(0, 6.9, 0, L, 2.6, 4.4).M(C(.62, .62, .6));
       (DRIVE.obs || (DRIVE.obs = [])).push([x, z, Math.cos(yaw), Math.sin(yaw), L / 2, 2.2, y + 6, y + 9.5]);   /* (the chase camera keeps out of it) */
       /* its two legs, each remembered: one found standing in a street's lanes once the drive map is in is taken away */
-      for (const sd of [-1, 1]) { const v0 = PB.p.length / 3, w = PB.W(sd * (L / 2 - 1.5), 0, 0), ob = [w[0], w[2], Math.cos(yaw), Math.sin(yaw), 1.1, 1.1, w[1], w[1] + 6]; PB.box(sd * (L / 2 - 1.5), 0, 0, 2.2, 6, 2.2); DRIVE.obs.push(ob); (DRIVE.fbLegs || (DRIVE.fbLegs = [])).push([v0, PB.p.length / 3, w[0], w[1], w[2], undefined, ob]); } } }
+      for (const sd of [-1, 1]) { const v0 = PB.p.length / 3, w = PB.W(sd * (L / 2 - 1.5), 0, 0), ob = [w[0], w[2], Math.cos(yaw), Math.sin(yaw), 1.1, 1.1, w[1], w[1] + 6]; PB.box(sd * (L / 2 - 1.5), 0, 0, 2.2, 6, 2.2); DRIVE.obs.push(ob); (DRIVE.fbLegs || (DRIVE.fbLegs = [])).push([v0, PB.p.length / 3, w[0], w[1], w[2], undefined, ob]); }
+      (DRIVE.fbAll || (DRIVE.fbAll = [])).push([fv0, PB.p.length / 3, x, z]); } }
   /* Mid-Levels escalator and Peak Tram on their surveyed lines */
   { const pth = resample(G.esc || [[SITE('center')[0], SITE('center')[1]], [SITE('center')[0] - 300, SITE('center')[1] + 300]], 10); PATHS.esc = pth.map(p => [p[0], hAt(p[0], p[1]) + 4.6, p[1]]);
     for (let i = 0; i < pth.length - 1; i++) { const a = pth[i], b = pth[i + 1], yaw = Math.atan2(b[1] - a[1], b[0] - a[0]), mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2, g = hAt(mx, mz);
@@ -3569,14 +3585,14 @@ async function b3dLoad(T) {
   try { const res = await fetch(b3dURL(T.id + '.bin')); if (!res.ok) throw new Error(res.status); let u8 = new Uint8Array(await res.arrayBuffer());
     if (u8[0] === 0x1f && u8[1] === 0x8b) u8 = new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
     const t1 = performance.now();
-    const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength), nb = dv.getUint32(4, true), G = b3dGrid(), recs = CITY.recs, td = CITY.tex.image.data; let o = 8, nv = 0, ni = 0; const list = [];
+    const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength), nb = dv.getUint32(4, true), G = b3dGrid(), recs = CITY.recs, td = CITY.tex.image.data; let o = 8, nv = 0, ni = 0; const list = [], hand = [];
     for (let b = 0; b < nb; b++) { const x = dv.getFloat32(o, true), z = dv.getFloat32(o + 4, true), y = dv.getFloat32(o + 8, true), top = dv.getFloat32(o + 12, true), n = dv.getUint32(o + 16, true), nt = dv.getUint32(o + 20, true), wide = dv.getUint8(o + 24), nc = dv.getUint8(o + 25); o += 26; const po = o; o += nc * 6; const vo = o; o += n * 6; const co = o; o += n; const io = o; o += nt * 3 * (wide ? 4 : 2);
       /* its outline box, and the surveyed buildings it stands for: those with their centre inside it and at least half their own box under it */
       const V = new Int16Array(u8.buffer.slice(u8.byteOffset + vo, u8.byteOffset + vo + n * 6)); let ix0 = 32767, iz0 = 32767, ix1 = -32768, iz1 = -32768; for (let k = 0; k < n * 3; k += 3) { const vx = V[k], vz = V[k + 2]; if (vx < ix0) ix0 = vx; if (vx > ix1) ix1 = vx; if (vz < iz0) iz0 = vz; if (vz > iz1) iz1 = vz; }
       const x0 = x + ix0 / 10, x1 = x + ix1 / 10, z0 = z + iz0 / 10, z1 = z + iz1 / 10;
-      const hit = []; let skip = false; for (let gx = Math.floor(x0 / 64); gx <= Math.floor(x1 / 64); gx++) for (let gz = Math.floor(z0 / 64); gz <= Math.floor(z1 / 64); gz++) for (const ri of G.get(gx * 65536 + gz) || []) { const r = recs[ri]; if (r.cx < x0 || r.cx > x1 || r.cz < z0 || r.cz > z1) continue;
-        const bb = r.bb, ov = Math.max(0, Math.min(bb[2], x1) - Math.max(bb[0], x0)) * Math.max(0, Math.min(bb[3], z1) - Math.max(bb[1], z0)), ar = (bb[2] - bb[0]) * (bb[3] - bb[1]) || 1; if (ov / ar < .5) continue; if (r.skip || r.flat) skip = true; else if (!r.gov) hit.push(ri); }
-      if (skip) continue;   /* a hand-built landmark stands here, or a building lowered because it stood on a road */
+      const hit = []; let skip = false, flat = false; for (let gx = Math.floor(x0 / 64); gx <= Math.floor(x1 / 64); gx++) for (let gz = Math.floor(z0 / 64); gz <= Math.floor(z1 / 64); gz++) for (const ri of G.get(gx * 65536 + gz) || []) { const r = recs[ri]; if (r.cx < x0 || r.cx > x1 || r.cz < z0 || r.cz > z1) continue;
+        const bb = r.bb, ov = Math.max(0, Math.min(bb[2], x1) - Math.max(bb[0], x0)) * Math.max(0, Math.min(bb[3], z1) - Math.max(bb[1], z0)), ar = (bb[2] - bb[0]) * (bb[3] - bb[1]) || 1; if (ov / ar < .5) continue; if (r.flat) flat = true; if (r.skip || r.flat) skip = true; else if (!r.gov) hit.push(ri); }
+      if (skip) { if (!flat) hand.push({ x, z, y, top, bb: [x0, z0, x1, z1], at: [hash2(Math.round(x * 3), Math.round(z * 3)), .3, .5, 0] }); continue; }   /* a hand-built landmark stands here (its street-level walls can still be the real ones), or a building lowered because it stood on a road */
       list.push({ x, z, y, top, n, nt, wide, V, io, hit, po, co, nc, bb: [x0, z0, x1, z1] }); nv += n; ni += nt * 3; }
     const NRM = new Float32Array(nv * 3);   /* not facings: each building's own origin (x, z) and main wall direction (y); see the shader */
     const P = new Float32Array(nv * 3), Cc = new Float32Array(nv * 3), AP = new Float32Array(nv * 4), AQ = new Float32Array(nv * 4), I = new Uint32Array(ni), hide = new Set(); let v0 = 0, i0 = 0, cut = 0;
@@ -3586,6 +3602,7 @@ async function b3dLoad(T) {
       /* each part of the building takes its own wall colour, read from the Lands Department's photo textures: for curtain-wall glass towers the mean of the
          facade, for the rest the mean of its brighter half (the wall rather than its windows, which the facade shader draws itself), lifted by
          a third: the photos carry their own shade and haze, and read about that much darker than the wall in sunlight */
+      b.at = [sd, lit, hue, flags];
       const glassy = type === 2, pal = []; for (let k = 0; k < b.nc; k++) { const q = b.po + k * 6 + (glassy ? 0 : 3), r = u8[q], g2 = u8[q + 1], bl = u8[q + 2]; const gain = glassy ? 1 / 255 : 1.3 / 255; pal.push(r + g2 + bl ? C(Math.min(1, r * gain), Math.min(1, g2 * gain), Math.min(1, bl * gain)) : null); }
       for (let k = 0; k < b.n; k++) { const q = (v0 + k) * 3, w = (v0 + k) * 4; P[q] = b.x + b.V[k * 3] / 10; P[q + 1] = b.y + b.V[k * 3 + 1] / 10; P[q + 2] = b.z + b.V[k * 3 + 2] / 10;
         NRM[q] = b.x; NRM[q + 2] = b.z; const pc = pal[u8[b.co + k]] || col; Cc[q] = pc[0]; Cc[q + 1] = pc[1]; Cc[q + 2] = pc[2]; AP[w] = sd; AP[w + 1] = type; AP[w + 2] = roof; AP[w + 3] = b.y; AQ[w] = b.y + b.top; AQ[w + 1] = lit; AQ[w + 2] = hue; AQ[w + 3] = flags; }
@@ -3604,11 +3621,59 @@ async function b3dLoad(T) {
     let ylo = 1e9, yhi = -1e9; for (const b of list) { ylo = Math.min(ylo, b.y - 20); yhi = Math.max(yhi, b.y + b.top + 5); } if (!list.length) ylo = yhi = 0;
     g.boundingSphere = new THREE.Sphere(new THREE.Vector3((T.box[0] + T.box[2]) / 2, (ylo + yhi) / 2, (T.box[1] + T.box[3]) / 2), Math.hypot(T.box[2] - T.box[0], yhi - ylo, T.box[3] - T.box[1]) / 2 + 30);
     const mesh = new THREE.Mesh(g, mat); mesh.layers.enable(1); scene.add(mesh);   /* casts shadows; left out of the water's reflection pass */
-    T.mesh = mesh; T.undo = b3dHide(hide); T.hide = hide; T.tris = i0 / 3; T.cut = cut; T.ms = Math.round(performance.now() - t0); T.sync = Math.round(performance.now() - t1); B3D.tiles.set(T.id, T); SH.farDirty = SH.nearDirty = true; NEAR.fx = NEAR.fz = 1e9;
+    T.mesh = mesh; if (T.st && !/[?&]nost\b/.test(location.search)) b3dStreet(T, list.concat(hand)); T.undo = b3dHide(hide); T.hide = hide; T.tris = i0 / 3; T.cut = cut; T.ms = Math.round(performance.now() - t0); T.sync = Math.round(performance.now() - t1); B3D.tiles.set(T.id, T); SH.farDirty = SH.nearDirty = true; NEAR.fx = NEAR.fz = 1e9;
   } catch (err) { B3D.fail.add(T.id); console.warn('b3d ' + T.id + ': ' + (err && err.message)); }
   B3D.loading = false;
 }
-function b3dDrop(T) { if (T.undo) b3dShow(T.undo); for (const ri of T.hide || []) CITY.recs[ri].gov = null; if (T.mesh) { scene.remove(T.mesh); T.mesh.geometry.dispose(); } T.mesh = T.undo = T.hide = null; B3D.tiles.delete(T.id); SH.farDirty = SH.nearDirty = true; NEAR.fx = NEAR.fz = 1e9; }
+/* street level, for a sheet that has it (index: st): the lowest floors of its buildings in the Lands Department's photographs, baked into
+   one small atlas and laid over the walls; and, while driving, its footbridges and walkways in their real shapes, in place of the guessed
+   ones. Models of the roads themselves (flyover decks) are left out: the drive map has its own, graded to be driven on. */
+async function b3dStreet(T, list) {
+  try {
+    const sfx = /[?&]sthi\b/.test(location.search) ? '.hi' : '';      /* (pilot: a sharper atlas to compare) */
+    const res = await fetch(b3dURL(T.id + sfx + '.st.bin')); if (!res.ok) throw new Error(res.status); let u8 = new Uint8Array(await res.arrayBuffer());
+    if (u8[0] === 0x1f && u8[1] === 0x8b) u8 = new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
+    const tex = await new THREE.TextureLoader().loadAsync(b3dURL(T.id + sfx + '.st.webp')); tex.flipY = false; tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy()); tex.needsUpdate = true;
+    if (B3D.tiles.get(T.id) !== T || !T.mesh) { tex.dispose(); return; }
+    const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength), by = new Map(), cut = (o, n) => u8.buffer.slice(u8.byteOffset + o, u8.byteOffset + o + n); for (const b of list) by.set(Math.round(b.x * 10) + '_' + Math.round(b.z * 10), b);
+    let o = 4; const nb = dv.getUint32(o, true); o += 4; const P = [], UV = [], AP = [], AQ = [], OR = [], I = []; let v0 = 0;
+    for (let k = 0; k < nb; k++) { const x = dv.getFloat32(o, true), z = dv.getFloat32(o + 4, true), y = dv.getFloat32(o + 8, true), n = dv.getUint32(o + 12, true), nt = dv.getUint32(o + 16, true), wide = dv.getUint8(o + 20); o += 21; const vo = o; o += n * 6; const uo = o; o += n * 4; const io = o; o += nt * 3 * (wide ? 4 : 2);
+      const b = by.get(Math.round(x * 10) + '_' + Math.round(z * 10)); if (!b || !b.at) continue;      /* a building this sheet does not draw (a hand-built landmark stands there) */
+      const V = new Int16Array(cut(vo, n * 6)), Q = new Uint16Array(cut(uo, n * 4)), J = wide ? new Uint32Array(cut(io, nt * 12)) : new Uint16Array(cut(io, nt * 6)), LN = b3dLanes(b.bb);
+      for (let i = 0; i < n; i++) { P.push(x + V[i * 3] / 10, y + V[i * 3 + 1] / 10, z + V[i * 3 + 2] / 10); UV.push(Q[i * 2] / 65535, Q[i * 2 + 1] / 65535); AP.push(b.at[0], 10, 0, b.y); AQ.push(b.y + b.top, b.at[1], b.at[2], b.at[3]); OR.push(b.x, 0, b.z); }
+      for (let i = 0; i < nt * 3; i += 3) { const a = J[i] * 3, e = J[i + 1] * 3, c = J[i + 2] * 3; if (LN && b3dBlocked(LN, x + V[a] / 10, y + V[a + 1] / 10, z + V[a + 2] / 10, x + V[e] / 10, y + V[e + 1] / 10, z + V[e + 2] / 10, x + V[c] / 10, y + V[c + 1] / 10, z + V[c + 2] / 10)) continue; I.push(v0 + J[i], v0 + J[i + 1], v0 + J[i + 2]); }
+      v0 += n; }
+    const S = T.stm = { tex, tris: I.length / 3 };
+    if (I.length) { const g = new THREE.BufferGeometry(), nv = P.length / 3, F = (a, n) => new THREE.BufferAttribute(new Float32Array(a), n);
+      g.setAttribute('position', F(P, 3)); g.setAttribute('aUv', F(UV, 2)); g.setAttribute('aP', F(AP, 4)); g.setAttribute('aQ', F(AQ, 4)); g.setAttribute('normal', F(OR, 3)); g.setAttribute('aCol', new THREE.BufferAttribute(new Float32Array(nv * 3).fill(1), 3)); g.setAttribute('aF', new THREE.BufferAttribute(new Float32Array(nv), 1));
+      g.setIndex(new THREE.BufferAttribute(new Uint32Array(I), 1)); g.boundingSphere = T.mesh.geometry.boundingSphere;
+      S.mat = new THREE.ShaderMaterial({ uniforms: Object.assign({}, U, { uAtlas: { value: tex } }), vertexShader: BLD_VS, fragmentShader: BLD_FS(), defines: { FOC_SINK: 1, FLATN: 1, STREET: 1 }, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4 });
+      S.mesh = new THREE.Mesh(g, S.mat); scene.add(S.mesh); }
+    /* footbridges and walkways: only once the streets are known, so that models of the roads themselves can be told apart and left out */
+    const ni = dv.getUint32(o, true); o += 4;
+    if (DRIVE.SG && ni) { const P2 = [], C2 = [], A2 = [], Q2 = [], O2 = [], I2 = []; let w0 = 0, kept = 0;
+      for (let k = 0; k < ni; k++) { const x = dv.getFloat32(o, true), z = dv.getFloat32(o + 4, true), y = dv.getFloat32(o + 8, true), n = dv.getUint32(o + 12, true), nt = dv.getUint32(o + 16, true), wide = dv.getUint8(o + 20), col = C(Math.min(1, dv.getUint8(o + 21) * 1.25 / 255), Math.min(1, dv.getUint8(o + 22) * 1.25 / 255), Math.min(1, dv.getUint8(o + 23) * 1.25 / 255)); o += 24; const vo = o; o += n * 6; const io = o; o += nt * 3 * (wide ? 4 : 2);
+        const V = new Int16Array(cut(vo, n * 6)), J = wide ? new Uint32Array(cut(io, nt * 12)) : new Uint16Array(cut(io, nt * 6)); let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9, top = 0;
+        for (let i = 0; i < n; i++) { const vx = x + V[i * 3] / 10, vz = z + V[i * 3 + 2] / 10; if (vx < x0) x0 = vx; if (vx > x1) x1 = vx; if (vz < z0) z0 = vz; if (vz > z1) z1 = vz; top = Math.max(top, V[i * 3 + 1] / 10); }
+        if (Math.max(x1 - x0, z1 - z0) > 400 || y + top < dGround((x0 + x1) / 2, (z0 + z1) / 2) + 2.5) continue;      /* a road tunnel or a subway under the street: not for the open air */
+        const LN = b3dLanes([x0, z0, x1, z1]), keep = []; let road = 0;
+        for (let i = 0; i < nt * 3; i += 3) { const a = J[i] * 3, e = J[i + 1] * 3, c = J[i + 2] * 3, cx = x + (V[a] + V[e] + V[c]) / 30, cy = y + (V[a + 1] + V[e + 1] + V[c + 1]) / 30, cz = z + (V[a + 2] + V[e + 2] + V[c + 2]) / 30; let on = false;
+          if (LN) for (const q of LN) { const dx = q[2] - q[0], dz = q[3] - q[1], t = clamp(((cx - q[0]) * dx + (cz - q[1]) * dz) / (dx * dx + dz * dz || 1), 0, 1), yl = q[4] + (q[5] - q[4]) * t; if (Math.abs(cy - yl) < 3 && Math.hypot(cx - q[0] - dx * t, cz - q[1] - dz * t) < q[6] + 1) { on = true; break; } }
+          if (on) road++; else keep.push(i); }
+        if (road > nt * .2) continue; kept++;      /* a fifth of it lies on a carriageway at road level: it is the road, not something beside or over it */
+        const sd = hash2(Math.round(x * 3), Math.round(z * 3));
+        for (let i = 0; i < n; i++) { P2.push(x + V[i * 3] / 10, y + V[i * 3 + 1] / 10, z + V[i * 3 + 2] / 10); C2.push(col[0], col[1], col[2]); A2.push(sd, 10, 0, y); Q2.push(y + top, .2, sd, 0); O2.push(x, 0, z); }
+        for (const i of keep) I2.push(w0 + J[i], w0 + J[i + 1], w0 + J[i + 2]); w0 += n; }
+      if (I2.length) { const g = new THREE.BufferGeometry(), nv = P2.length / 3, F = (a, n) => new THREE.BufferAttribute(new Float32Array(a), n);
+        g.setAttribute('position', F(P2, 3)); g.setAttribute('aCol', F(C2, 3)); g.setAttribute('aP', F(A2, 4)); g.setAttribute('aQ', F(Q2, 4)); g.setAttribute('normal', F(O2, 3)); g.setAttribute('aF', new THREE.BufferAttribute(new Float32Array(nv), 1));
+        g.setIndex(new THREE.BufferAttribute(new Uint32Array(I2), 1)); g.boundingSphere = T.mesh.geometry.boundingSphere; S.infra = new THREE.Mesh(g, B3D.mat); S.infra.layers.enable(1); scene.add(S.infra); S.infraN = kept;
+        /* the guessed footbridges of this sheet give way to the real ones */
+        if (PBm && DRIVE.fbAll) { const pos = PBm.geometry.attributes.position; S.fb = []; for (const [a, b, fx, fz] of DRIVE.fbAll) { if (fx < T.box[0] || fx > T.box[2] || fz < T.box[1] || fz > T.box[3]) continue; for (let v = a; v < b; v++) { S.fb.push(v, pos.array[v * 3 + 1]); pos.array[v * 3 + 1] -= 4000; } } pos.needsUpdate = true; } } }
+    SH.farDirty = SH.nearDirty = true;
+  } catch (err) { console.warn('b3d street ' + T.id + ': ' + (err && err.message)); }
+}
+function b3dDrop(T) { if (T.undo) b3dShow(T.undo);
+  if (T.stm) { const S = T.stm; if (S.mesh) { scene.remove(S.mesh); S.mesh.geometry.dispose(); S.mat.dispose(); } if (S.infra) { scene.remove(S.infra); S.infra.geometry.dispose(); } if (S.fb && PBm) { const pos = PBm.geometry.attributes.position; for (let k = 0; k < S.fb.length; k += 2) pos.array[S.fb[k] * 3 + 1] = S.fb[k + 1]; pos.needsUpdate = true; } S.tex.dispose(); T.stm = null; } for (const ri of T.hide || []) CITY.recs[ri].gov = null; if (T.mesh) { scene.remove(T.mesh); T.mesh.geometry.dispose(); } T.mesh = T.undo = T.hide = null; B3D.tiles.delete(T.id); SH.farDirty = SH.nearDirty = true; NEAR.fx = NEAR.fz = 1e9; }
 B3D.drop = b3dDrop;
 /* a few times a second: bring in the nearest sheet not yet loaded, drop the farthest when too many are held */
 function b3dStep(dt) {
