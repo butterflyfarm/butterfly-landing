@@ -131,6 +131,26 @@
   #dSpd{display:block;font-size:26px;font-weight:600;font-variant-numeric:tabular-nums}
   #dSpdBox small{font-size:9px;letter-spacing:.14em;opacity:.7}
   #dU{padding:8px 10px;font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+  #dU.hot{background:rgba(64,170,220,.6);border-color:rgba(160,225,255,.95);color:#fff;animation:dUhot 1s ease-in-out infinite alternate}
+  @keyframes dUhot{to{box-shadow:0 0 0 6px rgba(120,205,255,.28)}}
+  #dNavB{width:42px;height:42px;padding:0;flex:none;display:flex;align-items:center;justify-content:center}
+  #dNavB.on{background:rgba(64,170,220,.55);border-color:rgba(160,225,255,.9);color:#fff}
+  #dGo{display:none;align-items:center;gap:7px;max-width:100%;padding:4px 12px;border-radius:16px;background:rgba(20,70,100,.72);border:1px solid rgba(140,215,255,.6);color:#e6f7ff;font-size:11px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+  #dGo.show{display:flex}
+  #dGo i{font-style:normal;color:#7fdcff}
+  #dGo em{font-style:normal;overflow:hidden;text-overflow:ellipsis}
+  #navP{display:none;position:fixed;z-index:8;left:50%;top:max(64px,calc(env(safe-area-inset-top) + 58px));transform:translateX(-50%);width:min(380px,calc(100vw - 24px));max-height:min(70vh,560px);flex-direction:column;
+    background:rgba(9,20,28,.9);border:1px solid rgba(140,215,255,.45);border-radius:14px;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:0 10px 30px rgba(0,0,0,.5)}
+  body.navopen #navP{display:flex}
+  #navP .nh{display:flex;align-items:center;justify-content:space-between;padding:10px 12px 6px 16px;color:#e6f7ff;font-size:13px;letter-spacing:.2em;text-transform:uppercase}
+  #navX{width:34px;height:34px;padding:0;font-size:14px}
+  #navL{overflow-y:auto;padding:4px 8px 10px;display:flex;flex-direction:column;gap:4px;-webkit-overflow-scrolling:touch}
+  #drv .nv{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:9px;text-align:left;background:rgba(255,255,255,.04);border:1px solid rgba(140,215,255,.15)}
+  #drv .nv:hover{background:rgba(64,170,220,.25)}
+  .nv b{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#fff4df;font-weight:600}
+  .nv em{font-style:normal;font-size:10px;letter-spacing:.06em;opacity:.7;white-space:nowrap}
+  #drv .nv.stop{justify-content:center;background:rgba(200,70,50,.35);border-color:rgba(255,160,140,.5);font-size:12px;letter-spacing:.14em;text-transform:uppercase}
+  body.garage #dNavB{visibility:hidden}
   #dCar{width:42px;height:42px;padding:0;flex:none;display:flex;align-items:center;justify-content:center}
   #garage{display:none;position:fixed;z-index:7;left:0;right:0;bottom:max(14px,env(safe-area-inset-bottom));flex-direction:column;align-items:center;gap:10px;padding:0 10px;pointer-events:none}
   #garage>*{pointer-events:auto}
@@ -222,10 +242,11 @@
   <div id="zm"><button id="zIn" title="Zoom in" aria-label="Zoom in">+</button><button id="zOut" title="Zoom out" aria-label="Zoom out">−</button></div></div>
 <div id="hint" aria-live="polite"></div>
 <button id="bigDrive" type="button" aria-label="Drive around Hong Kong Island"><i><svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="24" cy="24" r="4.5" fill="currentColor"/><path d="M8 21.5c5-2.6 10.4-3.6 16-3.6s11 1 16 3.6M24 28.5v11.5M20 26l-9.5 9M28 26l9.5 9" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg></i><span><b>Drive</b><em>Every street on the island</em></span></button>
-<div id="drv"><div id="dTop"><button id="dExit" title="Stop driving (Esc)" aria-label="Stop driving">✕</button><button id="dCar" title="Change vehicle (G)" aria-label="Change vehicle"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M5 11l1.5-4.2A2 2 0 0 1 8.4 5.5h7.2a2 2 0 0 1 1.9 1.3L19 11h.5A1.5 1.5 0 0 1 21 12.5V17h-2v1.5a1 1 0 0 1-2 0V17H7v1.5a1 1 0 0 1-2 0V17H3v-4.5A1.5 1.5 0 0 1 4.5 11zm2.2 0h9.6l-1.1-3.2a.5.5 0 0 0-.5-.3H8.8a.5.5 0 0 0-.5.3zM6.5 15a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6zm11 0a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6z"/></svg></button>
-  <div id="dInfo"><span id="dSt"></span><span id="dNx"><i id="dArr">↑</i><b id="dNxD"></b><em id="dNxN"></em></span></div>
+<div id="drv"><div id="dTop"><button id="dExit" title="Stop driving (Esc)" aria-label="Stop driving">✕</button><button id="dNavB" title="Go somewhere" aria-label="Navigate"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 1 7 7c0 4.9-5.6 11.2-6.3 12a1 1 0 0 1-1.4 0C10.6 20.2 5 13.9 5 9a7 7 0 0 1 7-7zm0 4.2A2.8 2.8 0 1 0 12 11.8 2.8 2.8 0 0 0 12 6.2z"/></svg></button><button id="dCar" title="Change vehicle (G)" aria-label="Change vehicle"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M5 11l1.5-4.2A2 2 0 0 1 8.4 5.5h7.2a2 2 0 0 1 1.9 1.3L19 11h.5A1.5 1.5 0 0 1 21 12.5V17h-2v1.5a1 1 0 0 1-2 0V17H7v1.5a1 1 0 0 1-2 0V17H3v-4.5A1.5 1.5 0 0 1 4.5 11zm2.2 0h9.6l-1.1-3.2a.5.5 0 0 0-.5-.3H8.8a.5.5 0 0 0-.5.3zM6.5 15a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6zm11 0a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6z"/></svg></button>
+  <div id="dInfo"><span id="dSt"></span><span id="dNx"><i id="dArr">↑</i><b id="dNxD"></b><em id="dNxN"></em></span><span id="dGo"><i>➤</i><em></em></span></div>
   <div id="dSide"><div id="dSpdBox"><b id="dSpd">0</b><small>km/h</small></div><button id="dU" title="Turn round (U)">U-turn</button></div></div>
   <div id="mini" title="Tap for the whole island"><canvas id="mmC"></canvas><span id="mmD"></span></div><div id="dJoy"><i></i></div><div id="dTun"></div><div id="dMsg"></div>
+  <div id="navP"><div class="nh"><b>Where to?</b><button id="navX" aria-label="Close">✕</button></div><div id="navL"></div></div>
   <div id="garage"><b class="gh">Choose your ride</b><div class="gr"><button id="gPrev" aria-label="Previous vehicle">‹</button><div id="gList"></div><button id="gNext" aria-label="Next vehicle">›</button></div><div id="gStart" aria-label="Where to start"></div><button id="gGo">Drive</button></div></div>
 <div id="pm" title="Fly to Central"><b>Central</b><i></i><u></u></div>
 <div id="cr">Buildings: Lands Department, HKSAR Government, via <a href="https://data.gov.hk/en-data/dataset/hk-landsd-openmap-landsd-building" target="_blank" rel="noopener">DATA.GOV.HK</a> · map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors · elevation NASA SRTM</div>
@@ -3264,7 +3285,7 @@ function flattenRecs(set) {
   for (let k = 0; k < FA.n; k++) { const o = k * 10, x = FA.a[o], z = FA.a[o + 1]; for (const ri of set) { const b = recs[ri]; if (Math.abs(b.cx - x) < 80 && Math.abs(b.cz - z) < 80 && inPoly(x, z, b.rings[0])) { FA.a[o + 6] = 0; break; } } }
   SH.farDirty = SH.nearDirty = true; NEAR.fx = NEAR.fz = 1e9;
 }
-const DRIVE = { on: false, ready: false, loading: null, N: null, E: null, names: [], car: null, mesh: null, joy: null, k: { thr: 0, brk: 0, steer: 0 },
+const DRIVE = { queue: [], lock: null, req: null, nav: null, on: false, ready: false, loading: null, N: null, E: null, names: [], car: null, mesh: null, joy: null, k: { thr: 0, brk: 0, steer: 0 },
   intent: 0, intentT: 0, plan: null, hud: {}, ribbons: null, labelsWas: true, msgT: 0, tun: 0 };
 async function loadHKD(file) {
   const rel = /\/$|\.html?$/.test(location.pathname), url = rel ? new URL(file, location.href) : new URL('/hong-kong/' + file, location.href);
@@ -3362,6 +3383,7 @@ function buildDriveGraph(H) {
   /* every drivable street joins the occupancy map: no trees on it (bit 1), only small ones within a crown's width of it (bit 32) */
   for (const e of E) { if (e.tun || e.dead) continue; for (let i = 0; i <= e.n; i++) { if (!e.br) occDisc(e.xs[i], e.zs[i], e.hw + 1.2, 1); occDisc(e.xs[i], e.zs[i], e.hw + 7, 32); } }
   NEAR.fx = NEAR.fz = 1e9;   /* re-plant the near trees */
+  dCore();
 }
 /* side streets have no ribbons in the city view (only painted lines): give them proper surfaces near the car */
 function buildStreetRibbons() {
@@ -3463,9 +3485,9 @@ const STARTS = [{ id: 'here', name: 'Where you are' }, { id: 'pier', name: 'Cent
 function dStart(id) {
   const S = STARTS.find(q => q.id === id) || STARTS[0], here = DRIVE.hereXZ || SITE('hsbc'); DRIVE.start = S.id;
   if (S.site && SITE(S.site)) dSpawn(SITE(S.site)[0], SITE(S.site)[1], S.roads); else dSpawn(here[0], here[1]);
-  const c = DRIVE.car, e = DRIVE.E[c.e]; c.yaw = dTan(e, c.u) + (c.d < 0 ? PI : 0); cam.az = c.yaw + PI + .9; DRIVE.joy = null; DRIVE.camY = DRIVE.camG = undefined; DRIVE.camK = 1;
+  const c = DRIVE.car, e = DRIVE.E[c.e]; c.yaw = dTan(e, c.u) + (c.d < 0 ? PI : 0); cam.az = c.yaw + PI + .9; DRIVE.joy = null; DRIVE.camY = DRIVE.camG = undefined; DRIVE.camK = 1; DRIVE.req = null; DRIVE.queue = []; DRIVE.lock = null;
   if (S.id !== 'here') try { localStorage.setItem('hk-start', S.id); } catch (err) { /* storage blocked */ }
-  document.querySelectorAll('#gStart .gs').forEach(b => b.classList.toggle('on', b.dataset.id === S.id)); driveStep(0); placeCamera(0);
+  document.querySelectorAll('#gStart .gs').forEach(b => b.classList.toggle('on', b.dataset.id === S.id)); driveStep(0); placeCamera(0); if (DRIVE.nav) navStart(DRIVE.nav.dest);
 }
 /* the detailed vehicles: modelled in Blender (vehicles/<id>.glb, Draco-compressed), loaded when first picked and re-built into the
    scene's own prop format so they share its sun, shadows, night lamps and fog; the simple model stands in until they arrive */
@@ -3525,14 +3547,155 @@ const dTan = (e, u) => { const i = clamp(Math.floor(u / e.st), 0, e.n - 1); retu
 const wrapA = a => ((a % TAU) + TAU + PI) % TAU - PI;
 /* the heading of a road as it leaves node nd */
 function dLeave(q, nd) { const e = DRIVE.E[q], u = Math.min(10, e.L * .9); if (e.a === nd) { const p = dPos(e, u); return Math.atan2(p[2] - e.zs[0], p[0] - e.xs[0]); } const p = dPos(e, e.L - u); return Math.atan2(p[2] - e.zs[e.n], p[0] - e.xs[e.n]); }
-/* which road to take at node nd, arriving on edge q with heading h: the one nearest the direction the driver is asking for */
-function dChoose(q, nd, h, intent) {
-  const nd0 = DRIVE.N[nd], want = intent * 1.25; let best = null;
-  for (const c of nd0.adj) { if (c === q && nd0.adj.length > 1) continue; const e = DRIVE.E[c], out = dLeave(c, nd), rel = wrapA(out - h);
-    const against = e.ow && e.b === nd && e.a !== nd, sc = Math.abs(rel - want) + (against ? 1.4 : 0) + (Math.abs(rel) > 2.6 ? 1.6 : 0) + (e.tun ? .05 : 0);
-    if (!best || sc < best.sc) best = { sc, c, rel, d: e.a === nd ? 1 : -1, against }; }
-  return best;
+/* ---------- junctions: a whole intersection is one decision. Junction points closer than ~24 m (the two halves of a divided road,
+   slip lanes) are walked as one cluster; each way through it is scored by the direction it leaves in. One turn request makes one
+   turn; with none, the car keeps to the road it is on. Branches that lead only into dead ends, U-turns and wrong-way one-ways are
+   avoided unless asked for. With a destination set, each decision follows the planned route. ---------- */
+const SHORT = 24;
+/* the 2-core of the street network: nodes that are not in a tree of dead ends */
+function dCore() { const N = DRIVE.N, E = DRIVE.E, deg = new Int32Array(N.length), gone = new Uint8Array(N.length), st = [];
+  for (const e of E) { if (e.dead || e.a === e.b) continue; deg[e.a]++; deg[e.b]++; }
+  for (let i = 0; i < N.length; i++) if (deg[i] <= 1) st.push(i);
+  while (st.length) { const i = st.pop(); if (gone[i]) continue; gone[i] = 1; for (const q of N[i].adj) { const e = E[q]; if (e.dead || e.a === e.b) continue; const o = e.a === i ? e.b : e.a; if (!gone[o] && --deg[o] <= 1) st.push(o); } }
+  N.forEach((nd, i) => { nd.core = !gone[i]; }); }
+const dLeave15 = (q, nd) => { const e = DRIVE.E[q], u = Math.min(20, e.L * .9); if (e.a === nd) { const p = dPos(e, u); return Math.atan2(p[2] - e.zs[0], p[0] - e.xs[0]); } const p = dPos(e, e.L - u); return Math.atan2(p[2] - e.zs[e.n], p[0] - e.xs[e.n]); };
+/* every way through the cluster that starts at node nd, arriving on edge q */
+function dPaths(q, nd, h) {
+  const out = [], E = DRIVE.E, N = DRIVE.N;
+  const walk = (node, from, seq, dist, seen) => { const adj = N[node].adj;
+    for (const c of adj) { if (c === from && adj.length > 1) continue; const e = E[c]; if (e.dead) continue;
+      const d = e.a === node ? 1 : -1, far = e.a === e.b ? node : d > 0 ? e.b : e.a; if (seen.includes(far) && far !== node) continue;
+      const s2 = seq.concat([{ c, d, nd: node }]);
+      if (e.L < SHORT && dist + e.L < 70 && s2.length < 6 && N[far].adj.length > 1 && far !== node) walk(far, c, s2, dist + e.L, seen.concat([far]));
+      else out.push({ steps: s2, exit: c, exitNd: node, far, against: s2.some(s => E[s.c].ow && s.d < 0) }); } };
+  walk(nd, q, [], 0, [nd]);
+  for (const p of out) p.rel = wrapA(dLeave15(p.exit, p.exitNd) - h);
+  return out;
 }
+function dScore(p, ctx) {
+  const E = DRIVE.E, ex = E[p.exit], cur = E[ctx.q], dead = ctx.inCore && !DRIVE.N[p.far].core, out = !ctx.inCore && DRIVE.N[p.far].core, ut = Math.abs(p.rel) > 2.4;
+  let sc = (p.against ? 6 : 0) + (ut ? 8 : 0) + p.steps.length * .12 - (out ? .5 : 0);
+  if (ctx.req) sc += Math.abs(p.rel - ctx.req * 1.35) * 1.2 + (Math.abs(p.rel) < .4 ? 1.2 : 0) + (dead ? 3.5 : 0);
+  else sc += Math.abs(p.rel) * .7 + (cur.nm && ex.nm === cur.nm ? 0 : .6) + Math.max(0, ex.c - cur.c) * .2 + (dead ? 3 : 0);
+  if (ctx.nav && !ctx.req) { let m = 0; for (let i = 0; i < p.steps.length && i < ctx.nav.length; i++) { if (p.steps[i].c === ctx.nav[i].c) m++; else break; } const full = m === Math.min(p.steps.length, ctx.nav.length); if (m) sc -= full ? 10 + m : 2 * m; }
+  return sc;
+}
+/* the decision at the next node ahead of the car */
+function dPlan() {
+  const car = DRIVE.car, e = DRIVE.E[car.e], nd = car.d > 0 ? e.b : e.a, left = car.d > 0 ? e.L - car.u : car.u, h = car.d > 0 ? dTan(e, e.L - .01) : dTan(e, 0) + PI;
+  if (DRIVE.queue.length && DRIVE.queue[0].nd === nd && DRIVE.nav && !DRIVE.req) { const na = navAhead(nd); if (na && na[0].c !== DRIVE.queue[0].c) DRIVE.queue = []; }
+  if (DRIVE.queue.length && DRIVE.queue[0].nd === nd) return { nd, left, path: { steps: DRIVE.queue, rel: DRIVE.queueRel, exit: DRIVE.queue[DRIVE.queue.length - 1].c }, queued: true, opts: 1 };
+  if (DRIVE.lock && DRIVE.lock.nd === nd && DRIVE.lock.e === car.e && (!DRIVE.req || DRIVE.req.t <= DRIVE.lock.t)) return DRIVE.lock.plan;
+  const ps = dPaths(car.e, nd, h); if (!ps.length) return { nd, left, dead: true, opts: 0 };
+  const ctx = { q: car.e, req: DRIVE.req ? DRIVE.req.s : 0, inCore: DRIVE.N[e.a].core && DRIVE.N[e.b].core, nav: navAhead(nd) };
+  for (const p of ps) p.sc = dScore(p, ctx); ps.sort((a, b) => a.sc - b.sc);
+  return { nd, left, path: ps[0], opts: ps.length, choices: ps.filter(p => Math.abs(p.rel) < 2.4).length };
+}
+/* turn requests: a firm steer near a junction (within 70 m, or inside an intersection); it lasts until used or for 5 s */
+function dRequest(steer, dt, plan) {
+  if (DRIVE.req && (ST.t - DRIVE.req.t > 5)) DRIVE.req = null;
+  if (Math.abs(steer) > .7) DRIVE.reqHold = (DRIVE.reqHold || 0) + dt; else DRIVE.reqHold = 0;
+  if (DRIVE.reqHold > .18 && plan && (plan.left < 70 || DRIVE.queue.length)) { const s = Math.sign(steer); if (!DRIVE.req || DRIVE.req.s !== s) DRIVE.req = { s, t: ST.t }; }
+}
+/* crossing node nd: take the planned way; any further steps through the cluster are queued */
+function dCross(nd, plan) {
+  if (DRIVE.queue.length && DRIVE.queue[0].nd === nd) { const s = DRIVE.queue.shift(); return s; }
+  const p = plan && plan.nd === nd && plan.path ? plan.path : null; if (!p) return null;
+  DRIVE.queue = p.steps.slice(1); DRIVE.queueRel = p.rel; DRIVE.lock = null; if (DRIVE.req) DRIVE.req = null;
+  return p.steps[0];
+}
+/* ---------- navigation: the quickest way along the streets (one-ways respected, main roads preferred), re-planned whenever you
+   leave it; the route glows on the road ahead and on the mini map ---------- */
+const NAVSPD = [25, 25, 15, 15, 14, 15, 9, 5, 5];
+function navRoute(fromE, fromD, fromU, tx, tz) {
+  const N = DRIVE.N, E = DRIVE.E, n = N.length;
+  /* the goal: a well-connected node near the destination, preferring proper streets */
+  let goal = -1, gs = 1e9; N.forEach((nd, i) => { if (!nd.adj.length) return; const d = Math.hypot(nd.x - tx, nd.z - tz); if (d > 500) return; let minor = 1; for (const q of nd.adj) if (!E[q].dead && E[q].c <= 6) minor = 0; const sc = d + minor * 60 + (nd.core ? 0 : 40); if (sc < gs) { gs = sc; goal = i; } });
+  if (goal < 0) return null;
+  const e0 = E[fromE];
+  const push = (heap, c, i) => { heap.push([c, i]); let k = heap.length - 1; while (k) { const p = (k - 1) >> 1; if (heap[p][0] <= heap[k][0]) break; [heap[p], heap[k]] = [heap[k], heap[p]]; k = p; } };
+  const pop = heap => { const t = heap[0], l = heap.pop(); if (heap.length) { heap[0] = l; let k = 0; for (;;) { const a = 2 * k + 1, b = a + 1; let m = k; if (a < heap.length && heap[a][0] < heap[m][0]) m = a; if (b < heap.length && heap[b][0] < heap[m][0]) m = b; if (m === k) break; [heap[m], heap[k]] = [heap[k], heap[m]]; k = m; } } return t; };
+  const search = (start, startCost) => {
+    const dist = new Float64Array(n).fill(Infinity), prevE = new Int32Array(n).fill(-1), prevN = new Int32Array(n).fill(-1), heap = [];
+    dist[start] = startCost; prevE[start] = -2; push(heap, startCost, start);
+    while (heap.length) { const [c, u] = pop(heap); if (c > dist[u]) continue; if (u === goal) break;
+      for (const q of N[u].adj) { const e = E[q]; if (e.dead || e.a === e.b) continue; if (q === (prevE[u] >= 0 ? prevE[u] : fromE) && N[u].adj.length > 1) continue;
+        const fwd = e.a === u; if (!fwd && e.ow) continue; const v = fwd ? e.b : e.a, nc = c + e.L / NAVSPD[e.c] + (e.c >= 7 ? 4 : 0);
+        if (nc < dist[v]) { dist[v] = nc; prevE[v] = q; prevN[v] = u; push(heap, nc, v); } } }
+    if (!isFinite(dist[goal])) return null;
+    const steps = []; for (let v = goal; v !== start; v = prevN[v]) { const q = prevE[v], u = prevN[v]; steps.push({ c: q, d: E[q].a === u ? 1 : -1, nd: u }); if (steps.length > 5000) return null; }
+    steps.reverse(); return { steps, goal, secs: dist[goal] };
+  };
+  /* straight on first; if nothing is reachable that way (a dead-end branch, say), turn round where you are */
+  const ahead = search(fromD > 0 ? e0.b : e0.a, (fromD > 0 ? e0.L - fromU : fromU) / NAVSPD[e0.c]);
+  if (ahead || e0.ow) return ahead;
+  const back = search(fromD > 0 ? e0.a : e0.b, 20 + (fromD > 0 ? fromU : e0.L - fromU) / NAVSPD[e0.c]);
+  if (back) back.turn = true; return back;
+}
+/* the route's next steps from node nd onward (for the junction planner) */
+function navAhead(nd) { const R = DRIVE.nav; if (!R) return null; for (let k = R.k; k < Math.min(R.steps.length, R.k + 6); k++) if (R.steps[k].nd === nd) return R.steps.slice(k, k + 4); return null; }
+function navStart(dest) {
+  const car = DRIVE.car; if (!car) return; const r = navRoute(car.e, car.d, car.u, dest.x, dest.z);
+  if (!r) { dMsg('No way there by road'); navStop(); return; }
+  /* the only way there is back the way you came: turn round on the spot when nearly stopped, otherwise ask for a U-turn */
+  if (r.turn && Math.abs(car.v) < 4 && !navStart.flipping) { navStart.flipping = true; DRIVE.nav = { dest }; try { dUturn(); } finally { navStart.flipping = false; } return; }
+  DRIVE.nav = { dest, steps: r.steps, goal: r.goal, k: 0, t: ST.t, turn: !!r.turn }; DRIVE.lock = null; DRIVE.queue = []; navMesh(); dHudNav(); navTurnHint();
+}
+function navTurnHint() { const R = DRIVE.nav, b = document.getElementById('dU'); if (b) b.classList.toggle('hot', !!(R && R.turn)); if (R && R.turn) dMsg('Make a U-turn'); }
+function navStop() { DRIVE.nav = null; if (DRIVE.navMesh) DRIVE.navMesh.visible = false; dHudNav(); navTurnHint(); }
+/* after each junction: advance along the route, or re-plan if the car left it */
+function navAfterCross(c) {
+  const R = DRIVE.nav; if (!R) return; if (R.k >= R.steps.length) { navArrive(); return; } const k = R.steps.findIndex((s, i) => i >= R.k && i < R.k + 6 && s.c === c);
+  if (k >= 0) { R.k = k + 1; return; }
+  if (ST.t - (R.re || 0) > .5) { R.re = ST.t; const car = DRIVE.car, r = navRoute(car.e, car.d, car.u, R.dest.x, R.dest.z);
+    if (r) { const was = R.turn; R.steps = r.steps; R.goal = r.goal; R.k = 0; R.turn = !!r.turn; navMesh(); if (R.turn) { if (!was) navTurnHint(); } else { navTurnHint(); dMsg('Re-routing'); } } }
+}
+function navCheck() {
+  const R = DRIVE.nav, car = DRIVE.car; if (!R || !car) return;
+  const gN = DRIVE.N[R.goal];
+  if (Math.hypot(car.x - R.dest.x, car.z - R.dest.z) < 45 || (R.k >= R.steps.length && gN && Math.hypot(car.x - gN.x, car.z - gN.z) < 30)) navArrive();
+}
+function navArrive() { const R = DRIVE.nav; if (!R) return; dMsg('You have arrived: ' + R.dest.name); navStop(); }
+function navLeft() { const R = DRIVE.nav, car = DRIVE.car, E = DRIVE.E; if (!R) return 0; const e = E[car.e]; let m = car.d > 0 ? e.L - car.u : car.u; for (let k = R.k; k < R.steps.length; k++) m += E[R.steps[k].c].L; return m; }
+/* the route as moving chevrons on the road, in the lane you drive in */
+function navMesh() {
+  const R = DRIVE.nav, E = DRIVE.E; if (!R) return; const P = [], S = [], I = [], pts = []; let s0 = 0;
+  const car = DRIVE.car, seq = [{ c: car.e, d: car.d, from: car.u }].concat(R.steps.slice(R.k));
+  for (const st of seq) { const e = E[st.c], lane = e.ow || e.c >= 7 || e.lanes < 2 && e.c >= 6 ? 0 : e.hw * .5, base = P.length / 3;
+    const idx = []; for (let i = 0; i <= e.n; i++) idx.push(st.d > 0 ? i : e.n - i);
+    let first = 0; if (st.from !== undefined) first = st.d > 0 ? Math.floor(st.from / e.st) : Math.floor((e.L - st.from) / e.st);
+    let cnt = 0;
+    for (let m = first; m < idx.length; m++) { const i = idx[m], j = Math.min(i + 1, e.n), k = Math.max(i - 1, 0); let hx = (e.xs[j] - e.xs[k]) * st.d, hz = (e.zs[j] - e.zs[k]) * st.d; const l = Math.hypot(hx, hz) || 1; hx /= l; hz /= l;
+      const cx = e.xs[i] + hz * lane, cz = e.zs[i] - hx * lane, y = e.ys[i] + (e.br ? .2 : .4), w = .8;
+      P.push(cx + hz * w, y, cz - hx * w, cx - hz * w, y, cz + hx * w); S.push(s0, -1, s0, 1); if (cnt) { const b = base + (cnt - 1) * 2; I.push(b, b + 1, b + 2, b + 1, b + 3, b + 2); } cnt++; s0 += e.st;
+      if (m % 3 === 0) pts.push(cx, cz); } }
+  R.pts = pts;
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('aS', new THREE.Float32BufferAttribute(S, 2)); g.setIndex(I);
+  if (!DRIVE.navMesh) { DRIVE.navMesh = new THREE.Mesh(g, new THREE.ShaderMaterial({ uniforms: { uTime: U.uTime, uNight: U.uNight || { value: 0 } }, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4,
+      vertexShader: 'attribute vec2 aS;varying vec2 vS;varying float vD;void main(){vS=aS;vec4 w=modelMatrix*vec4(position,1.);vD=distance(w.xyz,cameraPosition);gl_Position=projectionMatrix*viewMatrix*w;}',
+      fragmentShader: 'uniform float uTime;varying vec2 vS;varying float vD;void main(){float t=fract((vS.x-uTime*9.)/7.);float chev=smoothstep(.0,.08,t-abs(vS.y)*.35)*smoothstep(.42,.34,t-abs(vS.y)*.35);float a=(.22+.6*chev)*(1.-smoothstep(260.,420.,vD))*(1.-smoothstep(.7,1.,abs(vS.y)));gl_FragColor=vec4(vec3(.35,.86,1.)*(1.+chev),a);}' }));
+    DRIVE.navMesh.frustumCulled = false; DRIVE.navMesh.renderOrder = 22; scene.add(DRIVE.navMesh); }
+  else { DRIVE.navMesh.geometry.dispose(); DRIVE.navMesh.geometry = g; }
+  DRIVE.navMesh.visible = true; R.meshK = R.k;
+}
+/* places to go: the landmarks, the districts and the start points, nearest first */
+function navPlaces() {
+  const car = DRIVE.car, out = [], seen = new Set();
+  for (const o of LABELS.list) { if (o.kind !== 'tower' && o.kind !== 'dist') continue; if (seen.has(o.name)) continue; seen.add(o.name); out.push({ name: o.name, x: o.x, z: o.z, kind: o.kind === 'tower' ? 'Landmark' : 'District' }); }
+  for (const S of STARTS) { if (!S.site || seen.has(S.name)) continue; const p = SITE(S.site); if (p) { seen.add(S.name); out.push({ name: S.name, x: p[0], z: p[1], kind: 'Place' }); } }
+  for (const p of out) p.d = Math.hypot(p.x - car.x, p.z - car.z);
+  return out.sort((a, b) => a.d - b.d);
+}
+function navOpen() {
+  const L = document.getElementById('navL'); L.innerHTML = '';
+  if (DRIVE.nav) { const b = document.createElement('button'); b.className = 'nv stop'; b.textContent = 'Stop navigation'; b.onclick = () => { navStop(); navClose(); }; L.appendChild(b); }
+  for (const p of navPlaces()) { const b = document.createElement('button'); b.className = 'nv'; b.innerHTML = '<b></b><em></em>'; b.firstChild.textContent = p.name; b.lastChild.textContent = p.kind + ' · ' + (p.d < 1000 ? Math.round(p.d / 10) * 10 + ' m' : (p.d / 1000).toFixed(1) + ' km');
+    b.onclick = () => { navClose(); navStart(p); }; L.appendChild(b); }
+  document.body.classList.add('navopen'); DRIVE.joy = null; dJoyDraw();
+}
+function navClose() { document.body.classList.remove('navopen'); }
+function dHudNav() { const el = document.getElementById('dGo'); if (!el) return; const R = DRIVE.nav; el.classList.toggle('show', !!R); document.getElementById('dNavB').classList.toggle('on', !!R); if (!R) return;
+  const m = navLeft(); el.lastChild.textContent = R.dest.name + ' · ' + (m < 1000 ? Math.round(m / 10) * 10 + ' m' : (m / 1000).toFixed(1) + ' km'); }
 function dSpawn(x, z, names) {
   let best = null; for (const e of DRIVE.E) { if (!e.main || e.tun || e.dead) continue; const pen = names ? (names.includes(DRIVE.names[e.nm]) ? 0 : 900) : (e.c >= 8 ? 120 : e.c >= 6 ? 30 : 0); for (let i = 0; i <= e.n; i += 2) { const d = Math.hypot(e.xs[i] - x, e.zs[i] - z) + pen; if (!best || d < best.d) best = { d, e, u: i * e.st }; } }
   const e = best.e; DRIVE.car = { e: e.i, d: 1, u: clamp(best.u, 2, e.L - 2), lat: e.ow ? 0 : e.hw / 2, latRate: 0, v: 0, yaw: 0, x: 0, y: 0, z: 0, h: 0 };
@@ -3546,7 +3709,9 @@ function driveStep(dt) {
   /* input: keys add to the touch stick */
   const kt = (keys.ArrowUp || keys.KeyW ? 1 : 0), kb = (keys.ArrowDown || keys.KeyS ? 1 : 0), ks = (keys.ArrowRight || keys.KeyD ? 1 : 0) - (keys.ArrowLeft || keys.KeyA ? 1 : 0);
   const G0 = DRIVE.garage, V = DRIVE.V || VEHICLES[0], j = G0 ? null : DRIVE.joy, thr = G0 ? 0 : Math.max(kt, j ? j.thr : 0), brk = G0 ? 0 : Math.max(kb, j ? j.brk : 0), steer = G0 ? 0 : clamp(ks + (j ? j.steer : 0), -1, 1);
-  if (Math.abs(steer) > .3) { DRIVE.intent = steer; DRIVE.intentT = 1.6; } else if ((DRIVE.intentT -= dt) <= 0) DRIVE.intent = 0;
+  let plan = G0 ? null : dPlan(); if (!G0) { const had = DRIVE.req; dRequest(steer, dt, plan); if (DRIVE.req !== had) plan = dPlan(); }
+  /* within 25 m of the node the choice is locked (a new turn request can still change it) */
+  if (plan && !plan.queued && plan.path && plan.left < 25 && !(DRIVE.lock && DRIVE.lock.nd === plan.nd && DRIVE.lock.e === car.e && (!DRIVE.req || DRIVE.req.t <= DRIVE.lock.t))) DRIVE.lock = { nd: plan.nd, e: car.e, t: ST.t, plan };
   /* speed: throttle, brakes, drag, rolling, and the hill */
   let e = E[car.e]; const grade = (() => { const p0 = dPos(e, car.u - 3 * car.d), p1 = dPos(e, car.u + 3 * car.d); return (p1[1] - p0[1]) / 6; })();
   const vmax = V.top * [1, 1, .85, .85, .8, .85, .62, .45, .45][e.c];
@@ -3560,9 +3725,10 @@ function driveStep(dt) {
   while ((car.u > e.L || car.u < 0) && hops++ < 4) {
     const fwd = car.v >= 0, endB = car.u > e.L, nd = endB ? e.b : e.a, over = endB ? car.u - e.L : -car.u;
     if (!fwd) { car.u = endB ? e.L : 0; car.v = 0; break; }   /* reversing stops at a junction */
-    const h = endB ? dTan(e, e.L - .01) : dTan(e, 0) + PI, ch = dChoose(car.e, nd, h, DRIVE.intent);
-    if (!ch || ch.c === car.e && DRIVE.N[nd].adj.length === 1) { car.d = -car.d; car.u = endB ? e.L - .1 : .1; car.v = 0; car.lat = -car.lat; dMsg('Dead end: turned round'); break; }
-    const ne = E[ch.c]; car.e = ch.c; car.d = ch.d; car.u = ch.d > 0 ? over : ne.L - over; if (ch.against) dMsg('One way: wrong direction'); DRIVE.intentT = Math.min(DRIVE.intentT, .25); e = ne;
+    if (!plan || plan.nd !== nd) plan = dPlan();
+    const st = dCross(nd, plan);
+    if (!st || st.c === car.e) { car.d = -car.d; car.u = endB ? e.L - .1 : .1; car.v = 0; car.lat = -car.lat; DRIVE.queue = []; DRIVE.lock = null; dMsg('Dead end: turned round'); if (DRIVE.nav) navAfterCross(-1); break; }
+    const ne = E[st.c]; car.e = st.c; car.d = st.d; car.u = st.d > 0 ? over : ne.L - over; if (ne.ow && st.d < 0) dMsg('One way: wrong direction'); e = ne; navAfterCross(st.c); plan = dPlan();
   }
   car.u = clamp(car.u, 0, e.L);
   /* across the road: keep left, steer to move over, slide wide if a bend is taken too fast */
@@ -3591,7 +3757,8 @@ function driveStep(dt) {
   cam.dist = lerp(cam.dist, (G0 ? 1.05 : 1) * (7 + V.len * 1.3 + Math.min(V.h, 3) * 1.2) + sp * .32 + DRIVE.zoom, 1 - Math.exp(-dt * 3)); cam.pol = lerp(cam.pol, (G0 ? 72 : big ? 74 : 76) * RAD, 1 - Math.exp(-dt * 3)); cam.fov = lerp(cam.fov, G0 ? 46 : 56 + sp * .35, 1 - Math.exp(-dt * 2));
   cam.vaz = cam.vpol = cam.vx = cam.vz = cam.vzoom = 0;
   /* the next junction, as a nav app would show it */
-  const J = dJunctionAhead(); DRIVE.plan = J.left < 70 && J.opts > 2 ? dChoose(car.e, J.nd, J.h, DRIVE.intent) : null; DRIVE.planLeft = J.left;
+  { const P = plan || dPlan(); DRIVE.plan = P && P.path && P.left < 120 && (P.choices > 1 || P.queued || Math.abs(P.path.rel) > .5 || DRIVE.nav) ? { c: P.path.exit, rel: P.path.rel } : null; DRIVE.planLeft = P ? P.left : 0; }
+  if (DRIVE.nav) { navCheck(); if (DRIVE.nav && DRIVE.nav.meshK !== DRIVE.nav.k) navMesh(); if ((DRIVE.navT = (DRIVE.navT || 0) + dt) > .3) { DRIVE.navT = 0; dHudNav(); } }
   /* the tunnel veil: while the car (or the camera trailing it) is below the hillside */
   const under = Math.max(e.tun && car.u > 6 && car.u < e.L - 6 ? 1 : 0, e.cov && e.cov[clamp(Math.round(car.u / e.st), 0, e.n)] ? 1 : 0, clamp((dGround(car.x, car.z) - car.y - .8) / 2.5, 0, 1), clamp((groundY(camera.position.x, camera.position.z) - car.y - 4) / 4, 0, 1) * (e.tun ? 1 : 0));
   DRIVE.tun = lerp(DRIVE.tun, under, 1 - Math.exp(-dt * 6));
@@ -3723,10 +3890,10 @@ async function enterDrive0() {
   document.body.classList.add('driving'); DYN.uNoNear.value = 12; cam.dist = 30; openGarage(); dStart(DRIVE.pendingStart);
 }
 function exitDrive() {
-  if (!DRIVE.on) return; DRIVE.on = false; DRIVE.joy = null; dJoyDraw(); LABELS.on = DRIVE.labelsWas; document.body.classList.remove('driving', 'garage'); DRIVE.garage = false; if (DRIVE.mesh) DRIVE.mesh.visible = false; DYN.uNoNear.value = 0; HIT.slots = []; uploadHits();
+  if (!DRIVE.on) return; DRIVE.on = false; DRIVE.joy = null; dJoyDraw(); LABELS.on = DRIVE.labelsWas; document.body.classList.remove('driving', 'garage'); DRIVE.garage = false; if (DRIVE.mesh) DRIVE.mesh.visible = false; DYN.uNoNear.value = 0; HIT.slots = []; uploadHits(); navStop(); navClose();
   const c = DRIVE.car; flyTo({ tx: c.x, tz: c.z, dist: 700, pol: 62 * RAD, az: cam.az, fov: 40, ty: 0, dur: 2.2 });
 }
-function dUturn() { const c = DRIVE.car; if (!c) return; c.d = -c.d; c.lat = -c.lat; c.v = 0; c.yaw += PI; DRIVE.intent = 0; }
+function dUturn() { const c = DRIVE.car; if (!c) return; c.d = -c.d; c.lat = -c.lat; c.v = 0; c.yaw += PI; DRIVE.req = null; DRIVE.queue = []; DRIVE.lock = null; if (DRIVE.nav) navStart(DRIVE.nav.dest); }
 /* ---------- the mini map: heading-up around the car (tap it for the whole island), with the district you are in ---------- */
 const MM = { base: null, mpp: 8, W: 0, H: 0, wide: false, cv: null, g: null, dT: 0, odd: false };
 function buildMiniBase() {
@@ -3746,8 +3913,13 @@ function drawMini(dt) {
   const cv = MM.cv, g = MM.g, D = cv.width, R = D / 2, car = DRIVE.car, px = (car.x - X0) / MM.mpp, pz = (car.z - Z0) / MM.mpp;
   g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, D, D); g.save(); g.beginPath(); g.arc(R, R, R - 1, 0, TAU); g.clip(); g.fillStyle = '#163a50'; g.fillRect(0, 0, D, D); g.imageSmoothingEnabled = true;
   let ax = R, ay = R, aa = -PI / 2, na;
-  if (!MM.wide) { const k = D * MM.mpp / 1100, th = -PI / 2 - car.yaw; g.translate(R, R); g.rotate(th); g.scale(k, k); g.drawImage(MM.base, -px, -pz); na = -PI / 2 + th; }
-  else { const k = D * .94 / Math.max(MM.W, MM.H); g.translate(R, R); g.scale(k, k); g.drawImage(MM.base, -MM.W / 2, -MM.H / 2); ax = R + (px - MM.W / 2) * k; ay = R + (pz - MM.H / 2) * k; aa = car.yaw; na = -PI / 2; }
+  let ox, oz, kk;
+  if (!MM.wide) { const k = D * MM.mpp / 1100, th = -PI / 2 - car.yaw; g.translate(R, R); g.rotate(th); g.scale(k, k); g.drawImage(MM.base, -px, -pz); na = -PI / 2 + th; ox = -px; oz = -pz; kk = k; }
+  else { const k = D * .94 / Math.max(MM.W, MM.H); g.translate(R, R); g.scale(k, k); g.drawImage(MM.base, -MM.W / 2, -MM.H / 2); ax = R + (px - MM.W / 2) * k; ay = R + (pz - MM.H / 2) * k; aa = car.yaw; na = -PI / 2; ox = -MM.W / 2; oz = -MM.H / 2; kk = k; }
+  /* the route and its destination */
+  const NV = DRIVE.nav; if (NV && NV.pts && NV.pts.length > 3) { const P = NV.pts; g.beginPath(); g.moveTo((car.x - X0) / MM.mpp + ox, (car.z - Z0) / MM.mpp + oz); for (let i = 0; i < P.length; i += 2) g.lineTo((P[i] - X0) / MM.mpp + ox, (P[i + 1] - Z0) / MM.mpp + oz);
+    g.lineCap = g.lineJoin = 'round'; g.strokeStyle = 'rgba(80,200,255,.95)'; g.lineWidth = 4.2 * (D / 140) / kk; g.stroke();
+    g.beginPath(); g.arc((NV.dest.x - X0) / MM.mpp + ox, (NV.dest.z - Z0) / MM.mpp + oz, 6 * (D / 140) / kk, 0, TAU); g.fillStyle = '#7fdcff'; g.fill(); g.lineWidth = 2 * (D / 140) / kk; g.strokeStyle = '#05243a'; g.stroke(); }
   g.restore();
   /* you */
   const s = D / 140; g.save(); g.translate(ax, ay); g.rotate(aa + PI / 2); g.beginPath(); g.moveTo(0, -9 * s); g.lineTo(6.5 * s, 7 * s); g.lineTo(0, 3.5 * s); g.lineTo(-6.5 * s, 7 * s); g.closePath();
@@ -3767,6 +3939,7 @@ function initMini() {
 }
 function initDrive() {
   const H = DRIVE.hud, q = id => document.getElementById(id); Object.assign(H, { spd: q('dSpd'), st: q('dSt'), nx: q('dNx'), arr: q('dArr'), nxd: q('dNxD'), nxn: q('dNxN'), tun: q('dTun'), msg: q('dMsg'), joy: q('dJoy') });
+  q('dNavB').onclick = () => document.body.classList.contains('navopen') ? navClose() : navOpen(); q('navX').onclick = navClose;
   q('bDrive').onclick = () => DRIVE.on ? exitDrive() : enterDrive(); q('bigDrive').onclick = () => enterDrive(); q('bigDrive').classList.add('ready'); q('dExit').onclick = exitDrive; q('dU').onclick = dUturn;
   addEventListener('keydown', e => { if (!DRIVE.on) return; if (e.code === 'KeyU' && !DRIVE.garage) dUturn(); if (e.code === 'KeyG' && !DRIVE.garage) openGarage(); if (e.code === 'Escape') exitDrive(); });
   initGarage(); initMini();
@@ -4135,7 +4308,7 @@ async function boot() {
 }
 window.__hk = {
   THREE, TRAMS, TOD, TOUR, LABELS, setTime, startTour, stopTour, viewHash, flyTo, scene, camera, renderer, cam, U, ST, L, ROADS, DAMS, LAKES, LL, SH, STATS, BI, FA, G, SITES, PATHS, CITY, get GEO() { return GEO; },
-  get terr() { return terr; }, QUALS, resize, get composer() { return composer; }, get scenePass() { return scenePass; }, NEAR, hooks, hAt: (x, z) => hAt(x, z), pick: (x, y) => pickGround(x, y), GS, LT, ltGo, FOCUS, DRIVE, keys, HIT, get TRAF() { return TRAF; }, trafAt, goPreset, setLight, setQuality,
+  get terr() { return terr; }, QUALS, resize, get composer() { return composer; }, get scenePass() { return scenePass; }, NEAR, hooks, hAt: (x, z) => hAt(x, z), pick: (x, y) => pickGround(x, y), GS, LT, ltGo, FOCUS, DRIVE, keys, HIT, dPlan, navStart, navRoute, navPlaces, dPaths, get TRAF() { return TRAF; }, trafAt, goPreset, setLight, setQuality,
   pose(o) { userInput(); Object.assign(cam, o); cam.vaz = cam.vpol = cam.vx = cam.vz = cam.vzoom = 0; placeCamera(0); },
   at(lat, lon, dist, azDeg, polDeg, fov) { const p = LL(lat, lon); this.pose({ tx: p[0], tz: p[1], dist, az: azDeg * RAD, pol: polDeg * RAD, fov: fov || 36, ty: 0 }); },
   step(n = 1, dt = 1 / 60) { for (let i = 0; i < n; i++) frame(dt); },
