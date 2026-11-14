@@ -3846,6 +3846,16 @@ function vWheels(g, xs, zs, r, w, hub = C(.72, .72, .74)) {
 }
 const vLights = (g, xf, xr, y, z, w = .3, h = .14) => { g.M(C(1, .96, .84), .95).box(xf, y, -z, .06, h, w).box(xf, y, z, .06, h, w); g.M(C(.95, .08, .05), .8).box(xr, y, -z, .06, h, w).box(xr, y, z, .06, h, w); };
 const GLASS = C(.035, .045, .055);
+/* a low open car with its driver at the wheel (on the right, as Hong Kong drives): body, seats, a chrome screen frame, a seated figure */
+function vOpenCar(g, paint, trim, clothes, skin) {
+  const sil = C(.8, .81, .82);
+  vWheels(g, [-1.38, 1.42], [-.78, .78], .33, .22);
+  g.M(paint, 0, .3); vHull(g, [[-2.3, .26], [2.3, .26], [2.3, .62], [1.7, .8], [-1.5, .84], [-2.3, .72]], -.88, .88);
+  g.M(trim, 0, .4).box(-.2, .845, 0, 1.6, .02, 1.42).box(-.72, .84, .37, .16, .42, .5).box(-.72, .84, -.37, .16, .42, .5);
+  g.M(clothes).box(-.52, .84, .37, .26, .34, .36); g.M(skin).box(-.5, 1.18, .37, .18, .2, .18).box(-.3, 1.0, .37, .5, .07, .08);
+  g.M(sil, 0, .6).box(.72, 1.2, 0, .04, .035, 1.54).box(.8, .84, .76, .035, .38, .035).box(.8, .84, -.76, .035, .38, .035).box(2.33, .3, 0, .08, .2, 1.66).box(-2.33, .32, 0, .08, .2, 1.66);
+  vLights(g, 2.31, -2.31, .56, .62);
+}
 const VEHICLES = [
   { id: 'taxi', name: 'Red Taxi', blurb: "Hong Kong's red cab. Knows every short cut.", len: 4.6, wid: 1.72, h: 1.5, top: 70, acc: 12, grip: 11.5,
     build(g) { const red = C(.74, .05, .04), sil = C(.8, .81, .82);
@@ -3900,10 +3910,32 @@ const VEHICLES = [
       g.M(blk).box(-.8, 1.5, 0, 9.41, .08, 2.47).box(-.8, 1.05, 0, 9.41, .08, 2.47).box(5.51, .6, 0, .04, .7, 1.4);
       g.M(C(.85, .06, .05), .3).box(3.3, 1.55, -1.25, .42, .42, .03); g.M(C(1, .5, .05), .9).box(3.88, 2.95, -.9, .06, .14, .22).box(3.88, 2.95, .9, .06, .14, .22);
       vLights(g, 5.52, -5.52, .75, .95, .3); } },
+  /* the open cars carry their drivers (modelled in Blender, like the rest: vehicles/<id>.glb); these stand in until the models arrive */
+  { id: 'pink', name: 'Pink Convertible', blurb: 'Pearls, a silk scarf and the hood down.', len: 4.8, wid: 1.8, h: 1.3, top: 70, acc: 12, grip: 11.5,
+    build(g) { vOpenCar(g, C(.99, .66, .78), C(.96, .94, .9), C(.06, .06, .07), C(.93, .74, .62)); } },
+  { id: 'yellow', name: 'Yellow Convertible', blurb: 'Aviators on, one elbow on the door.', len: 4.8, wid: 1.8, h: 1.35, top: 70, acc: 12, grip: 11.5,
+    build(g) { vOpenCar(g, C(.98, .78, .05), C(.2, .12, .08), C(.95, .95, .93), C(.8, .58, .43)); } },
+  { id: 'tram', name: 'Tram', blurb: 'The ding ding: two decks and a bell.', len: 9, wid: 2.05, h: 4.4, top: 70, acc: 12, grip: 11.5,
+    build(g) { const green = C(.05, .3, .16), cream = C(.93, .9, .78);
+      vWheels(g, [-2.7, -1.6, 1.6, 2.7], [-.72, .72], .34, .16, C(.3, .3, .32));
+      g.M(green, 0, .3).box(0, .3, 0, 8.6, 3.95, 2.0); g.M(cream, 0, .4).box(0, 2.18, 0, 8.62, .34, 2.02).box(0, 4.25, 0, 8.3, .06, 1.9);
+      g.M(GLASS, 0, .5).box(0, 1.25, 0, 7.2, .8, 2.03).box(0, 2.78, 0, 7.2, .82, 2.03).box(4.3, 1.28, 0, .04, .8, 1.5).box(4.3, 2.8, 0, .04, .8, 1.5);
+      vLights(g, 4.32, -4.32, .9, .25, .2, .2); } },
+  { id: 'sidecar', name: 'Motorbike and Sidecar', blurb: 'A rider, a chair and a dog in goggles.', len: 2.3, wid: 1.75, h: 1.6, top: 70, acc: 12, grip: 11.5,
+    build(g) { const teal = C(.05, .42, .45), dark = C(.07, .07, .075);
+      vWheels(g, [-.72, .78], [.38], .33, .12); vWheels(g, [-.2], [-.96], .3, .12);
+      g.M(dark).box(.03, .36, .38, 1.3, .5, .22); g.M(teal, 0, .3).box(.2, .78, .38, .6, .22, .3).box(-.05, .3, -.46, 2.0, .58, .8);
+      g.M(C(.33, .18, .08)).box(-.15, .9, .38, .32, .52, .4); g.M(C(.94, .9, .78), 0, .3).box(-.03, 1.45, .38, .26, .24, .24); g.M(C(.86, .58, .28)).box(-.25, .9, -.46, .3, .3, .28);
+      g.M(C(1, .96, .84), .95).box(.9, .92, .38, .06, .18, .18); } },
+  { id: 'monster', name: 'Monster Truck', blurb: 'Tyres taller than a taxi.', len: 5.6, wid: 3.0, h: 3.6, top: 70, acc: 12, grip: 11.5,
+    build(g) { const org = C(.95, .35, .04);
+      vWheels(g, [-1.7, 1.7], [-1.2, 1.2], .92, .78, C(.9, .9, .88));
+      g.M(C(.07, .07, .08)).box(0, .8, 0, 4.4, .8, .9); g.M(org, 0, .3).box(0, 1.62, 0, 5.05, .86, 2.04).box(.3, 2.48, 0, 1.7, .64, 1.86);
+      g.M(GLASS, 0, .6).box(.34, 2.52, 0, 1.5, .5, 1.9).box(1.02, 2.5, 0, .3, .5, 1.7); vLights(g, 2.55, -2.52, 2.02, .7, .28, .16); } },
 ];
 const VSTAT = { top: 70, acc: 12, grip: 11.5 };
 /* same pace for all; what differs is how hard they knock things away (and the supercar's light trails, the ice-cream van's chimes) */
-for (const V of VEHICLES) V.knock = { dd: 1.6, school: 1.45, cyber: 1.25, minibus: 1.15 }[V.id] || 1;
+for (const V of VEHICLES) V.knock = { dd: 1.6, school: 1.45, cyber: 1.25, minibus: 1.15, monster: 1.7, tram: 1.5, sidecar: .85 }[V.id] || 1;
 function buildVehicle(V) {
   const g = new GB(); g.M(C(0, 0, 0)).box(0, .03, 0, V.len + .2, .02, V.wid + .3);   /* contact shadow */
   V.build(g); const m = g.mesh(propMat); m.frustumCulled = false; m.matrixAutoUpdate = false; m.visible = false; scene.add(m); return m;
@@ -3912,24 +3944,34 @@ function buildVehicle(V) {
    side east to west, then up to the Peak. Each has a spot (a site, or x,z) and the roads to put the car on there */
 /* (the seaside places are pinned where the road has the water in view, each checked by eye: the harbour front at Kennedy Town, the
    headland road at Shek O (the village streets are boxed in by houses), the road by the main beach at Stanley, Beach Road at Repulse
-   Bay, the shore road below Cyberport. Each pin is on or within 45 m of a junction the route planner ends at, so a trip there arrives) */
+   Bay, the shore road below Cyberport. Each pin is on or within 45 m of a junction the route planner ends at, so a trip there arrives.
+   The list runs clockwise round the island from Kennedy Town; the Peak, the top, comes last) */
 const STARTS = [
   { id: 'kt', moved: 2, name: 'Kennedy Town', blurb: 'The harbour front at the western end of the island', xz: [-6544, -3736], roads: ['New Praya, Kennedy Town'] },
+  { id: 'cargo', name: 'Western Cargo Pier', blurb: 'The open harbour edge at the west end of town', xz: [-5698, -4329], roads: [] },
   { id: 'pier', name: 'Central Pier', blurb: 'The harbourfront, by the observation wheel', site: 'wheel', roads: ['Man Kwong Street', 'Man Yiu Street', 'Lung Wo Road'] },
   { id: 'landmark', name: 'The Landmark', blurb: "Central's grand shopping block on Queen's Road", xz: [-3330, -3428], roads: ["Queen's Road Central", 'Pedder Street', 'Des Voeux Road Central'] },
   { id: 'henderson', name: 'The Henderson', blurb: 'The curving glass tower on Murray Road', xz: [-2872, -3340], roads: ['Murray Road', 'Garden Road', 'Queensway'] },
+  { id: 'hv', name: 'Happy Valley', blurb: 'Round the racecourse, ringed by towers', xz: [-795, -2283], roads: ['Wong Nai Chung Road'] },
   { id: 'cwb', name: 'Causeway Bay', blurb: 'Shopping streets, trams and neon', site: 'causewaybay', roads: ['Hennessy Road', 'Yee Wo Street', 'Gloucester Road'] },
   { id: 'iec', name: 'Eastern Corridor', blurb: 'The expressway along the north-east shore', site: 'northpoint', roads: ['Island Eastern Corridor'] },
+  { id: 'cape', name: 'Cape Collinson', blurb: "High above the open sea at the island's eastern tip", xz: [6612, -640], roads: ['Cape Collinson Road'] },
   { id: 'sheko', moved: 2, name: 'Shek O', blurb: 'The headland beyond the beach village, far south-east', xz: [6749, 2354], roads: ['Shek O Headland Road'] },
+  { id: 'ridge', name: "Dragon's Back", blurb: 'Shek O Road on the ridge, the sea far below', xz: [5155, 2628], roads: ['Shek O Road'] },
+  { id: 'taitam', name: 'Tai Tam Dam', blurb: 'The road across the reservoir dam, water on both sides', xz: [3298, 771], roads: ['Tai Tam Road'] },
   { id: 'stanley', moved: 2, name: 'Stanley', blurb: 'Seaside market town on the south side', xz: [2473, 3330], roads: ['Stanley Link Road'] },
   { id: 'rb', moved: 2, name: 'Repulse Bay', blurb: 'The big sandy beach on the south side', xz: [598, 1333], roads: ['Beach Road'] },
+  { id: 'dwb', name: 'Deep Water Bay', blurb: 'The beach road on the quiet south side', xz: [-581, 521], roads: ['Island Road'] },
   { id: 'op', name: 'Ocean Park', blurb: 'The theme park gates at Wong Chuk Hang', xz: [-1600, 170], roads: ['Ocean Park Road'] },
   { id: 'abd', name: 'Aberdeen', blurb: 'Harbour of fishing boats and sampans', site: 'aberdeen', roads: ['Aberdeen Praya Road'] },
+  { id: 'alc', name: 'Ap Lei Chau', blurb: 'Across the bridge, looking back at Aberdeen', xz: [-3213, 859], roads: ['Ap Lei Chau Praya Road'] },
   { id: 'cyber', moved: 2, name: 'Cyberport', blurb: 'Offices by the sea on the west coast', xz: [-6352, -1308], roads: ['Cyberport Road'] },
+  { id: 'sandy', name: 'Sandy Bay', blurb: 'Victoria Road on the west coast, facing the sunset', xz: [-7082, -2450], roads: ['Victoria Road'] },
+  { id: 'stubbs', name: 'Stubbs Road', blurb: 'High on the hillside, the skyline through the trees', xz: [-1499, -2215], roads: ['Stubbs Road'] },
   { id: 'peak', name: 'The Peak', blurb: 'The top of the island, above the skyline', site: 'peaktower', roads: ['Peak Road'] }];
 const placeXZ = S => S.xz || (S.site && SITE(S.site) ? [SITE(S.site)[0], SITE(S.site)[1]] : null);
 function dStart(id) {
-  const S = id === 'here' ? null : STARTS.find(q => q.id === id) || STARTS[1], here = DRIVE.hereXZ || SITE('hsbc'), P = S && placeXZ(S); DRIVE.start = S ? S.id : 'here';
+  const S = id === 'here' ? null : STARTS.find(q => q.id === id) || STARTS.find(q => q.id === 'pier'), here = DRIVE.hereXZ || SITE('hsbc'), P = S && placeXZ(S); DRIVE.start = S ? S.id : 'here';
   if (P) dSpawn(P[0], P[1], S.roads); else dSpawn(here[0], here[1]);
   const c = DRIVE.car, e = DRIVE.E[c.e]; c.yaw = dTan(e, c.u) + (c.d < 0 ? PI : 0); cam.az = c.yaw + PI + .9; DRIVE.joy = null; DRIVE.camY = DRIVE.camG = undefined; DRIVE.camK = 1; DRIVE.req = null; DRIVE.queue = []; DRIVE.lock = null; DRIVE.prev = null; DRIVE.azV = 0; DRIVE.boosting = false; if (DRIVE.boost === undefined) DRIVE.boost = .6;
   if (S) try { localStorage.setItem('hk-start', S.id); } catch (err) { /* storage blocked */ }
@@ -3974,7 +4016,7 @@ function dSelect(i) {
   if (DRIVE.car) driveStep(0);
 }
 function gStep(s) { const g = document.getElementById('garage'); g.dataset.step = s; DRIVE.gStep = s;
-  if (s === 'where') { const i = STARTS.findIndex(q => q.id === DRIVE.start); pickSet('start', i >= 0 ? i : 1); document.getElementById('gHere').style.display = DRIVE.hereXZ ? '' : 'none'; }
+  if (s === 'where') { const i = STARTS.findIndex(q => q.id === DRIVE.start); pickSet('start', i >= 0 ? i : STARTS.findIndex(q => q.id === 'pier')); document.getElementById('gHere').style.display = DRIVE.hereXZ ? '' : 'none'; }
   if (s === 'dest') { const L = pickList('dest'), cur = PICK.dest.id && L.findIndex(q => q.id === PICK.dest.id); pickSet('dest', cur >= 0 ? cur : (L.findIndex(q => q.id === 'peak') + L.length) % L.length); }
   if (s === 'mode') { const p = DRIVE.gDest, m = p.km; document.getElementById('gToName').textContent = p.name; document.getElementById('gToDist').textContent = m ? (m < 1 ? Math.round(m * 100) * 10 + ' m' : m.toFixed(1) + ' km') + ' by road' : '';
     const bt = DRIVE.start && DRIVE.start !== 'here' ? bestOf(DRIVE.start, p.id) : {}; document.getElementById('gAutoBest').textContent = bt.a ? 'Best ' + fmtT(bt.a) : ''; document.getElementById('gFreeBest').textContent = bt.m ? 'Your best ' + fmtT(bt.m) : 'Timed: set a best'; } }
@@ -4581,7 +4623,7 @@ function crashStep() {
 /* the horn: vehicles ahead in your way hop aside and land on their wheels */
 function dHorn() {
   const car = DRIVE.car; if (!car || DRIVE.garage) return; const V = DRIVE.V || VEHICLES[0], T = ST.t, fx = Math.cos(car.h ?? car.yaw), fz = Math.sin(car.h ?? car.yaw), lx = fz, lz = -fx;
-  sfx(V.id === 'icecream' ? 'jingle' : 'horn'); let n = 0;
+  sfx(V.id === 'icecream' ? 'jingle' : V.id === 'tram' ? 'bell' : 'horn'); let n = 0;
   for (const S of TRAFS) { trafIndex(S); const rows = S.hash.get(Math.floor(car.x / 256) * 65536 + Math.floor(car.z / 256)); if (!rows) continue;
     for (const j of rows) for (const k of S.rowInst[j]) { if (S.aH.array[k]) continue; const p = trafAt(S, k, T); if (!p) continue; const dx = p.x - car.x, dz = p.z - car.z, f = dx * fx + dz * fz, l = dx * lx + dz * lz;
       if (f < 2 || f > 60 || Math.abs(l) > 4.6 || Math.abs(p.y - car.y) > 3.5) continue; const sd = Math.sign(l) || (Math.random() < .5 ? -1 : 1); let ax = lx * sd + fx * .25, az = lz * sd + fz * .25; const al = Math.hypot(ax, az); launchCar(S, k, p, ax / al, az / al, 6, T, { soft: true }); n++; } }
@@ -4594,6 +4636,7 @@ function sfx(kind) {
   try { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return; const ac = SFX.ac || (SFX.ac = new AC()); if (ac.state === 'suspended') ac.resume(); const t0 = ac.currentTime + .01;
     const tone = (f, at, dur, type, vol) => { const o = ac.createOscillator(), g = ac.createGain(); o.type = type; o.frequency.value = f; g.gain.setValueAtTime(0, t0 + at); g.gain.linearRampToValueAtTime(vol, t0 + at + .015); g.gain.setValueAtTime(vol, t0 + at + dur - .04); g.gain.linearRampToValueAtTime(0, t0 + at + dur); o.connect(g); g.connect(ac.destination); o.start(t0 + at); o.stop(t0 + at + dur + .02); };
     if (kind === 'horn') { tone(415, 0, .36, 'sawtooth', .05); tone(349, 0, .36, 'sawtooth', .05); }
+    else if (kind === 'bell') { for (const at of [0, .2]) { tone(1568, at, .16, 'sine', .1); tone(2349, at, .16, 'sine', .04); } }   /* ding ding */
     else { /* the opening of the Blue Danube waltz, as the vans play it */ const N = [[293.7, 0], [293.7, .22], [370, .44], [440, .66], [440, .98], [880, 1.3], [880, 1.52], [740, 1.84], [740, 2.06]]; for (const [f, at] of N) tone(f, at, .2, 'triangle', .07); }
   } catch (e) { /* no audio */ }
 }
