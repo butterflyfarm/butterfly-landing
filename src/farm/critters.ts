@@ -1,6 +1,10 @@
 // The animals who wander across the farm. Every ten seconds or so one sets
 // off from one side and crosses to the other: who comes depends on the hour
-// and the weather. They are drawn in world units, facing right, feet at y = 0.
+// and the weather. Now and then others race along the top of the meadow, at
+// the foot of the big tree. They are drawn in world units, facing right, feet
+// at y = 0.
+
+import { ridges } from './scene'
 
 type Part = { d: string; fill: string }
 type Leg = { x: number; y: number; len: number; w: number; phase: number }
@@ -29,6 +33,8 @@ type Kind = {
   family?: { kind: Kind; count: number; gap: number }
   /** how glad it is to be out by day, at dusk, at night, and how much rain changes that */
   likes: readonly [day: number, dusk: number, night: number, rain: number]
+  /** runs along the top of the meadow, by the tree: how many come together */
+  runs?: number
 }
 
 export type Shade = { lean: number; stretch: number; strength: number }
@@ -64,6 +70,7 @@ const FOX: Kind = {
   lane: 'near',
   shadow: 30,
   likes: [0.5, 1.5, 1.1, 0.4],
+  runs: 1,
 }
 
 const RABBIT: Kind = {
@@ -89,6 +96,7 @@ const RABBIT: Kind = {
   grazes: true,
   shadow: 14,
   likes: [1.5, 1.1, 0.2, 0.15],
+  runs: 3,
 }
 
 const duckParts = (body: string, wing: string): Part[] => [
@@ -175,6 +183,7 @@ const DEER: Kind = {
   grazes: true,
   shadow: 26,
   likes: [0.5, 1.7, 0.6, 0.5],
+  runs: 2,
 }
 
 const CAT: Kind = {
@@ -196,6 +205,7 @@ const CAT: Kind = {
   grazes: true,
   shadow: 18,
   likes: [1, 1, 0.6, 0.1],
+  runs: 1,
 }
 
 const SHEEP: Kind = {
@@ -216,6 +226,7 @@ const SHEEP: Kind = {
   grazes: true,
   shadow: 22,
   likes: [1.2, 0.5, 0.05, 0.6],
+  runs: 3,
 }
 
 const FROG: Kind = {
@@ -261,9 +272,13 @@ type Critter = {
   hurry: number
   jump: number
   jv: number
+  /** running along the top of the meadow, following the lie of the land */
+  run: boolean
+  /** how far below the meadow's crest it runs */
+  depth: number
 }
 
-function figure(c: CanvasRenderingContext2D, k: Kind, x: number, y: number, dir: number, s: number, phase: number, still: boolean, jump: number) {
+function figure(c: CanvasRenderingContext2D, k: Kind, x: number, y: number, dir: number, s: number, phase: number, still: boolean, jump: number, run: boolean) {
   const cycle = phase * Math.PI * 2
   let lift = jump
   let tilt = 0
@@ -272,11 +287,15 @@ function figure(c: CanvasRenderingContext2D, k: Kind, x: number, y: number, dir:
     tilt = k.grazes ? 0.16 : 0
   } else if (k.gait === 'hop') {
     const h = Math.max(0, Math.sin(cycle))
-    lift += h * (k.hop ?? 8)
+    lift += h * (k.hop ?? 8) * (run ? 1.4 : 1)
     tilt = -0.14 * h
     tuck = 0.8 * h
   } else if (k.gait === 'waddle') {
     tilt = Math.sin(cycle) * 0.08
+  } else if (run) {
+    // a gallop: the body bounds and rocks, front legs together, back legs together
+    lift += Math.max(0, Math.sin(cycle)) * 7
+    tilt = Math.cos(cycle) * 0.09
   } else {
     lift += Math.abs(Math.sin(cycle)) * 0.8
   }
@@ -287,7 +306,13 @@ function figure(c: CanvasRenderingContext2D, k: Kind, x: number, y: number, dir:
   c.rotate(tilt)
   c.fillStyle = k.legFill
   for (const leg of k.legs) {
-    const swing = still ? 0 : k.gait === 'hop' ? tuck : Math.sin(cycle + leg.phase) * (k.reach ?? (k.gait === 'waddle' ? 0.3 : 0.42))
+    const swing = still
+      ? 0
+      : k.gait === 'hop'
+        ? tuck
+        : run && k.gait === 'walk'
+          ? Math.sin(cycle + (leg.x > 0 ? 0 : Math.PI) + leg.phase * 0.08) * 0.75
+          : Math.sin(cycle + leg.phase) * (k.reach ?? (k.gait === 'waddle' ? 0.3 : 0.42))
     c.save()
     c.translate(leg.x, leg.y)
     c.rotate(swing)
@@ -305,14 +330,16 @@ export function makeCritters(rand: () => number) {
   const live: Critter[] = []
   let wait = 3.5 // the first one comes along soon after arrival
   let last: Kind | null = null
+  let lastRunner: Kind | null = null
+  let runWait = 6 // and soon after, someone runs along the top of the meadow
   let edge = 800
 
-  function choose(night: number, wet: number): Kind {
+  function choose(night: number, wet: number, runners: boolean): Kind {
     const day = Math.max(0, 1 - 2 * night)
     const dusk = 1 - Math.abs(2 * night - 1)
     const dark = Math.max(0, 2 * night - 1)
     const weights = KINDS.map((k) => {
-      if (k === last) return 0
+      if (runners ? k === lastRunner || !k.runs : k === last) return 0
       const [d, u, n, r] = k.likes
       return (d * day + u * dusk + n * dark) * (wet > 0.4 ? r : 1)
     })
@@ -324,25 +351,48 @@ export function makeCritters(rand: () => number) {
     return FOX
   }
 
+  const critter = (kind: Kind, x: number, y: number, dir: 1 | -1, s: number): Critter => ({
+    kind,
+    x,
+    y,
+    dir,
+    s,
+    phase: rand(),
+    pauseAt: null,
+    pauseLeft: 0,
+    hurry: 0,
+    jump: 0,
+    jv: 0,
+    run: false,
+    depth: 0,
+  })
+
   function spawn(vis: number, night: number, wet: number) {
-    const kind = choose(night, wet)
+    const kind = choose(night, wet, false)
     last = kind
     const dir = rand() < 0.5 ? 1 : -1
     const far = kind.lane === 'far'
-    const s = kind.size * (far ? 0.58 : 1)
-    live.push({
-      kind,
-      x: -dir * (vis / 2 + 70),
-      y: far ? 684 + rand() * 10 : 798 + rand() * 6,
-      dir,
-      s,
-      phase: rand(),
-      pauseAt: kind.grazes && rand() < 0.7 ? (rand() - 0.5) * vis * 0.6 : null,
-      pauseLeft: 0,
-      hurry: 0,
-      jump: 0,
-      jv: 0,
-    })
+    const a = critter(kind, -dir * (vis / 2 + 70), far ? 684 + rand() * 10 : 798 + rand() * 6, dir, kind.size * (far ? 0.58 : 1))
+    a.pauseAt = kind.grazes && rand() < 0.7 ? (rand() - 0.5) * vis * 0.6 : null
+    live.push(a)
+    live.sort((a, b) => a.y - b.y)
+  }
+
+  /** One animal, or a few racing each other, running along the top of the meadow past the tree. */
+  function spawnRunners(vis: number, night: number, wet: number) {
+    const kind = choose(night, wet, true)
+    lastRunner = kind
+    const dir = rand() < 0.5 ? 1 : -1
+    const n = 1 + Math.floor(rand() * (kind.runs ?? 1))
+    let x = -dir * (vis / 2 + 60)
+    for (let i = 0; i < n; i++) {
+      const a = critter(kind, x, 0, dir, kind.size * (0.56 + rand() * 0.06))
+      a.run = true
+      a.depth = 5 + rand() * 7
+      a.y = ridges.near(a.x) + a.depth
+      live.push(a)
+      x -= dir * (26 + rand() * 40)
+    }
     live.sort((a, b) => a.y - b.y)
   }
 
@@ -353,13 +403,35 @@ export function makeCritters(rand: () => number) {
       edge = vis / 2 + 90
       wait -= dt
       if (wait <= 0) {
-        if (live.length < 3) {
+        if (live.filter((a) => !a.run).length < 3) {
           spawn(vis, night, wet)
           wait = 9 + rand() * 3
         } else wait = 2
       }
+      runWait -= dt
+      if (runWait <= 0) {
+        if (!live.some((a) => a.run)) {
+          spawnRunners(vis, night, wet)
+          runWait = 12 + rand() * 8
+        } else runWait = 2
+      }
       for (let i = live.length - 1; i >= 0; i--) {
         const a = live[i]
+        if (a.run) {
+          // they run flat out, rising and dipping with the meadow's edge
+          // (the slow walkers pick up their feet most)
+          a.x += a.dir * (a.kind.speed + 40) * a.s * (2.2 + a.hurry * 1.2) * dt
+          a.phase += dt * a.kind.beat * (a.kind.gait === 'hop' ? 1.9 : 2.3) * (1 + a.hurry * 0.5)
+          a.y = ridges.near(a.x) + a.depth
+          a.hurry = Math.max(0, a.hurry - dt / 2.6)
+          if (a.jump > 0 || a.jv > 0) {
+            a.jump += a.jv * dt
+            a.jv -= 420 * dt
+            if (a.jump <= 0) a.jump = a.jv = 0
+          }
+          if (a.dir > 0 ? a.x > edge : a.x < -edge) live.splice(i, 1)
+          continue
+        }
         if (a.pauseAt !== null && (a.dir > 0 ? a.x >= a.pauseAt : a.x <= a.pauseAt)) {
           a.pauseAt = null
           a.pauseLeft = 2.5 + rand() * 2
@@ -402,7 +474,7 @@ export function makeCritters(rand: () => number) {
         }
         const still = a.pauseLeft > 0 && a.hurry === 0
         for (const [k, x, s, offset] of members) {
-          figure(c, k, x, a.y, a.dir, s, a.phase * (k.beat / a.kind.beat) + offset, still, a.jump)
+          figure(c, k, x, a.y, a.dir, s, a.phase * (k.beat / a.kind.beat) + offset, still, a.jump, a.run)
         }
       }
     },
