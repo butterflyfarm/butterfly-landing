@@ -3910,19 +3910,22 @@ function buildVehicle(V) {
 }
 /* the places to start from and drive to (the same list for both), in order round the island: the north shore west to east, the south
    side east to west, then up to the Peak. Each has a spot (a site, or x,z) and the roads to put the car on there */
+/* (the seaside places are pinned where the road has the water in view, each checked by eye: the harbour front at Kennedy Town, the
+   headland road at Shek O (the village streets are boxed in by houses), the road by the main beach at Stanley, Beach Road at Repulse
+   Bay, the shore road below Cyberport. Each pin is on or within 45 m of a junction the route planner ends at, so a trip there arrives) */
 const STARTS = [
-  { id: 'kt', name: 'Kennedy Town', blurb: 'The tram terminus at the western end of the island', site: 'kennedytown', roads: ["Belcher's Street", 'Smithfield', 'Catchick Street'] },
+  { id: 'kt', moved: 2, name: 'Kennedy Town', blurb: 'The harbour front at the western end of the island', xz: [-6544, -3736], roads: ['New Praya, Kennedy Town'] },
   { id: 'pier', name: 'Central Pier', blurb: 'The harbourfront, by the observation wheel', site: 'wheel', roads: ['Man Kwong Street', 'Man Yiu Street', 'Lung Wo Road'] },
   { id: 'landmark', name: 'The Landmark', blurb: "Central's grand shopping block on Queen's Road", xz: [-3330, -3428], roads: ["Queen's Road Central", 'Pedder Street', 'Des Voeux Road Central'] },
   { id: 'henderson', name: 'The Henderson', blurb: 'The curving glass tower on Murray Road', xz: [-2872, -3340], roads: ['Murray Road', 'Garden Road', 'Queensway'] },
   { id: 'cwb', name: 'Causeway Bay', blurb: 'Shopping streets, trams and neon', site: 'causewaybay', roads: ['Hennessy Road', 'Yee Wo Street', 'Gloucester Road'] },
   { id: 'iec', name: 'Eastern Corridor', blurb: 'The expressway along the north-east shore', site: 'northpoint', roads: ['Island Eastern Corridor'] },
-  { id: 'sheko', name: 'Shek O', blurb: 'Beach village at the far south-east', site: 'sheko', roads: ['Shek O Road'] },
-  { id: 'stanley', name: 'Stanley', blurb: 'Seaside market town on the south side', site: 'stanley', roads: ['Stanley Village Road', 'Stanley Beach Road'] },
-  { id: 'rb', name: 'Repulse Bay', blurb: 'The big sandy beach on the south side', site: 'repulsebay', roads: ['Repulse Bay Road', 'Beach Road'] },
+  { id: 'sheko', moved: 2, name: 'Shek O', blurb: 'The headland beyond the beach village, far south-east', xz: [6749, 2354], roads: ['Shek O Headland Road'] },
+  { id: 'stanley', moved: 2, name: 'Stanley', blurb: 'Seaside market town on the south side', xz: [2473, 3330], roads: ['Stanley Link Road'] },
+  { id: 'rb', moved: 2, name: 'Repulse Bay', blurb: 'The big sandy beach on the south side', xz: [598, 1333], roads: ['Beach Road'] },
   { id: 'op', name: 'Ocean Park', blurb: 'The theme park gates at Wong Chuk Hang', xz: [-1600, 170], roads: ['Ocean Park Road'] },
   { id: 'abd', name: 'Aberdeen', blurb: 'Harbour of fishing boats and sampans', site: 'aberdeen', roads: ['Aberdeen Praya Road'] },
-  { id: 'cyber', name: 'Cyberport', blurb: 'Offices by the sea on the west coast', xz: [-6056, -1216], roads: ['Cyberport Road', 'Information Crescent'] },
+  { id: 'cyber', moved: 2, name: 'Cyberport', blurb: 'Offices by the sea on the west coast', xz: [-6352, -1308], roads: ['Cyberport Road'] },
   { id: 'peak', name: 'The Peak', blurb: 'The top of the island, above the skyline', site: 'peaktower', roads: ['Peak Road'] }];
 const placeXZ = S => S.xz || (S.site && SITE(S.site) ? [SITE(S.site)[0], SITE(S.site)[1]] : null);
 function dStart(id) {
@@ -3983,7 +3986,7 @@ function openGarage() {
 /* leave the start screen: free driving; with a destination, the route shown and either you drive (auto false) or the car does */
 function closeGarage(dest, auto = true) {
   DRIVE.garage = false; DRIVE.started = true; document.body.classList.remove('garage');
-  DRIVE.run = dest && dest.id && DRIVE.start && DRIVE.start !== 'here' ? { key: DRIVE.start + '>' + dest.id + (auto ? '|a' : '|m'), dest: dest.id, t0: ST.t } : null;
+  DRIVE.run = dest && dest.id && DRIVE.start && DRIVE.start !== 'here' ? { key: runEnd(DRIVE.start) + '>' + runEnd(dest.id) + (auto ? '|a' : '|m'), dest: dest.id, t0: ST.t } : null;
   if (dest && !auto) { setAuto(false); navStart(dest); ctlHint.first = true; ctlHint.show(['Follow the arrows to ' + dest.name].concat(COARSE ? ['Hold anywhere to drive', 'Slide to steer'] : ['↑ drive', '← → steer']), 9000); return; }
   if (dest) { setAuto(true); navStart(dest); ctlHint.first = false; ctlHint.show(['Driving you to ' + dest.name, COARSE ? 'Steer to turn off' : '← → to turn off', 'Auto to take over'], 7000); return; }
   setAuto(false); navStop();
@@ -4480,7 +4483,9 @@ function dFx(dt, sp, BK) {
 /* ---------- timed runs: start place to destination, self-driven and driven yourself kept apart; best times are remembered on this device ---------- */
 const fmtT = t => Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0');
 function bestTimes() { try { return JSON.parse(localStorage.getItem('hk-best') || '{}') || {}; } catch (e) { return {}; } }
-function bestOf(from, to) { const B = bestTimes(); return { a: B[from + '>' + to + '|a'], m: B[from + '>' + to + '|m'] }; }
+/* a place that has been moved keeps its name but not its old records: best times are kept under the place and where it stands */
+const runEnd = id => { const S = STARTS.find(q => q.id === id); return S && S.moved ? id + '@' + S.moved : id; };
+function bestOf(from, to) { const B = bestTimes(), k = runEnd(from) + '>' + runEnd(to); return { a: B[k + '|a'], m: B[k + '|m'] }; }
 function runFinish(R) {
   const run = DRIVE.run; if (!run || run.dest !== R.dest.id) return ''; DRIVE.run = null; const t = ST.t - run.t0, B = bestTimes(), prev = B[run.key];
   if (!prev || t < prev) { B[run.key] = Math.round(t * 10) / 10; try { localStorage.setItem('hk-best', JSON.stringify(B)); } catch (e) { /* storage blocked */ } return ' · ' + fmtT(t) + (prev ? ' · new best!' : ''); }
