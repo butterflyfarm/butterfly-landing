@@ -152,31 +152,48 @@
   #drv .nv.stop{justify-content:center;background:rgba(200,70,50,.35);border-color:rgba(255,160,140,.5);font-size:12px;letter-spacing:.14em;text-transform:uppercase}
   body.garage #dNavB{visibility:hidden}
   #dCar{width:42px;height:42px;padding:0;flex:none;display:flex;align-items:center;justify-content:center}
-  #garage{display:none;position:fixed;z-index:7;left:0;right:0;bottom:max(14px,env(safe-area-inset-bottom));flex-direction:column;align-items:center;gap:10px;padding:0 10px;pointer-events:none}
-  #garage>*{pointer-events:auto}
-  body.garage #garage{display:flex}
+  /* the start screen: step 1 the vehicle, big in the middle of the view; step 2 where to start and how to drive; step 3 (self-driving) where to */
+  #garage{display:none;position:fixed;z-index:7;inset:0;pointer-events:none}
+  body.garage #garage{display:block}
   body.garage #cr{opacity:0;pointer-events:none}
-  body.garage #dInfo,body.garage #dSide,body.garage #dCar{visibility:hidden}
-  #garage .gh{color:#fff4df;font-size:13px;font-weight:600;letter-spacing:.26em;text-transform:uppercase;text-shadow:0 1px 5px rgba(0,0,0,.85)}
-  #garage .gr{display:flex;align-items:center;gap:8px;max-width:min(100%,1000px)}
-  #gList{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 2px 8px;scrollbar-width:none;-webkit-overflow-scrolling:touch;touch-action:pan-x}
-  #gList::-webkit-scrollbar{display:none}
-  #drv .gc{flex:none;scroll-snap-align:center;width:172px;display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:10px 12px 11px;text-align:left;border-radius:12px;background:rgba(9,20,28,.74);border:1px solid rgba(255,196,128,.26);color:#f3e6d0}
-  #drv .gc.on{border-color:rgba(255,206,140,.95);background:rgba(66,40,14,.86);box-shadow:0 0 0 1px rgba(255,206,140,.5),0 6px 18px rgba(0,0,0,.45)}
-  .gc b{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#fff4df}
-  .gc em{font-style:normal;font-size:10.5px;line-height:1.3;opacity:.82;min-height:2.6em}
-  #drv .gc{padding-bottom:12px}
-  .gc .st{display:flex;align-items:center;gap:6px;font-size:9px;letter-spacing:.12em;text-transform:uppercase;opacity:.88}
-  .gc .st i{font-style:normal;width:58px}
-  .gc .st u{flex:1;height:4px;border-radius:2px;background:rgba(255,196,128,.18);overflow:hidden;text-decoration:none}
-  .gc .st s{display:block;height:100%;background:#ffc98a;text-decoration:none}
-  #gStart{display:flex;gap:6px;overflow-x:auto;max-width:min(100%,940px);padding:2px 4px;scrollbar-width:none;-webkit-overflow-scrolling:touch;touch-action:pan-x}
-  #gStart::-webkit-scrollbar{display:none}
-  #gStart::before{content:"Start at";flex:none;align-self:center;margin-right:4px;color:#fff4df;font-size:10px;letter-spacing:.2em;text-transform:uppercase;text-shadow:0 1px 4px rgba(0,0,0,.8)}
-  #drv .gs{flex:none;padding:7px 12px;border-radius:16px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
-  #drv .gs.on{background:rgba(255,176,84,.42);color:#fff4df;border-color:rgba(255,214,160,.9)}
-  #gPrev,#gNext{flex:none;width:38px;height:60px;font-size:24px;padding:0}
-  #drv #gGo{padding:12px 40px;font-size:14px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;background:rgba(255,176,84,.92);color:#241405;border-color:rgba(255,224,176,.95);border-radius:24px;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+  body.garage #dInfo,body.garage #dSide,body.garage #dCar,body.garage #dNavB{visibility:hidden}
+  #garage .gp{display:none;position:absolute;inset:0;flex-direction:column;align-items:center;padding:calc(max(12px,env(safe-area-inset-top)) + 58px) 16px max(20px,env(safe-area-inset-bottom))}
+  #garage[data-step="ride"] #gA,#garage[data-step="where"] #gB,#garage[data-step="dest"] #gC{display:flex}
+  #garage .gp>*,#garage .gmid>*{pointer-events:auto}
+  #gA .gh{color:#fff4df;font-size:clamp(14px,3.6vw,18px);font-weight:700;letter-spacing:.32em;text-transform:uppercase;text-shadow:0 1px 8px rgba(0,0,0,.9)}
+  #gA .gmid{flex:1;width:100%;max-width:820px;display:flex;align-items:center;justify-content:space-between;pointer-events:none}
+  #drv .garr{width:66px;height:66px;border-radius:50%;font-size:40px;line-height:1;padding:0 0 6px;color:#fff4df;background:rgba(9,20,28,.6)}
+  #gA .gnm{display:flex;flex-direction:column;align-items:center;text-align:center;max-width:560px}
+  #gName{font-size:clamp(28px,7vw,46px);font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#fff4df;line-height:1.05;text-shadow:0 2px 16px rgba(0,0,0,.85)}
+  #gBlurb{font-style:normal;font-size:clamp(13px,3.4vw,16px);color:#fff1da;margin-top:8px;text-shadow:0 1px 8px rgba(0,0,0,.9)}
+  #gDots{display:flex;gap:10px;margin:16px 0 18px}
+  #drv #gDots button{width:13px;height:13px;border-radius:50%;padding:0;background:rgba(9,20,28,.6);border:1.5px solid rgba(255,214,160,.8)}
+  #drv #gDots button.on{background:#ffc98a;border-color:#ffe2b8}
+  #drv .gbtn{padding:16px 64px;font-size:17px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;background:rgba(255,176,84,.95);color:#241405;border-color:rgba(255,224,176,.95);border-radius:30px;box-shadow:0 6px 22px rgba(0,0,0,.45)}
+  #garage .gcard{margin:auto 0;width:min(100%,640px);max-height:100%;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding:16px 16px 18px;border-radius:20px;background:rgba(9,20,28,.84);border:1px solid rgba(255,196,128,.32);box-shadow:0 12px 40px rgba(0,0,0,.5);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);overscroll-behavior:contain}
+  #garage .ghd{display:flex;align-items:center;gap:10px;min-height:38px}
+  #garage .ghd b{color:#fff4df;font-size:clamp(15px,3.8vw,19px);font-weight:700;letter-spacing:.18em;text-transform:uppercase}
+  #drv #gBack,#drv #gBack2{flex:none;width:38px;height:38px;border-radius:50%;padding:0 0 3px;font-size:24px;line-height:1}
+  #garage .ggrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  #drv .gs{min-height:54px;padding:10px 8px;border-radius:12px;font-size:14px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#f6e6cc}
+  #drv .gs.on{background:rgba(255,176,84,.42);color:#fff;border-color:rgba(255,214,160,.95);box-shadow:0 0 0 1px rgba(255,214,160,.5)}
+  #garage .gmodes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  #drv .gmode{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:18px 16px;border-radius:14px;text-align:left;background:rgba(255,176,84,.9);border-color:rgba(255,224,176,.95);color:#241405}
+  #drv .gmode.auto{background:rgba(64,170,220,.85);border-color:rgba(170,228,255,.95);color:#06202c}
+  .gmode b{font-size:clamp(16px,4vw,20px);letter-spacing:.1em;text-transform:uppercase}
+  .gmode em{font-style:normal;font-size:13px;line-height:1.3;opacity:.85}
+  #garage .glist{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .nvseg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 0 6px}
+  #drv .nvm{padding:10px 8px;border-radius:9px;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase}
+  #drv .nvm.on{background:rgba(64,170,220,.62);border-color:rgba(170,228,255,.95);color:#fff}
+  #drv .glist .nv{min-height:56px;align-items:center;background:rgba(255,255,255,.06)}
+  .glist .nv b{font-size:14px}
+  #drv .gsub{grid-column:1/-1;margin:6px 2px 0;color:#9fdcff;font-size:11px;font-weight:600;letter-spacing:.24em;text-transform:uppercase}
+  #drv .nv.fav{background:rgba(64,170,220,.22);border-color:rgba(140,215,255,.45)}
+  /* self-driving: the Auto button shows while a route is set */
+  #drv #dAuto{display:none;padding:8px 10px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
+  body.navving #drv #dAuto{display:block}
+  #drv #dAuto.on{background:rgba(64,170,220,.7);border-color:rgba(170,228,255,.95);color:#fff}
   #mini{position:fixed;z-index:6;left:max(12px,env(safe-area-inset-left));top:calc(max(10px,env(safe-area-inset-top)) + 54px);width:156px;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;touch-action:manipulation}
   #mmC{display:block;width:156px;height:156px;border-radius:50%;box-shadow:0 2px 12px rgba(0,0,0,.55)}
   #mmD{max-width:100%;padding:3px 9px;border-radius:9px;background:rgba(9,20,28,.66);color:#fff4df;font-size:10px;letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -194,8 +211,9 @@
     body.menu #nav{opacity:0;pointer-events:none}
     #fc{max-width:calc(100vw - 100px)}
     #fc.auto .foc{display:none}
-    #gPrev,#gNext{display:none}
-    #drv .gc{width:150px}
+    #drv .garr{width:54px;height:54px;font-size:34px}
+    #garage .ggrid{grid-template-columns:repeat(2,1fr)}
+    #garage .gmodes,#garage .glist{grid-template-columns:1fr}
     #mini,#mmC{width:118px}
     #mmC{height:118px}
     #mini{top:calc(max(10px,env(safe-area-inset-top)) + 62px)}
@@ -244,10 +262,24 @@
 <button id="bigDrive" type="button" aria-label="Drive around Hong Kong Island"><i><svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="24" cy="24" r="4.5" fill="currentColor"/><path d="M8 21.5c5-2.6 10.4-3.6 16-3.6s11 1 16 3.6M24 28.5v11.5M20 26l-9.5 9M28 26l9.5 9" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg></i><span><b>Drive</b><em>Every street on the island</em></span></button>
 <div id="drv"><div id="dTop"><button id="dExit" title="Stop driving (Esc)" aria-label="Stop driving">✕</button><button id="dNavB" title="Go somewhere" aria-label="Navigate"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 1 7 7c0 4.9-5.6 11.2-6.3 12a1 1 0 0 1-1.4 0C10.6 20.2 5 13.9 5 9a7 7 0 0 1 7-7zm0 4.2A2.8 2.8 0 1 0 12 11.8 2.8 2.8 0 0 0 12 6.2z"/></svg></button><button id="dCar" title="Change vehicle (G)" aria-label="Change vehicle"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M5 11l1.5-4.2A2 2 0 0 1 8.4 5.5h7.2a2 2 0 0 1 1.9 1.3L19 11h.5A1.5 1.5 0 0 1 21 12.5V17h-2v1.5a1 1 0 0 1-2 0V17H7v1.5a1 1 0 0 1-2 0V17H3v-4.5A1.5 1.5 0 0 1 4.5 11zm2.2 0h9.6l-1.1-3.2a.5.5 0 0 0-.5-.3H8.8a.5.5 0 0 0-.5.3zM6.5 15a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6zm11 0a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6z"/></svg></button>
   <div id="dInfo"><span id="dSt"></span><span id="dNx"><i id="dArr">↑</i><b id="dNxD"></b><em id="dNxN"></em></span><span id="dGo"><i>➤</i><em></em></span></div>
-  <div id="dSide"><div id="dSpdBox"><b id="dSpd">0</b><small>km/h</small></div><button id="dU" title="Turn round (U)">U-turn</button></div></div>
+  <div id="dSide"><div id="dSpdBox"><b id="dSpd">0</b><small>km/h</small></div><button id="dU" title="Turn round (U)">U-turn</button><button id="dAuto" title="Self-driving on or off">Auto</button></div></div>
   <div id="mini" title="Tap for the whole island"><canvas id="mmC"></canvas><span id="mmD"></span></div><div id="dJoy"><i></i></div><div id="dTun"></div><div id="dMsg"></div>
   <div id="navP"><div class="nh"><b>Where to?</b><button id="navX" aria-label="Close">✕</button></div><div id="navL"></div></div>
-  <div id="garage"><b class="gh">Choose your ride</b><div class="gr"><button id="gPrev" aria-label="Previous vehicle">‹</button><div id="gList"></div><button id="gNext" aria-label="Next vehicle">›</button></div><div id="gStart" aria-label="Where to start"></div><button id="gGo">Drive</button></div></div>
+  <div id="garage" data-step="ride">
+    <div id="gA" class="gp"><b class="gh">Choose your ride</b>
+      <div class="gmid"><button id="gPrev" class="garr" aria-label="Previous vehicle">‹</button><button id="gNext" class="garr" aria-label="Next vehicle">›</button></div>
+      <div class="gnm"><b id="gName"></b><em id="gBlurb"></em><div id="gDots" role="tablist" aria-label="Vehicles"></div></div>
+      <button id="gGo" class="gbtn">Next</button></div>
+    <div id="gB" class="gp"><div class="gcard">
+      <div class="ghd"><button id="gBack" aria-label="Back to vehicles">‹</button><b>Start at</b></div>
+      <div id="gStart" class="ggrid" aria-label="Where to start"></div>
+      <div class="ghd"><b>How do you want to drive?</b></div>
+      <div class="gmodes"><button id="gFree" class="gmode"><b>I'll drive</b><em>Steer yourself, anywhere on the island</em></button><button id="gAuto" class="gmode auto"><b>Take me to…</b><em>Pick a place and the car drives itself</em></button></div>
+    </div></div>
+    <div id="gC" class="gp"><div class="gcard">
+      <div class="ghd"><button id="gBack2" aria-label="Back">‹</button><b>Where to?</b></div>
+      <div id="gDest" class="glist"></div>
+    </div></div></div></div>
 <div id="pm" title="Fly to Central"><b>Central</b><i></i><u></u></div>
 <div id="cr">Buildings: Lands Department, HKSAR Government, via <a href="https://data.gov.hk/en-data/dataset/hk-landsd-openmap-landsd-building" target="_blank" rel="noopener">DATA.GOV.HK</a> · map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors · elevation NASA SRTM</div>
 <script>window.__errs=[];addEventListener("error",function(e){window.__errs.push(String(e.message).slice(0,300)+" @"+e.lineno)});(function(){var ce=console.error;console.error=function(){try{window.__errs.push(Array.prototype.join.call(arguments," ").slice(0,900))}catch(e){}ce.apply(console,arguments)}})();</script>
@@ -2858,8 +2890,9 @@ const DC = { ac: C(.62, .63, .62), tank: [C(.50, .52, .55), C(.30, .40, .50), C(
   cloth: [C(.85, .85, .82), C(.75, .2, .2), C(.2, .35, .7), C(.9, .75, .3), C(.3, .6, .5), C(.85, .5, .6), C(.15, .15, .2)], awn: [C(.70, .12, .10), C(.10, .40, .24), C(.12, .25, .55), C(.85, .70, .20), C(.80, .80, .76), C(.55, .25, .10)],
   neon: [[1, .12, .1], [1, .75, .1], [.1, 1, .5], [.2, .6, 1], [1, .3, .8], [1, 1, .9]], cage: [C(.12, .25, .18), C(.35, .2, .12), C(.3, .32, .34)] };
 function regenNear(fx, fz) {
-  const t0 = performance.now(), D = NEAR.det, R = 440, R2 = R * R, IN2 = 190 * 190, m = D.m, cc = D.c, pp = D.p, CAP = D.cap; let n = 0;
-  const put = (x, y, z, w, h, d, yaw, col, em, gl, fl) => { if (n >= CAP) return; const c = Math.cos(yaw), s = Math.sin(yaw), o = n * 16;
+  const t0 = performance.now(), D = NEAR.det, R = 440, R2 = R * R, IN2 = 190 * 190, m = D.m, cc = D.c, pp = D.p, CAP = D.cap, lanes = !!DRIVE.SG; let n = 0; NEAR.cut = 0;
+  /* nothing is put where a car drives (awnings, signs, sheds, poles or walls that would stand in a lane): see laneIn */
+  const put = (x, y, z, w, h, d, yaw, col, em, gl, fl) => { if (n >= CAP) return; if (lanes && boxInLane(x, y, z, w, h, d, yaw, 0)) { NEAR.cut++; return; } const c = Math.cos(yaw), s = Math.sin(yaw), o = n * 16;
     m[o] = c * w; m[o + 1] = 0; m[o + 2] = s * w; m[o + 3] = 0; m[o + 4] = 0; m[o + 5] = h; m[o + 6] = 0; m[o + 7] = 0; m[o + 8] = -s * d; m[o + 9] = 0; m[o + 10] = c * d; m[o + 11] = 0; m[o + 12] = x; m[o + 13] = y; m[o + 14] = z; m[o + 15] = 1;
     cc[n * 3] = col[0]; cc[n * 3 + 1] = col[1]; cc[n * 3 + 2] = col[2]; pp[n * 4] = em || 0; pp[n * 4 + 1] = gl || 0; pp[n * 4 + 2] = 0; pp[n * 4 + 3] = fl || 0; n++; };
   const i0 = Math.max(Math.floor((fx - R - X0) / NEAR.cell), 0), i1 = Math.min(Math.floor((fx + R - X0) / NEAR.cell), NEAR.gw - 1), j0 = Math.max(Math.floor((fz - R - Z0) / NEAR.cell), 0), j1 = Math.min(Math.floor((fz + R - Z0) / NEAR.cell), NEAR.gh - 1);
@@ -2901,10 +2934,15 @@ function regenNear(fx, fz) {
   const tree = (x, y, z, sc, sq, hue, dry) => { if (nt >= T.cap) return; ta[nt * 4] = x; ta[nt * 4 + 1] = y; ta[nt * 4 + 2] = z; ta[nt * 4 + 3] = sc; tb[nt * 4] = hue; tb[nt * 4 + 1] = sq; tb[nt * 4 + 2] = (x * .37 + z * .73) % 1; tb[nt * 4 + 3] = dry; nt++; };
   for (let ri = 0; ri < ROADS.length; ri++) { const r = ROADS[ri]; if (r.tram) continue; const streetTrees = r.cls === 'hill' || (r.cls !== 'trunk' && !r.ow && hash2(ri, 5) < .4);
     for (let i = 2; i < r.n - 2; i += 2) { const x = r.pts[i * 3], z = r.pts[i * 3 + 2]; if ((x - fx) * (x - fx) + (z - fz) * (z - fz) > R2) continue; const y = r.pts[i * 3 + 1], dx = r.pts[i * 3 + 3] - x, dz = r.pts[i * 3 + 5] - z, l = Math.hypot(dx, dz) || 1, nx = dz / l, nz = -dx / l, yaw = Math.atan2(dz, dx), hw = r.w / 2, el = r.el[i] > 2.5;
-      if (i % 4 === 0) { const sd = (i % 8 === 0) ? 1 : -1, px = x + nx * (hw + (el ? -.3 : .5)) * sd, pz = z + nz * (hw + (el ? -.3 : .5)) * sd; put(px, y, pz, .16, 9, .16, yaw, DC.pole); put(px - nx * 1.1 * sd, y + 8.8, pz - nz * 1.1 * sd, .14, .14, 2.3, yaw, DC.pole); put(px - nx * 2 * sd, y + 8.6, pz - nz * 2 * sd, .45, .18, .95, yaw, [1, .78, .45], 10); }
+      /* street lamps on the kerb; where the drivable street is wider than the drawn one, step the lamp back until it is clear of the lanes */
+      if (i % 4 === 0) { const sd = (i % 8 === 0) ? 1 : -1; let off = hw + (el ? -.3 : .5); if (lanes) { let k = 0; while (k < 6 && laneIn(x + nx * off * sd, z + nz * off * sd, y, y + 9, .5) > 0) { off += 1; k++; } if (k === 6) off = -1; }
+        if (off > 0) { const px = x + nx * off * sd, pz = z + nz * off * sd; put(px, y, pz, .16, 9, .16, yaw, DC.pole); put(px - nx * 1.1 * sd, y + 8.8, pz - nz * 1.1 * sd, .14, .14, 2.3, yaw, DC.pole); put(px - nx * 2 * sd, y + 8.6, pz - nz * 2 * sd, .45, .18, .95, yaw, [1, .78, .45], 10); } }
       if (el) continue;
       if (streetTrees && i % 4 === 2) for (const sd of [-1, 1]) { const px = x + nx * (hw + 2.6) * sd, pz = z + nz * (hw + 2.6) * sd, oc = occAt(px, pz); if ((oc & 3) || sdAt(px, pz) < 4) continue; const h = hash2(i, ri * 7 + sd), sc = crownFit(px, pz, 1.9 + h * 1.6); if (!sc) continue; const gy = hAt(px, pz); tree(px, gy + sc * .9 + 2.2, pz, sc, .85, h, 0); put(px, gy, pz, .3, sc * .9 + 2.2, .3, 0, DC.root); }
-      if (r.cls === 'hill' && i % 2 === 0) { const gx = hAt(x + 12, z) - hAt(x - 12, z), gz = hAt(x, z + 12) - hAt(x, z - 12), sl = Math.hypot(gx, gz) / 24; if (sl < .28) continue; const sd = (gx * nx + gz * nz) > 0 ? -1 : 1, wx = x + nx * (hw + 1) * sd, wz = z + nz * (hw + 1) * sd, wh = 2.5 + sl * 7;
+      if (r.cls === 'hill' && i % 2 === 0) { const gx = hAt(x + 12, z) - hAt(x - 12, z), gz = hAt(x, z + 12) - hAt(x, z - 12), sl = Math.hypot(gx, gz) / 24; if (sl < .28) continue; const sd = (gx * nx + gz * nz) > 0 ? -1 : 1, wh = 2.5 + sl * 7; let woff = hw + 1;
+        /* the retaining wall stands just off the kerb of the drivable street, not in it */
+        if (lanes) { let k = 0; while (k < 5 && boxInLane(x + nx * woff * sd, y - wh, z + nz * woff * sd, 16.5, wh + .9, .8, yaw, .3)) { woff += 1; k++; } if (k === 5) continue; }
+        const wx = x + nx * woff * sd, wz = z + nz * woff * sd;
         put(wx, y - wh, wz, 16.5, wh + .9, .8, yaw, DC.wall, 0, 0, 3);
         const scw = hash2(i, ri) < .28 ? crownFit(wx + nx * sd * 1.5, wz + nz * sd * 1.5, 4 + hash2(ri, i) * 3) : 0; if (scw) { const sc = scw; tree(wx + nx * sd * 1.5, y + sc * .8 + 1, wz + nz * sd * 1.5, sc, .75, .3, 0); for (let q = 0; q < 4; q++) put(wx + nx * sd * .5 + dx / l * (q - 1.5) * 1.1, y - wh * (.5 + .12 * q), wz + nz * sd * .5 + dz / l * (q - 1.5) * 1.1, .28, wh * (.5 + .12 * q) + 1.2, .22, yaw + q, DC.root); } }
     } }
@@ -3253,6 +3291,29 @@ function initLT() {
 function kerbDist(x, z) { const RH = DRIVE.RH; if (!RH) return 99; let best = 99; const gx = Math.floor(x / 16), gz = Math.floor(z / 16);
   for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) { const c = RH.get((gx + a) * 65536 + gz + b); if (!c) continue; for (let j = 0; j < c.length; j += 4) { const d = Math.hypot(c[j] - x, c[j + 1] - z) - c[j + 2]; if (d < best) best = d; } }
   return best; }
+/* the driving space: every street segment in a 16 m hash. laneIn(x, z, y0, y1, r) says how far a point reaches into a carriageway
+   (plus r metres of margin) whose surface lies where something spanning heights y0..y1 would stand in the way of a car or the chase
+   camera (from 4.6 m below its bottom to just above its top); negative = clear. Street props are kept out of it. */
+const LANE_CS = 16;
+function buildLaneHash() {
+  const SG = new Map(), cs = LANE_CS;
+  for (const e of DRIVE.E) { if (e.tun || e.dead) continue; for (let i = 0; i < e.n; i++) { const r = e.hw + 1.5, x0 = Math.floor((Math.min(e.xs[i], e.xs[i + 1]) - r) / cs), x1 = Math.floor((Math.max(e.xs[i], e.xs[i + 1]) + r) / cs), z0 = Math.floor((Math.min(e.zs[i], e.zs[i + 1]) - r) / cs), z1 = Math.floor((Math.max(e.zs[i], e.zs[i + 1]) + r) / cs);
+    for (let gx = x0; gx <= x1; gx++) for (let gz = z0; gz <= z1; gz++) { const k = gx * 65536 + gz; let a = SG.get(k); if (!a) SG.set(k, a = []); a.push(e.i, i); } } }
+  DRIVE.SG = SG;
+}
+function laneIn(x, z, y0, y1, r) {
+  const SG = DRIVE.SG; if (!SG) return -1e9; const a = SG.get(Math.floor(x / LANE_CS) * 65536 + Math.floor(z / LANE_CS)); if (!a) return -1e9; const E = DRIVE.E; let best = -1e9;
+  for (let j = 0; j < a.length; j += 2) { const e = E[a[j]], i = a[j + 1], ax = e.xs[i], az = e.zs[i], dx = e.xs[i + 1] - ax, dz = e.zs[i + 1] - az, l2 = dx * dx + dz * dz || 1;
+    const t = clamp(((x - ax) * dx + (z - az) * dz) / l2, 0, 1), y = e.ys[i] + (e.ys[i + 1] - e.ys[i]) * t; if (y < y0 - 4.6 || y > y1 + .3) continue;
+    const p = e.hw + r - Math.hypot(x - ax - dx * t, z - az - dz * t); if (p > best) best = p; }
+  return best;
+}
+/* does a box (centre x,z, base y, size w x h x d, turned by yaw) stand in the driving space? checks its corners, edges and middle */
+function boxInLane(x, y, z, w, h, d, yaw, r) {
+  if (!DRIVE.SG) return false; const c = Math.cos(yaw), s = Math.sin(yaw), nw = Math.max(1, Math.ceil(w / 3)), nd = Math.max(1, Math.ceil(d / 3));
+  for (let i = 0; i <= nw; i++) for (let j = 0; j <= nd; j++) { const lx = (i / nw - .5) * w, lz = (j / nd - .5) * d; if (laneIn(x + c * lx - s * lz, z + s * lx + c * lz, y, y + h, r) > 0) return true; }
+  return false;
+}
 /* the largest crown (its lumpy outline reaches ~1.35x the scale) that stays a metre clear of every road; 0 = no room for a tree here */
 const crownFit = (x, z, sc) => { const k = kerbDist(x, z); if (k >= 30) return sc; const fit = Math.min(sc, (k - 1) / 1.35); return fit >= 1.1 ? fit : 0; };
 /* lower surveyed buildings to the ground (in every level of detail and the shadow pass), and drop their near-tier details */
@@ -3366,6 +3427,26 @@ function buildDriveGraph(H) {
     for (const e of E) { if (e.tun || e.c > 5) continue; for (let i = 0; i <= e.n; i++) { const j = Math.min(i + 1, e.n), k = Math.max(i - 1, 0); let dx = e.xs[j] - e.xs[k], dz = e.zs[j] - e.zs[k]; const l = Math.hypot(dx, dz) || 1; dx /= l; dz /= l; const o = Math.max(e.hw - .4, .5);
       for (const t of [0, 1, -1]) for (const ri of at(e.xs[i] + dz * o * t, e.ys[i], e.zs[i] - dx * o * t, [])) { const b = CITY.recs[ri]; if (!b.skip && b.top - b.base < 30) lower.add(ri); } } }
     flattenRecs(lower);
+    /* side streets: where a building stands in one side of the carriageway and the other side is free, ease the street's line away
+       from it (up to 3.5 m, tapering to nothing at the junctions so the network stays joined) */
+    let shifted = 0;
+    for (const e of E) { if (e.tun || e.br || e.c < 6 || e.n < 3 || e.L < 14) continue; const off = new Float32Array(e.n + 1), NX = new Float32Array(e.n + 1), NZ = new Float32Array(e.n + 1); let any = false;
+      for (let i = 0; i <= e.n; i++) { const j = Math.min(i + 1, e.n), k = Math.max(i - 1, 0); let dx = e.xs[j] - e.xs[k], dz = e.zs[j] - e.zs[k]; const l = Math.hypot(dx, dz) || 1; NX[i] = dz / l; NZ[i] = -dx / l;
+        const reach = e.hw + 3, y = e.ys[i] + 1; let L = reach, Rr = reach;
+        for (let o = .25; o < reach && (L === reach || Rr === reach); o += .5) { if (Rr === reach && at(e.xs[i] + NX[i] * o, y, e.zs[i] + NZ[i] * o, []).length) Rr = o; if (L === reach && at(e.xs[i] - NX[i] * o, y, e.zs[i] - NZ[i] * o, []).length) L = o; }
+        if (L >= e.hw + .3 && Rr >= e.hw + .3) continue;
+        const s = i * e.st; off[i] = clamp((Rr - L) / 2, -3.5, 3.5) * sm(2, 10, s) * sm(2, 10, e.L - s); if (Math.abs(off[i]) > .1) any = true; }
+      if (!any) continue;
+      /* widen each push to its neighbours, then ease it so the street bends gently round the building */
+      { const q = off.slice(); for (let i = 0; i <= e.n; i++) { let m = q[i]; for (let k = Math.max(0, i - 2); k <= Math.min(e.n, i + 2); k++) if (Math.abs(q[k]) > Math.abs(m)) m = q[k]; off[i] = m; } }
+      for (let p = 0; p < 3; p++) { const q = off.slice(); for (let i = 1; i < e.n; i++) off[i] = (q[i - 1] + 2 * q[i] + q[i + 1]) / 4; }
+      for (let i = 1; i < e.n; i++) { const s = i * e.st, w = sm(2, 10, s) * sm(2, 10, e.L - s); e.xs[i] += NX[i] * off[i] * w; e.zs[i] += NZ[i] * off[i] * w; }
+      shifted++; }
+    /* sheds, canopies and kiosks (under 8 m) still standing in a side street's lanes are lowered, as on the main roads */
+    { const low = new Set();
+      for (const e of E) { if (e.tun || e.c < 6) continue; for (let i = 0; i <= e.n; i++) { const j = Math.min(i + 1, e.n), k = Math.max(i - 1, 0); let dx = e.xs[j] - e.xs[k], dz = e.zs[j] - e.zs[k]; const l = Math.hypot(dx, dz) || 1; dx /= l; dz /= l; const o = (e.hw - .3) * .6;
+        for (const t of [0, 1, -1]) for (const ri of at(e.xs[i] + dz * o * t, e.ys[i] + 1, e.zs[i] - dx * o * t, [])) { const b = CITY.recs[ri]; if (!b.skip && b.top - b.base < 8) low.add(ri); } } }
+      flattenRecs(low); DRIVE.shifted = shifted; DRIVE.lowered2 = low.size; }
     /* what is left in the way: lanes that run into a building are taken out; main roads through a tall one become covered there */
     let dropped = 0, cov = 0;
     for (const e of E) { if (e.tun) continue; const inn = new Uint8Array(e.n + 1); let run = 0, best = 0, any = 0; for (let i = 0; i <= e.n; i++) { if (at(e.xs[i], e.ys[i], e.zs[i], []).length) { inn[i] = 1; any++; run += e.st; best = Math.max(best, run); } else run = 0; }
@@ -3380,6 +3461,7 @@ function buildDriveGraph(H) {
   DRIVE.N = N; DRIVE.E = E;
   /* every street sample in a spatial hash, so a tree can ask how far it stands from the nearest kerb */
   const RH = new Map(); for (const e of E) { if (e.tun || e.dead) continue; for (let i = 0; i <= e.n; i++) { const k = Math.floor(e.xs[i] / 16) * 65536 + Math.floor(e.zs[i] / 16); let a = RH.get(k); if (!a) RH.set(k, a = []); a.push(e.xs[i], e.zs[i], e.hw, e.ys[i]); } } DRIVE.RH = RH;
+  buildLaneHash();
   /* every drivable street joins the occupancy map: no trees on it (bit 1), only small ones within a crown's width of it (bit 32) */
   for (const e of E) { if (e.tun || e.dead) continue; for (let i = 0; i <= e.n; i++) { if (!e.br) occDisc(e.xs[i], e.zs[i], e.hw + 1.2, 1); occDisc(e.xs[i], e.zs[i], e.hw + 7, 32); } }
   NEAR.fx = NEAR.fz = 1e9;   /* re-plant the near trees */
@@ -3518,30 +3600,75 @@ function dSelect(i) {
   DRIVE.meshes = DRIVE.meshes || []; if (!DRIVE.meshes[i]) DRIVE.meshes[i] = buildVehicle(V); loadVehicleModel(i);
   for (const m of DRIVE.meshes) if (m) m.visible = false; DRIVE.mesh = DRIVE.meshes[i]; DRIVE.mesh.visible = DRIVE.on;
   try { localStorage.setItem('hk-vehicle', V.id); } catch (e) { /* storage blocked */ }
-  document.querySelectorAll('#gList .gc').forEach((b, k) => { b.classList.toggle('on', k === i); if (k === i && DRIVE.garage) b.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' }); });
+  document.getElementById('gName').textContent = V.name; document.getElementById('gBlurb').textContent = V.blurb;
+  document.querySelectorAll('#gDots button').forEach((b, k) => { b.classList.toggle('on', k === i); b.setAttribute('aria-selected', k === i ? 'true' : 'false'); });
   if (DRIVE.car) driveStep(0);
 }
+function gStep(s) { const g = document.getElementById('garage'); g.dataset.step = s; DRIVE.gStep = s; if (s === 'dest') gFillDest(); }
 function openGarage() {
   if (DRIVE.started && DRIVE.car) DRIVE.hereXZ = [DRIVE.car.x, DRIVE.car.z]; DRIVE.started = false; document.querySelectorAll('#gStart .gs').forEach(b => b.classList.toggle('on', b.dataset.id === 'here'));
-  DRIVE.garage = true; DRIVE.joy = null; dJoyDraw(); if (DRIVE.car) { DRIVE.car.v = 0; } document.body.classList.add('garage'); ctlHint.hide();
-  dSelect(DRIVE.vi ?? 0);
+  DRIVE.garage = true; DRIVE.joy = null; dJoyDraw(); if (DRIVE.car) { DRIVE.car.v = 0; } document.body.classList.add('garage'); ctlHint.hide(); navClose();
+  gStep('ride'); dSelect(DRIVE.vi ?? 0);
 }
-function closeGarage() {
+/* leave the start screen: free driving, or (dest given) the car drives itself there */
+function closeGarage(dest) {
   DRIVE.garage = false; DRIVE.started = true; document.body.classList.remove('garage');
+  if (dest) { setAuto(true); navStart(dest); ctlHint.first = false; ctlHint.show(['Driving you to ' + dest.name, COARSE ? 'Steer to turn off' : '← → to turn off', 'Auto to take over'], 7000); return; }
+  setAuto(false); navStop();
   ctlHint.first = true; ctlHint.show(COARSE ? ['Hold anywhere to drive', 'Slide to steer', 'Pull back to brake'] : ['↑ drive', '↓ brake', '← → steer', 'U turn round', 'Esc leave'], 9000);
 }
-function initGarage() {
-  const L = document.getElementById('gList'); let saved = null; try { saved = localStorage.getItem('hk-vehicle'); } catch (e) { /* storage blocked */ }
-  DRIVE.vi = Math.max(0, VEHICLES.findIndex(v => v.id === saved));
-  VEHICLES.forEach((V, i) => { const b = document.createElement('button'); b.className = 'gc'; b.type = 'button';
-    const bar = (lab, v) => `<span class="st"><i>${lab}</i><u><s style="width:${Math.round(clamp(v, .08, 1) * 100)}%"></s></u></span>`;
-    b.innerHTML = `<b></b><em></em>`;
-    b.querySelector('b').textContent = V.name; b.querySelector('em').textContent = V.blurb; b.onclick = () => { if (DRIVE.vi === i) closeGarage(); else dSelect(i); }; L.appendChild(b); });
-  const GS0 = document.getElementById('gStart'); for (const S of STARTS) { const b = document.createElement('button'); b.type = 'button'; b.className = 'gs'; b.dataset.id = S.id; b.textContent = S.name; b.onclick = () => dStart(S.id); GS0.appendChild(b); }
-  document.getElementById('gGo').onclick = closeGarage; document.getElementById('gPrev').onclick = () => dSelect(DRIVE.vi - 1); document.getElementById('gNext').onclick = () => dSelect(DRIVE.vi + 1);
-  document.getElementById('dCar').onclick = openGarage;
-  addEventListener('keydown', e => { if (!DRIVE.on || !DRIVE.garage) return; if (e.code === 'ArrowLeft') dSelect(DRIVE.vi - 1); if (e.code === 'ArrowRight') dSelect(DRIVE.vi + 1); if (e.code === 'Enter' || e.code === 'Space') { e.preventDefault(); closeGarage(); } });
+function gFillDest() { const L = document.getElementById('gDest'); L.innerHTML = ''; placeList(L, p => closeGarage(p)); L.parentNode.scrollTop = 0; }
+/* destinations: the start places make good long drives, so those come first; then everything, nearest first (not where you already are) */
+function placeList(L, pick) {
+  const head = t => { const h = document.createElement('div'); h.className = 'gsub'; h.textContent = t; L.appendChild(h); };
+  const btn = (p, cls) => { const b = document.createElement('button'); b.className = 'nv' + (cls ? ' ' + cls : ''); b.type = 'button'; b.innerHTML = '<b></b><em></em>'; b.firstChild.textContent = p.name;
+    b.lastChild.textContent = (cls ? '' : p.kind + ' · ') + (p.d < 1000 ? Math.round(p.d / 10) * 10 + ' m' : (p.d / 1000).toFixed(1) + ' km'); b.onclick = () => pick(p); L.appendChild(b); };
+  const car = DRIVE.car, all = navPlaces().filter(p => p.d > 150), fav = [];
+  for (const S of STARTS) { const s = S.site && SITE(S.site); if (!s) continue; const d = Math.hypot(s[0] - car.x, s[1] - car.z); if (d > 1200) fav.push({ name: S.name, x: s[0], z: s[1], kind: 'Place', d }); }
+  fav.sort((a, b) => a.d - b.d);
+  if (fav.length) { head('Scenic drives'); fav.forEach(p => btn(p, 'fav')); head('All places'); }
+  all.forEach(p => btn(p));
 }
+function initGarage() {
+  let saved = null; try { saved = localStorage.getItem('hk-vehicle'); } catch (e) { /* storage blocked */ }
+  DRIVE.vi = Math.max(0, VEHICLES.findIndex(v => v.id === saved));
+  const dots = document.getElementById('gDots');
+  VEHICLES.forEach((V, i) => { const b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-label', V.name); b.onclick = () => dSelect(i); dots.appendChild(b); });
+  const GS0 = document.getElementById('gStart'); for (const S of STARTS) { const b = document.createElement('button'); b.type = 'button'; b.className = 'gs'; b.dataset.id = S.id; b.textContent = S.name; b.onclick = () => dStart(S.id); GS0.appendChild(b); }
+  const q = id => document.getElementById(id);
+  q('gGo').onclick = () => gStep('where'); q('gPrev').onclick = () => dSelect(DRIVE.vi - 1); q('gNext').onclick = () => dSelect(DRIVE.vi + 1);
+  q('gBack').onclick = () => gStep('ride'); q('gBack2').onclick = () => gStep('where'); q('gFree').onclick = () => closeGarage(); q('gAuto').onclick = () => gStep('dest');
+  q('dCar').onclick = openGarage; q('dAuto').onclick = () => { setAuto(!DRIVE.auto); dMsg(DRIVE.auto ? 'Self-driving' : 'You are driving'); };
+  /* swipe across the view to change vehicle */
+  { let sx = null; addEventListener('pointerdown', e => { if (DRIVE.on && DRIVE.garage && DRIVE.gStep === 'ride' && e.target.tagName === 'CANVAS') sx = e.clientX; });
+    addEventListener('pointerup', e => { if (sx === null) return; const dx = e.clientX - sx; sx = null; if (Math.abs(dx) > 40) dSelect(DRIVE.vi + (dx < 0 ? 1 : -1)); }); }
+  addEventListener('keydown', e => { if (!DRIVE.on || !DRIVE.garage) return; const s = DRIVE.gStep;
+    if (s === 'ride' && e.code === 'ArrowLeft') dSelect(DRIVE.vi - 1); if (s === 'ride' && e.code === 'ArrowRight') dSelect(DRIVE.vi + 1);
+    if ((e.code === 'Enter' || e.code === 'Space') && document.activeElement && document.activeElement.tagName === 'BUTTON') return;   /* a focused button clicks itself */
+    if (e.code === 'Enter' || e.code === 'Space') { e.preventDefault(); if (s === 'ride') gStep('where'); else if (s === 'where') closeGarage(); }
+    if (e.code === 'Backspace') { if (s === 'where') gStep('ride'); else if (s === 'dest') gStep('where'); } });
+}
+const AUTO_KMH = [150, 140, 110, 100, 90, 80, 65, 45, 40];   /* self-driving cruise by road class: expressway ... service lane */
+/* the self-driving pace: fast. Flat out for the road, braking hard and late only for bends, the turn at the next junction and the
+   destination. It does not yield to traffic: anything in the way gets knocked flying. After arriving it stops and asks where next */
+function autoPilot(car, e, plan, vmax, V, dt) {
+  const sp = car.v, LAT = 7, DEC = 7; let vt = Math.min(vmax * .95, AUTO_KMH[e.c] / 3.6);
+  if (DRIVE.autoStop) { if (sp < .5) { DRIVE.autoStop = false; setAuto(false); DRIVE.autoNext = true; navOpen(); DRIVE.autoNext = true; return { thr: 0, brk: 0 }; } return { thr: 0, brk: sp > 4 ? 1 : 0 }; }
+  if (!DRIVE.nav) return { thr: 0, brk: 0 };
+  /* bends on this road up to 90 m ahead: the speed each one allows (sideways grip LAT), less what there is room to brake off before it */
+  const hd = u => dTan(e, u) + (car.d < 0 ? PI : 0);
+  for (let ahead = 10; ahead <= 90; ahead += 10) { const u1 = car.u + ahead * car.d, u0 = car.u + (ahead - 10) * car.d; if (u1 < 0 || u1 > e.L) break;
+    const k = Math.abs(wrapA(hd(u1) - hd(u0))) / 10; if (k > .003) vt = Math.min(vt, Math.sqrt(LAT / k + 2 * DEC * (ahead - 10))); }
+  /* the next junction: brake for a sharp turn, ease for a bend */
+  if (plan && plan.path && plan.left < 160) { const r = Math.abs(plan.path.rel || 0), vj = r > 1.2 ? 10 : r > .6 ? 14 : r > .3 ? 20 : 99; vt = Math.min(vt, Math.sqrt(vj * vj + 2 * DEC * Math.max(0, plan.left - 4))); }
+  else if (plan && plan.dead) vt = Math.min(vt, Math.sqrt(2 * DEC * Math.max(0, plan.left - 4)));
+  /* the destination */
+  const left = navLeft(); vt = Math.min(vt, Math.sqrt(2 * 5 * Math.max(0, left - 6)) + 2);
+  if (sp < vt - .5) return { thr: 1, brk: 0 };
+  if (sp > vt + 1.5) return { thr: 0, brk: 1 };
+  return { thr: .5, brk: 0 };
+}
+function setAuto(on) { DRIVE.auto = !!on; const b = document.getElementById('dAuto'); if (b) b.classList.toggle('on', DRIVE.auto); }
 const dPos = (e, u) => { const f = clamp(u / e.st, 0, e.n - 1e-4), i = Math.floor(f), t = f - i; return [lerp(e.xs[i], e.xs[i + 1], t), lerp(e.ys[i], e.ys[i + 1], t), lerp(e.zs[i], e.zs[i + 1], t)]; };
 const dTan = (e, u) => { const i = clamp(Math.floor(u / e.st), 0, e.n - 1); return Math.atan2(e.zs[i + 1] - e.zs[i], e.xs[i + 1] - e.xs[i]); };
 const wrapA = a => ((a % TAU) + TAU + PI) % TAU - PI;
@@ -3655,7 +3782,7 @@ function navCheck() {
   const gN = DRIVE.N[R.goal];
   if (Math.hypot(car.x - R.dest.x, car.z - R.dest.z) < 45 || (R.k >= R.steps.length && gN && Math.hypot(car.x - gN.x, car.z - gN.z) < 30)) navArrive();
 }
-function navArrive() { const R = DRIVE.nav; if (!R) return; dMsg('You have arrived: ' + R.dest.name); navStop(); }
+function navArrive() { const R = DRIVE.nav; if (!R) return; dMsg('You have arrived: ' + R.dest.name); navStop(); if (DRIVE.auto) DRIVE.autoStop = true; }
 function navLeft() { const R = DRIVE.nav, car = DRIVE.car, E = DRIVE.E; if (!R) return 0; const e = E[car.e]; let m = car.d > 0 ? e.L - car.u : car.u; for (let k = R.k; k < R.steps.length; k++) m += E[R.steps[k].c].L; return m; }
 /* the route as moving chevrons on the road, in the lane you drive in */
 function navMesh() {
@@ -3689,12 +3816,16 @@ function navPlaces() {
 function navOpen() {
   const L = document.getElementById('navL'); L.innerHTML = '';
   if (DRIVE.nav) { const b = document.createElement('button'); b.className = 'nv stop'; b.textContent = 'Stop navigation'; b.onclick = () => { navStop(); navClose(); }; L.appendChild(b); }
-  for (const p of navPlaces()) { const b = document.createElement('button'); b.className = 'nv'; b.innerHTML = '<b></b><em></em>'; b.firstChild.textContent = p.name; b.lastChild.textContent = p.kind + ' · ' + (p.d < 1000 ? Math.round(p.d / 10) * 10 + ' m' : (p.d / 1000).toFixed(1) + ' km');
-    b.onclick = () => { navClose(); navStart(p); }; L.appendChild(b); }
+  /* drive there yourself, or let the car drive */
+  if (DRIVE.navAuto === undefined || DRIVE.autoNext) DRIVE.navAuto = DRIVE.auto || !!DRIVE.autoNext;
+  { const seg = document.createElement('div'); seg.className = 'nvseg'; for (const [lab, v] of [["I'll drive", false], ['Drive me', true]]) { const b = document.createElement('button'); b.type = 'button'; b.className = 'nvm' + (DRIVE.navAuto === v ? ' on' : ''); b.textContent = lab;
+      b.onclick = () => { DRIVE.navAuto = v; seg.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); }; seg.appendChild(b); } L.appendChild(seg); }
+  placeList(L, p => { navClose(); DRIVE.autoNext = false; setAuto(DRIVE.navAuto); navStart(p); }); L.scrollTop = 0;
+  document.querySelector('#navP .nh b').textContent = DRIVE.autoNext ? 'Where next?' : 'Where to?';
   document.body.classList.add('navopen'); DRIVE.joy = null; dJoyDraw();
 }
-function navClose() { document.body.classList.remove('navopen'); }
-function dHudNav() { const el = document.getElementById('dGo'); if (!el) return; const R = DRIVE.nav; el.classList.toggle('show', !!R); document.getElementById('dNavB').classList.toggle('on', !!R); if (!R) return;
+function navClose() { document.body.classList.remove('navopen'); DRIVE.autoNext = false; }
+function dHudNav() { const el = document.getElementById('dGo'); if (!el) return; const R = DRIVE.nav; el.classList.toggle('show', !!R); document.getElementById('dNavB').classList.toggle('on', !!R); document.body.classList.toggle('navving', !!R); if (!R) return;
   const m = navLeft(); el.lastChild.textContent = R.dest.name + ' · ' + (m < 1000 ? Math.round(m / 10) * 10 + ' m' : (m / 1000).toFixed(1) + ' km'); }
 function dSpawn(x, z, names) {
   let best = null; for (const e of DRIVE.E) { if (!e.main || e.tun || e.dead) continue; const pen = names ? (names.includes(DRIVE.names[e.nm]) ? 0 : 900) : (e.c >= 8 ? 120 : e.c >= 6 ? 30 : 0); for (let i = 0; i <= e.n; i += 2) { const d = Math.hypot(e.xs[i] - x, e.zs[i] - z) + pen; if (!best || d < best.d) best = { d, e, u: i * e.st }; } }
@@ -3708,13 +3839,16 @@ function driveStep(dt) {
   const car = DRIVE.car; if (!car) return; const K = DRIVE.k, E = DRIVE.E;
   /* input: keys add to the touch stick */
   const kt = (keys.ArrowUp || keys.KeyW ? 1 : 0), kb = (keys.ArrowDown || keys.KeyS ? 1 : 0), ks = (keys.ArrowRight || keys.KeyD ? 1 : 0) - (keys.ArrowLeft || keys.KeyA ? 1 : 0);
-  const G0 = DRIVE.garage, V = DRIVE.V || VEHICLES[0], j = G0 ? null : DRIVE.joy, thr = G0 ? 0 : Math.max(kt, j ? j.thr : 0), brk = G0 ? 0 : Math.max(kb, j ? j.brk : 0), steer = G0 ? 0 : clamp(ks + (j ? j.steer : 0), -1, 1);
+  const G0 = DRIVE.garage, V = DRIVE.V || VEHICLES[0], j = G0 ? null : DRIVE.joy, steer = G0 ? 0 : clamp(ks + (j ? j.steer : 0), -1, 1);
+  let thr = G0 ? 0 : Math.max(kt, j ? j.thr : 0), brk = G0 ? 0 : Math.max(kb, j ? j.brk : 0);
   let plan = G0 ? null : dPlan(); if (!G0) { const had = DRIVE.req; dRequest(steer, dt, plan); if (DRIVE.req !== had) plan = dPlan(); }
   /* within 25 m of the node the choice is locked (a new turn request can still change it) */
   if (plan && !plan.queued && plan.path && plan.left < 25 && !(DRIVE.lock && DRIVE.lock.nd === plan.nd && DRIVE.lock.e === car.e && (!DRIVE.req || DRIVE.req.t <= DRIVE.lock.t))) DRIVE.lock = { nd: plan.nd, e: car.e, t: ST.t, plan };
   /* speed: throttle, brakes, drag, rolling, and the hill */
   let e = E[car.e]; const grade = (() => { const p0 = dPos(e, car.u - 3 * car.d), p1 = dPos(e, car.u + 3 * car.d); return (p1[1] - p0[1]) / 6; })();
   const vmax = V.top * [1, 1, .85, .85, .8, .85, .62, .45, .45][e.c];
+  /* self-driving: the car sets its own pace (your brake or throttle still wins, steering still turns) */
+  if (!G0 && (DRIVE.auto || DRIVE.autoStop) && !thr && !brk) { const ap = autoPilot(car, e, plan, vmax, V, dt); thr = ap.thr; brk = ap.brk; }
   let a = thr * (car.v < vmax ? V.acc * (1 - car.v / (vmax * 1.08)) + .6 : -2) - grade * 9.8 * .55 - V.acc * .45 / (V.top * V.top) * car.v * Math.abs(car.v) - (car.v > 0 ? .35 : car.v < 0 ? -.35 : 0);
   DRIVE.stopT = brk && Math.abs(car.v) < .5 ? (DRIVE.stopT || 0) + dt : 0;
   if (brk) a = car.v > .4 ? -11 : DRIVE.stopT > .6 && car.v > -4 ? -3.2 : car.v < -.4 ? 0 : -car.v / Math.max(dt, .001);   /* brake to a stop; keep holding to back up */
@@ -3754,7 +3888,9 @@ function driveStep(dt) {
   if (G0) cam.az += dt * .35; else cam.az += wrapA(car.yaw + PI - cam.az) * (1 - Math.exp(-dt * 4));
   const fwd = G0 ? 0 : V.len * .6, big = V.h > 2.4;
   const shk = (DRIVE.shake = Math.max(0, (DRIVE.shake || 0) - dt * 2.5)) * .6; cam.tx = car.x + hx * fwd + (Math.random() - .5) * shk; cam.tz = car.z + hz * fwd + (Math.random() - .5) * shk; cam.ty = (car.yR ?? car.y) + V.h * (G0 ? .45 : .75) - groundY(cam.tx, cam.tz);
-  cam.dist = lerp(cam.dist, (G0 ? 1.05 : 1) * (7 + V.len * 1.3 + Math.min(V.h, 3) * 1.2) + sp * .32 + DRIVE.zoom, 1 - Math.exp(-dt * 3)); cam.pol = lerp(cam.pol, (G0 ? 72 : big ? 74 : 76) * RAD, 1 - Math.exp(-dt * 3)); cam.fov = lerp(cam.fov, G0 ? 46 : 56 + sp * .35, 1 - Math.exp(-dt * 2));
+  /* while choosing where to start and where to go, the camera rises to show the place round the car */
+  const wide = G0 && DRIVE.gStep && DRIVE.gStep !== 'ride';
+  cam.dist = lerp(cam.dist, wide ? 230 : (G0 ? 1.05 : 1) * (7 + V.len * 1.3 + Math.min(V.h, 3) * 1.2) + sp * .32 + DRIVE.zoom, 1 - Math.exp(-dt * (wide ? 1.6 : 3))); cam.pol = lerp(cam.pol, (wide ? 48 : G0 ? 72 : big ? 74 : 76) * RAD, 1 - Math.exp(-dt * 3)); cam.fov = lerp(cam.fov, G0 ? 46 : 56 + sp * .35, 1 - Math.exp(-dt * 2));
   cam.vaz = cam.vpol = cam.vx = cam.vz = cam.vzoom = 0;
   /* the next junction, as a nav app would show it */
   { const P = plan || dPlan(); DRIVE.plan = P && P.path && P.left < 120 && (P.choices > 1 || P.queued || Math.abs(P.path.rel) > .5 || DRIVE.nav) ? { c: P.path.exit, rel: P.path.rel } : null; DRIVE.planLeft = P ? P.left : 0; }
@@ -3890,7 +4026,7 @@ async function enterDrive0() {
   document.body.classList.add('driving'); DYN.uNoNear.value = 12; cam.dist = 30; openGarage(); dStart(DRIVE.pendingStart);
 }
 function exitDrive() {
-  if (!DRIVE.on) return; DRIVE.on = false; DRIVE.joy = null; dJoyDraw(); LABELS.on = DRIVE.labelsWas; document.body.classList.remove('driving', 'garage'); DRIVE.garage = false; if (DRIVE.mesh) DRIVE.mesh.visible = false; DYN.uNoNear.value = 0; HIT.slots = []; uploadHits(); navStop(); navClose();
+  if (!DRIVE.on) return; DRIVE.on = false; DRIVE.joy = null; dJoyDraw(); LABELS.on = DRIVE.labelsWas; document.body.classList.remove('driving', 'garage'); DRIVE.garage = false; if (DRIVE.mesh) DRIVE.mesh.visible = false; DYN.uNoNear.value = 0; HIT.slots = []; uploadHits(); navStop(); navClose(); setAuto(false); DRIVE.autoStop = false;
   const c = DRIVE.car; flyTo({ tx: c.x, tz: c.z, dist: 700, pol: 62 * RAD, az: cam.az, fov: 40, ty: 0, dur: 2.2 });
 }
 function dUturn() { const c = DRIVE.car; if (!c) return; c.d = -c.d; c.lat = -c.lat; c.v = 0; c.yaw += PI; DRIVE.req = null; DRIVE.queue = []; DRIVE.lock = null; if (DRIVE.nav) navStart(DRIVE.nav.dest); }
