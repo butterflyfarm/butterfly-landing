@@ -10,7 +10,7 @@
   canvas#c{display:block;width:100vw;height:100vh;touch-action:none;cursor:grab}
   canvas#c.drag{cursor:grabbing}
   body.photo canvas#c{cursor:none}
-  #ui{position:fixed;left:50%;bottom:max(12px,env(safe-area-inset-bottom));transform:translateX(-50%);
+  #ui{position:fixed;right:max(10px,env(safe-area-inset-right));bottom:calc(max(12px,env(safe-area-inset-bottom)) + 16px);
     display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;padding:6px 10px;
     background:rgba(9,20,28,.58);border:1px solid rgba(255,196,128,.28);border-radius:9px;
     -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
@@ -40,12 +40,16 @@
   #ui input[type=range]::-moz-range-thumb{width:11px;height:11px;border-radius:50%;background:#ffc98a;border:1px solid #5a3a12;cursor:pointer}
   /* the bar: Places and More. (Drive is the big button of its own; the hour is set on the clock) */
   #ui>button{padding:8px 16px;font-size:11.5px;font-weight:700;letter-spacing:.14em}
-  #more{position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);display:none;flex-direction:column;gap:9px;min-width:240px;padding:11px 12px;background:rgba(9,20,28,.92);border:1px solid rgba(255,196,128,.32);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+  #more{position:absolute;right:0;bottom:calc(100% + 8px);display:none;flex-direction:column;gap:9px;min-width:240px;padding:11px 12px;background:rgba(9,20,28,.92);border:1px solid rgba(255,196,128,.32);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
   body.menu #more{display:flex} body.menu #ui{opacity:1;z-index:8} body.menu #hint{opacity:0}
   #more .mr{display:flex;gap:6px;align-items:center}
   #more .mr button{flex:1;white-space:nowrap;padding:7px 10px}
   #more label.mr{justify-content:space-between;gap:12px} #more label.mr input{flex:1;width:auto}
   #bQ::before{content:"Detail: "}
+  #tourS{position:fixed;z-index:7;left:50%;top:max(12px,env(safe-area-inset-top));transform:translate(-50%,-8px);max-width:calc(100vw - 150px);display:flex;align-items:center;gap:10px;padding:9px 12px 9px 16px;border-radius:20px;
+    border:1px solid rgba(255,196,128,.45);background:rgba(9,20,28,.86);color:#fff4df;font:inherit;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .35s,transform .35s;touch-action:manipulation}
+  #tourS.on{opacity:1;pointer-events:auto;transform:translate(-50%,0)} #tourS span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis} #tourS i{font-style:normal;opacity:.7}
+  body.photo #tourS,body.driving #tourS{display:none}
   /* Photo: a camera under the clock. In photo mode everything else goes; the button stays, faint, to come back */
   #bCam{position:fixed;z-index:6;right:calc(max(12px,env(safe-area-inset-right)) + 12px);top:calc(max(12px,env(safe-area-inset-top)) + 228px);width:44px;height:44px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;
     color:#f3d9b4;background:rgba(9,20,28,.72);border:1px solid rgba(255,196,128,.4);cursor:pointer;touch-action:manipulation;transition:opacity .4s}
@@ -118,23 +122,27 @@
   #zm button+button{border-top:1px solid rgba(255,196,128,.22)}
   #zm button:hover{background:rgba(255,190,110,.2)}
   body.photo #nav,body.photo #hint{opacity:0;pointer-events:none}
-  #hint{position:fixed;left:50%;bottom:calc(max(12px,env(safe-area-inset-bottom)) + 50px);transform:translate(-50%,8px);box-sizing:border-box;max-width:calc(100vw - 32px);width:max-content;
+  #hint{position:fixed;left:50%;bottom:calc(max(12px,env(safe-area-inset-bottom)) + 96px);transform:translate(-50%,8px);box-sizing:border-box;max-width:calc(100vw - 32px);width:max-content;
     padding:7px 6px;border-radius:18px;background:rgba(9,20,28,.72);border:1px solid rgba(255,206,140,.42);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
     color:#fff4df;font-size:11px;letter-spacing:.1em;text-transform:uppercase;line-height:1.6;text-align:center;opacity:0;pointer-events:none;transition:opacity .6s,transform .6s}
   #hint.show{opacity:1;transform:translate(-50%,0)}
   #hint span{display:inline-block;white-space:nowrap;margin:0 .75em}
-  #bigDrive{position:fixed;z-index:5;left:max(16px,env(safe-area-inset-left));bottom:calc(max(14px,env(safe-area-inset-bottom)) + 2px);display:flex;align-items:center;gap:12px;padding:8px 18px 8px 8px;
+  /* the two big buttons, side by side at the foot of the view: Drive, and Places */
+  #bigs{position:fixed;z-index:5;left:max(16px,env(safe-area-inset-left));bottom:calc(max(14px,env(safe-area-inset-bottom)) + 2px);display:flex;align-items:flex-end;gap:12px;transition:opacity .6s}
+  .big{display:flex;align-items:center;gap:12px;padding:8px 18px 8px 8px;
     border-radius:44px;border:1px solid rgba(255,214,160,.85);background:rgba(9,20,28,.72);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:#fff4df;font-family:inherit;cursor:pointer;
-    box-shadow:0 6px 22px rgba(0,0,0,.45);transition:transform .2s,opacity .6s;touch-action:manipulation;text-align:left;opacity:0;pointer-events:none}
+    box-shadow:0 6px 22px rgba(0,0,0,.45);transition:transform .2s,opacity .6s;touch-action:manipulation;text-align:left}
+  #bigDrive{opacity:0;pointer-events:none}
   #bigDrive.ready{opacity:1;pointer-events:auto}
-  #bigDrive:hover{transform:translateY(-2px)}
-  #bigDrive i{position:relative;flex:none;width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#ffb054;color:#2a1606}
+  .big:hover{transform:translateY(-2px)}
+  .big i{position:relative;flex:none;width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#ffb054;color:#2a1606}
+  #bPlaces i{background:#4fc3f2;color:#05243a} #bPlaces{border-color:rgba(160,220,250,.8)}
   #bigDrive i::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid rgba(255,176,84,.75);animation:bdPulse 2.2s ease-out infinite}
   @keyframes bdPulse{0%{transform:scale(.9);opacity:.9}100%{transform:scale(1.35);opacity:0}}
-  #bigDrive span{display:flex;flex-direction:column;line-height:1.15}
-  #bigDrive b{font-size:20px;font-weight:600;letter-spacing:.22em;text-transform:uppercase}
-  #bigDrive em{font-style:normal;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;opacity:.75}
-  body.driving #bigDrive,body.photo #bigDrive{opacity:0;pointer-events:none}
+  .big span{display:flex;flex-direction:column;line-height:1.15}
+  .big b{font-size:20px;font-weight:600;letter-spacing:.22em;text-transform:uppercase}
+  .big em{font-style:normal;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;opacity:.75}
+  body.driving #bigs,body.photo #bigs,body.places #bigs{opacity:0;pointer-events:none}
   @media (prefers-reduced-motion:reduce){#bigDrive i::after{animation:none;opacity:0}}
   #drv{display:none}
   body.driving #drv{display:block}
@@ -304,17 +312,17 @@
     #mini,#mmC{width:118px}
     #mmC{height:118px}
     #mini{top:calc(max(10px,env(safe-area-inset-top)) + 62px)}
-    #bigDrive{bottom:calc(max(10px,env(safe-area-inset-bottom)) + 44px);padding:6px 14px 6px 6px;gap:9px}
-    #bigDrive i{width:50px;height:50px}
-    #bigDrive b{font-size:17px}
-    #bigDrive em{font-size:9px}
+    #bigs{bottom:calc(max(10px,env(safe-area-inset-bottom)) + 66px);flex-direction:column-reverse;align-items:flex-start;gap:9px}   /* (a phone: Places above Drive) */
+    .big{padding:6px 14px 6px 6px;gap:9px}
+    .big i{width:50px;height:50px}
+    .big b{font-size:17px}
+    .big em{font-size:9px}
     #dSt{font-size:12px;letter-spacing:.07em;padding:6px 10px}
     #dTop{gap:8px}
     #hint{bottom:calc(max(12px,env(safe-area-inset-bottom)) + 62px);font-size:10px}
-    body:not(.driving) #hint{bottom:calc(max(10px,env(safe-area-inset-bottom)) + 122px)}   /* above the big Drive button */
-    #ui{left:auto;right:max(8px,env(safe-area-inset-right));transform:none;gap:6px;padding:5px;opacity:.92;flex-wrap:nowrap}
+    body:not(.driving) #hint{bottom:calc(max(10px,env(safe-area-inset-bottom)) + 210px)}   /* above the two big buttons */
+    #ui{right:max(8px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));gap:6px;padding:5px;opacity:.92;flex-wrap:nowrap}
     #ui>button{padding:9px 13px}
-    #more{left:auto;right:0;transform:none}
     body.menu #cr{opacity:0}
     #more .mr button{padding:9px 10px}
     #cr{right:auto;left:max(8px,env(safe-area-inset-left));bottom:max(6px,env(safe-area-inset-bottom));max-width:calc(100vw - 186px);text-align:left;line-height:1.3}   /* (clear of Places and More) */
@@ -325,7 +333,6 @@
 <body>
 <canvas id="c"></canvas>
 <div id="ui">
-  <button id="bPlaces" title="Fly to a place on the island">Places</button>
   <button id="bMore" title="Settings and extras" aria-haspopup="true">More</button>
   <div id="more">
     <div class="mr"><button id="bLabels" class="on" title="Place names on or off">Place names</button><button id="bQ" title="How much detail is drawn">High</button></div>
@@ -335,7 +342,7 @@
 </div>
 <div id="places" role="dialog" aria-label="Places"><div class="pc">
   <div class="ph"><b>Fly to a place</b><button id="plX" type="button" aria-label="Close">✕</button></div>
-  <input id="plQ" type="search" placeholder="Search a district, landmark or street" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search a district, landmark or street"><div id="plRes"></div>
+  <input id="plQ" type="search" placeholder="Search a place, street, building or address" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search a place, street, building or address"><div id="plRes"></div>
   <canvas id="plMap" aria-label="Map of the island with the places to fly to"></canvas>
   <div class="pcar"><button id="plPrev" class="parr" type="button" aria-label="Previous place">‹</button><div class="psel"><b id="plName"></b><em id="plSub"></em></div><button id="plNext" class="parr" type="button" aria-label="Next place">›</button></div>
   <div id="plDots" class="pdots"></div>
@@ -356,8 +363,9 @@
   <circle cx="34" cy="34" r="33" fill="rgba(9,20,28,.9)" stroke="rgba(255,196,128,.42)"/><circle cx="34" cy="34" r="26" fill="none" stroke="rgba(120,150,210,.30)" stroke-width="5"/><path id="tcDay" fill="none" stroke="#f0b45a" stroke-width="5" stroke-linecap="round"/>
   <path d="M34 3.5v4M34 60.5v4M3.5 34h4M60.5 34h4" stroke="rgba(243,217,180,.6)" stroke-width="1.2"/><g id="tcHand"><circle id="tcSun" cx="34" cy="8" r="6.2" fill="#ffd27a" stroke="#1a130a" stroke-width="1.4"/></g>
   <text id="tcTxt" x="34" y="38.5" text-anchor="middle">17:00</text></svg></div>
+<button id="tourS" type="button" title="End the tour" aria-live="polite"><span></span><i>✕</i></button>
 <div id="hint" aria-live="polite"></div>
-<button id="bigDrive" type="button" aria-label="Drive around Hong Kong Island"><i><svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="24" cy="24" r="4.5" fill="currentColor"/><path d="M8 21.5c5-2.6 10.4-3.6 16-3.6s11 1 16 3.6M24 28.5v11.5M20 26l-9.5 9M28 26l9.5 9" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg></i><span><b>Drive</b><em>Every street on the island</em></span></button>
+<div id="bigs"><button id="bigDrive" class="big" type="button" aria-label="Drive around Hong Kong Island"><i><svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="24" cy="24" r="4.5" fill="currentColor"/><path d="M8 21.5c5-2.6 10.4-3.6 16-3.6s11 1 16 3.6M24 28.5v11.5M20 26l-9.5 9M28 26l9.5 9" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg></i><span><b>Drive</b><em>Every street on the island</em></span></button><button id="bPlaces" class="big" type="button" aria-label="Places: search, fly or ride anywhere on the island"><i><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 4.2a2.8 2.8 0 1 1 0 5.6 2.8 2.8 0 0 1 0-5.6Z"/></svg></i><span><b>Places</b><em>Search, fly or ride there</em></span></button></div>
 <div id="drv"><div id="dTop"><button id="dExit" title="Stop driving (Esc)" aria-label="Stop driving">✕</button><button id="dNavB" title="Go somewhere" aria-label="Navigate"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 1 7 7c0 4.9-5.6 11.2-6.3 12a1 1 0 0 1-1.4 0C10.6 20.2 5 13.9 5 9a7 7 0 0 1 7-7zm0 4.2A2.8 2.8 0 1 0 12 11.8 2.8 2.8 0 0 0 12 6.2z"/></svg></button><button id="dCar" title="Change vehicle (G)" aria-label="Change vehicle"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M5 11l1.5-4.2A2 2 0 0 1 8.4 5.5h7.2a2 2 0 0 1 1.9 1.3L19 11h.5A1.5 1.5 0 0 1 21 12.5V17h-2v1.5a1 1 0 0 1-2 0V17H7v1.5a1 1 0 0 1-2 0V17H3v-4.5A1.5 1.5 0 0 1 4.5 11zm2.2 0h9.6l-1.1-3.2a.5.5 0 0 0-.5-.3H8.8a.5.5 0 0 0-.5.3zM6.5 15a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6zm11 0a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6z"/></svg></button>
   <div id="dInfo"><span id="dSt"></span><span id="dNx"><i id="dArr">↑</i><b id="dNxD"></b><em id="dNxN"></em></span><span id="dGo"><i>➤</i><em></em></span></div>
   <div id="dSide"><div id="dSpdBox"><b id="dSpd">0</b><small>km/h</small></div><button id="dU" title="Turn round (U)">U-turn</button><button id="dAuto" title="Self-driving on or off">Auto</button></div></div>
@@ -389,7 +397,7 @@
       <div class="gto"><em>To</em><b id="gToName"></b><i id="gToDist"></i></div>
       <div class="gmodes"><button id="gAuto" class="gmode auto"><b>Drive me</b><em>Sit back: the car drives itself there, fast</em><i id="gAutoBest"></i></button><button id="gFree" class="gmode"><b>I'll drive</b><em>You steer, following the route on the road</em><i id="gFreeBest"></i></button></div>
       <button id="gBack3" class="glink">‹ Pick another place</button></div></div></div>
-<div id="cr">Buildings and 3D building models: Lands Department, HKSAR Government, via <a href="https://data.gov.hk/en-data/dataset/hk-landsd-openmap-landsd-building" target="_blank" rel="noopener">DATA.GOV.HK</a> and <a href="https://3d.map.gov.hk/" target="_blank" rel="noopener">Open3Dhk</a> · map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors · elevation NASA SRTM</div>
+<div id="cr">Buildings and 3D building models: Lands Department, HKSAR Government, via <a href="https://data.gov.hk/en-data/dataset/hk-landsd-openmap-landsd-building" target="_blank" rel="noopener">DATA.GOV.HK</a> and <a href="https://3d.map.gov.hk/" target="_blank" rel="noopener">Open3Dhk</a> · map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors · addresses: <a href="https://data.gov.hk/en-data/dataset/hk-dpo-als_01-als" target="_blank" rel="noopener">Address Lookup Service</a>, HKSAR Government · elevation NASA SRTM</div>
 <script>window.__errs=[];addEventListener("error",function(e){window.__errs.push(String(e.message).slice(0,300)+" @"+e.lineno)});(function(){var ce=console.error;console.error=function(){try{window.__errs.push(Array.prototype.join.call(arguments," ").slice(0,900))}catch(e){}ce.apply(console,arguments)}})();</script>
 <script type="module">
 import * as THREE from 'three';
@@ -3281,8 +3289,8 @@ const sunVec = (azS, el) => { const a = azS * RAD, e = el * RAD; return [-Math.c
 const LIGHTS = {
   /* warm: the afternoon the page opens on. The sun is still well up (about 28 degrees), so streets and waterfront stand in sunlight and not in the
      towers' long shadows, and the light is graded gold: warm sun, warm fill from the ground, a deep sky for it to stand against */
-  warm: { sun: sunVec(40, 28), sunCol: [4.0, 2.55, 1.15], glow: [1.6, .9, .40], zen: [.09, .22, .52], horW: [1.2, .78, .42], horE: [.50, .54, .66], ambS: [.34, .33, .36], ambG: [.34, .25, .15],
-    fog: [.95, .70, .48], fogDen: 1.9e-5, water: [.03, .10, .13], night: 0, sh: 1, cloud: .46, expo: 1.08, bloom: .26 },
+  warm: { sun: sunVec(40, 28), sunCol: [4.9, 2.7, .78], glow: [2.3, 1.1, .34], zen: [.16, .23, .40], horW: [1.9, 1.0, .36], horE: [.85, .62, .46], ambS: [.42, .33, .25], ambG: [.46, .29, .12],
+    fog: [1.15, .76, .38], fogDen: 2.1e-5, water: [.035, .10, .125], night: 0, sh: 1, cloud: .46, expo: 1.1, bloom: .3 },   /* (gold all through: amber sky and haze, warm shade; the sea keeps its own deep colour and takes the gold in its light) */
   golden: { sun: sunVec(9, 11.5), sunCol: [3.1, 1.80, .80], glow: [1.5, .82, .34], zen: [.10, .22, .50], horW: [1.15, .70, .36], horE: [.46, .50, .66], ambS: [.22, .25, .34], ambG: [.22, .16, .10],
     fog: [.82, .62, .46], fogDen: 2.3e-5, water: [.030, .105, .135], night: .1, sh: 1, cloud: .42, expo: 1.06, bloom: .32 },
   noon: { sun: sunVec(62, 62), sunCol: [3.3, 3.15, 2.9], glow: [.9, .9, .85], zen: [.10, .27, .62], horW: [.62, .74, .88], horE: [.58, .72, .88], ambS: [.34, .44, .60], ambG: [.20, .19, .16],
@@ -3326,7 +3334,7 @@ function lightAtTime(h) {
 const fmtH = h => { const m = Math.round(h * 60); return String(Math.floor(m / 60) % 24).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
 function applyTime(h, force) {
   TOD.h = h; const p = lightAtTime(h); L.cur = p; applyLight(p); L.name = p.el >= 38 ? 'noon' : p.el >= -1 ? 'golden' : 'dusk'; todDial(h);
-  if (force || ST.t - TOD.shT > .2) { SH.farDirty = true; TOD.shT = ST.t; }
+  if (force || ST.t - TOD.shT > (COARSE ? .5 : .25)) { SH.farDirty = true; TOD.shT = ST.t; }   /* (while the hour is moving: the island's shadow redrawn a few times a second, fewer on a phone) */
 }
 /* ---------- Places: the island with every place on it; choose one and the view flies there ---------- */
 const PLC = { i: 0, box: null, on: false };
@@ -3343,47 +3351,65 @@ function plDraw() {
   /* where the view is now */
   g.strokeStyle = '#fff4df'; g.lineWidth = 1.6; g.beginPath(); g.arc(X(cam.tx), Z(cam.tz), 6, 0, TAU); g.stroke(); g.beginPath(); g.arc(X(cam.tx), Z(cam.tz), 1.5, 0, TAU); g.fillStyle = '#fff4df'; g.fill();
   /* every place; the chosen one large, with its name */
-  STARTS.forEach((S, j) => { if (j === PLC.i) return; const P = placeXZ(S); if (!P) return; g.fillStyle = '#ffb054'; g.strokeStyle = 'rgba(9,20,28,.9)'; g.lineWidth = 2; g.beginPath(); g.arc(X(P[0]), Z(P[1]), 5.5, 0, TAU); g.fill(); g.stroke(); });
-  const S = STARTS[PLC.i], P = placeXZ(S), x = X(P[0]), z = Z(P[1]); g.fillStyle = '#4fc3f2'; g.strokeStyle = '#fff4df'; g.lineWidth = 3; g.beginPath(); g.arc(x, z, 11, 0, TAU); g.fill(); g.stroke();
+  STARTS.forEach((S, j) => { if (j === PLC.i && !PLC.sel) return; const P = placeXZ(S); if (!P) return; g.fillStyle = '#ffb054'; g.strokeStyle = 'rgba(9,20,28,.9)'; g.lineWidth = 2; g.beginPath(); g.arc(X(P[0]), Z(P[1]), 5.5, 0, TAU); g.fill(); g.stroke(); });
+  const S = PLC.sel || STARTS[PLC.i], P = PLC.sel ? [PLC.sel.x, PLC.sel.z] : placeXZ(S), x = X(P[0]), z = Z(P[1]); g.fillStyle = '#4fc3f2'; g.strokeStyle = '#fff4df'; g.lineWidth = 3; g.beginPath(); g.arc(x, z, 11, 0, TAU); g.fill(); g.stroke();
   g.font = '700 13px ' + getComputedStyle(document.body).fontFamily; const t = S.name.toUpperCase(), tw = g.measureText(t).width + 16, bx = clamp(x - tw / 2, 4, T.w - tw - 4), by = z - 17 - 24 < 4 ? z + 17 : z - 17 - 24;
   g.fillStyle = 'rgba(9,20,28,.88)'; g.beginPath(); g.roundRect ? g.roundRect(bx, by, tw, 24, 12) : g.rect(bx, by, tw, 24); g.fill(); g.fillStyle = '#fff4df'; g.textBaseline = 'middle'; g.fillText(t, bx + 8, by + 12.5);
 }
-function plSet(i) { const n = STARTS.length; PLC.i = ((i % n) + n) % n; const S = STARTS[PLC.i]; document.getElementById('plName').textContent = S.name; document.getElementById('plSub').textContent = S.blurb || '';
+function plSet(i) { const n = STARTS.length; PLC.sel = null; PLC.i = ((i % n) + n) % n; const S = STARTS[PLC.i]; document.getElementById('plName').textContent = S.name; document.getElementById('plSub').textContent = S.blurb || '';
   const dots = document.getElementById('plDots'); if (dots.children.length !== n) { dots.innerHTML = ''; STARTS.forEach(() => dots.appendChild(document.createElement('i'))); } [...dots.children].forEach((d, j) => d.classList.toggle('on', j === PLC.i)); plDraw(); }
-function plOpen() { if (DRIVE.on) return; PLC.on = true; { const q = document.getElementById('plQ'); if (q) { q.value = ''; plSearch(''); } } document.body.classList.remove('menu'); document.body.classList.add('places');
+function plOpen() { if (DRIVE.on) return; PLC.on = true; plAddr(); { const q = document.getElementById('plQ'); if (q) { q.value = ''; plSearch(''); } } document.body.classList.remove('menu'); document.body.classList.add('places');
   let best = 0, bd = 1e9; STARTS.forEach((S, j) => { const P = placeXZ(S); if (!P) return; const d = Math.hypot(P[0] - cam.tx, P[1] - cam.tz); if (d < bd) { bd = d; best = j; } }); plSet(best); }
 function plClose() { PLC.on = false; document.body.classList.remove('places'); }
-function plFly() { const P = placeXZ(STARTS[PLC.i]); plClose(); if (TOUR.on) stopTour(); if (FOCUS.label) exitFocus(); userInput(); flyTo({ tx: P[0], tz: P[1], dist: 950, pol: 64 * RAD }); }
-/* search: the places, the districts, landmarks and peaks that carry a name on the map, and every named street. A place is chosen on the map
-   (to fly or ride there); anything else the view flies straight to */
+function plFly() { const e = PLC.sel, P = e ? [e.x, e.z] : placeXZ(STARTS[PLC.i]); plClose(); if (TOUR.on) stopTour(); if (FOCUS.label) exitFocus(); userInput();
+  if (e && e.label) { flyTo(e.label.fly); if (e.label.focus) focusOffer(e.label); } else flyTo({ tx: P[0], tz: P[1], dist: e ? e.dist || 800 : 950, pol: (e ? 62 : 64) * RAD }); }
+/* search: the places; the districts, landmarks and peaks that carry a name on the map; every named street (all of them once the streets for driving
+   are loaded); and every building the survey names. Choosing a result shows it on the map; Fly there and Ride there then go to it */
 function plIndex() {
-  if (PLC.idx && PLC.idxD === !!DRIVE.ready) return PLC.idx; PLC.idxD = !!DRIVE.ready; const out = [], seen = new Set(), put = (name, kind, rank, run) => { const k = kind + '|' + name.toLowerCase(); if (!name || seen.has(k)) return; seen.add(k); out.push({ name, low: name.toLowerCase(), kind, rank, run }); };
-  STARTS.forEach((S, j) => put(S.name, 'Place', 0, () => plSet(j)));
-  for (const o of LABELS.list) { const kind = o.kind === 'dist' ? 'District' : o.kind === 'tower' ? 'Landmark' : o.kind === 'peak' ? 'Peak' : null; if (kind && o.fly) put(o.name, kind, kind === 'District' ? 1 : 2, () => { plClose(); if (TOUR.on) stopTour(); userInput(); flyTo(o.fly); if (o.focus) focusOffer(o); }); }
-  const best = new Map(); for (const r of ROADS) { if (!r.name || !r.pts || r.n < 2) continue; const b = best.get(r.name); if (!b || r.len > b.len) best.set(r.name, r); }
-  const street = (name, x, z) => put(name, 'Street', 3, () => { plClose(); if (TOUR.on) stopTour(); if (FOCUS.label) exitFocus(); userInput(); flyTo({ tx: x, tz: z, dist: 620, pol: 62 * RAD }); });
-  /* (the map's main roads run on under the name they start with, so a street is found a little way in from its start, not at the middle of the line.
-     Once the streets for driving have been loaded, every named street on the island can be found, each at the middle of its longest stretch) */
-  if (DRIVE.ready && DRIVE.E) { const lg = new Map(); for (const e of DRIVE.E) { const nm = DRIVE.names[e.nm]; if (!nm || e.tun || e.dead) continue; const b = lg.get(nm); if (!b || e.L > b.L) lg.set(nm, e); } for (const [nm, e] of lg) { const i = e.n >> 1; street(nm, e.xs[i], e.zs[i]); } }
-  for (const [name, r] of best) { if (name === 'tram') continue; const m = Math.min(r.n >> 1, 31) * 3; street(name, r.pts[m], r.pts[m + 2]); }
+  if (PLC.idx && PLC.idxD === !!DRIVE.ready && PLC.idxC === !!CITY.recs && PLC.idxA === !!PLC.addr) return PLC.idx; PLC.idxD = !!DRIVE.ready; PLC.idxC = !!CITY.recs; PLC.idxA = !!PLC.addr;
+  const out = [], seen = new Set(), put = (name, kind, rank, x, z, more) => { const k = kind + '|' + name.toLowerCase(); if (!name || seen.has(k)) return; seen.add(k); out.push(Object.assign({ name, low: name.toLowerCase(), kind, rank, x, z }, more)); };
+  STARTS.forEach((S, j) => { const P = placeXZ(S); if (P) put(S.name, 'Place', 0, P[0], P[1], { place: j }); });
+  for (const o of LABELS.list) { const kind = o.kind === 'dist' ? 'District' : o.kind === 'tower' ? 'Landmark' : o.kind === 'peak' ? 'Peak' : null; if (kind && o.fly) put(o.name, kind, kind === 'District' ? 1 : 2, o.x, o.z, { label: o }); }
+  /* (the map's main roads run on under the name they start with, so a street is found a little way in from its start, not at the middle of the line) */
+  if (DRIVE.ready && DRIVE.E) { const lg = new Map(); for (const e of DRIVE.E) { const nm = DRIVE.names[e.nm]; if (!nm || e.tun || e.dead) continue; const b = lg.get(nm); if (!b || e.L > b.L) lg.set(nm, e); } for (const [nm, e] of lg) { const i = e.n >> 1; put(nm, 'Street', 3, e.xs[i], e.zs[i], { dist: 620 }); } }
+  const best = new Map(); for (const r of ROADS) { if (!r.name || !r.pts || r.n < 2 || r.name === 'tram') continue; const b = best.get(r.name); if (!b || r.len > b.len) best.set(r.name, r); }
+  for (const [name, r] of best) { const m = Math.min(r.n >> 1, 31) * 3; put(name, 'Street', 3, r.pts[m], r.pts[m + 2], { dist: 620 }); }
+  /* every address on the island and the building at it (addr.txt, from the government's address register: 20,000 of them, loaded when Places
+     is first opened). A building is found by its name or by its number and street */
+  const named = new Set(); if (PLC.addr) { const A = PLC.addr; for (let i = 0; i < A.name.length; i++) { const nm = A.name[i], road = A.streets[A.si[i]], at = A.no[i] && road ? A.no[i] + ' ' + road : road; if (nm) named.add(nm.toLowerCase());
+    put(nm ? (at && at.toLowerCase() !== nm.toLowerCase() ? nm + ' · ' + at : nm) : at, nm ? 'Building' : 'Address', nm ? 4 : 5, A.x[i], A.z[i], { dist: 520 }); } }
+  /* buildings the survey names: the tallest record of each name; not one the map already carries as a landmark, or the address list has */
+  if (CITY.recs) { const tall = new Map(); for (const b of CITY.recs) { if (!b.nm) continue; const k = b.nm.toLowerCase(), q = tall.get(k); if (!q || b.h > q.h) tall.set(k, b); }
+    for (const [k, b] of tall) { if (seen.has('Landmark|' + k) || seen.has('Place|' + k) || named.has(k)) continue; const nm = b.nm === b.nm.toUpperCase() ? k.replace(/(^|[\s(\-/])[a-z]/g, c => c.toUpperCase()) : b.nm; put(nm, 'Building', 4, b.cx, b.cz, { dist: clamp(b.h * 2.4, 380, 1100) }); } }
   return (PLC.idx = out);
 }
 function plSearch(text) {
   const box = document.getElementById('plRes'), t = text.trim().toLowerCase(); box.innerHTML = ''; PLC.hits = []; box.classList.toggle('on', !!t); if (!t) return;
   const sc = e => e.low === t ? 0 : e.low.startsWith(t) ? 1 : e.low.includes(' ' + t) ? 2 : e.low.includes(t) ? 3 : 9;
-  PLC.hits = plIndex().map(e => [sc(e), e]).filter(q => q[0] < 9).sort((a, b) => a[0] - b[0] || a[1].rank - b[1].rank || a[1].name.length - b[1].name.length).slice(0, 6).map(q => q[1]);
-  if (!PLC.hits.length) { const d = document.createElement('div'); d.className = 'none'; d.textContent = 'Nothing by that name'; box.appendChild(d); return; }
-  for (const e of PLC.hits) { const b = document.createElement('button'); b.type = 'button'; b.innerHTML = '<span></span><em></em>'; b.firstChild.textContent = e.name; b.lastChild.textContent = e.kind; b.onclick = () => plPick(e); box.appendChild(b); }
+  PLC.hits = plIndex().map(e => [sc(e), e]).filter(q => q[0] < 9).sort((a, b) => a[0] - b[0] || a[1].rank - b[1].rank || a[1].name.length - b[1].name.length).slice(0, 8).map(q => q[1]);
+  if (!PLC.hits.length) { const d = document.createElement('div'); d.className = 'none'; d.textContent = PLC.addr ? 'Nothing by that name' : 'Nothing yet: the address list is still loading'; box.appendChild(d); }
+  plRows(box, PLC.hits);
 }
-function plPick(e) { const q = document.getElementById('plQ'); q.value = ''; q.blur(); plSearch(''); e.run(); }
+function plRows(box, list) { for (const e of list) { const b = document.createElement('button'); b.type = 'button'; b.innerHTML = '<span></span><em></em>'; b.firstChild.textContent = e.name; b.lastChild.textContent = e.kind; b.onclick = () => plPick(e); box.appendChild(b); } }
+/* the address list: fetched once, when Places is first opened; the search already typed is run again when it arrives */
+function plAddr() {
+  if (PLC.addrP) return; PLC.addrP = fetch(new URL('addr.txt', location.href.split(/[?#]/)[0])).then(r => { if (!r.ok) throw new Error(r.status); return r.text(); }).then(t => {
+    const L = t.split('\n'), S = +L[0], streets = L.slice(1, 1 + S), n = L.length - 1 - S, A = { streets, name: [], no: [], si: new Uint16Array(n), x: new Int16Array(n), z: new Int16Array(n) }; let k = 0;
+    for (let i = 1 + S; i < L.length; i++) { const q = L[i].split('\t'); if (q.length < 5) continue; A.name.push(q[0]); A.no.push(q[1]); A.si[k] = +q[2]; A.x[k] = +q[3]; A.z[k] = +q[4]; k++; }
+    PLC.addr = A; const el = document.getElementById('plQ'); if (PLC.on && el && el.value.trim()) plSearch(el.value); }).catch(() => { PLC.addrP = null; });
+}
+/* a result is chosen: it is marked on the map and named below it, and the buttons under the map act on it */
+function plPick(e) { const q = document.getElementById('plQ'); q.value = ''; q.blur(); plSearch(''); if (e.place !== undefined) { plSet(e.place); return; }
+  PLC.sel = e; document.getElementById('plName').textContent = e.name; document.getElementById('plSub').textContent = e.kind; [...document.getElementById('plDots').children].forEach(d => d.classList.remove('on')); plDraw();
+  const m = document.getElementById('plMap'); if (m.scrollIntoView) m.scrollIntoView({ block: 'nearest' }); }
 /* the ride: a tour by road. The car drives itself from the place nearest the view to the chosen one, then on from place to place, until you take the
    wheel (Auto), choose somewhere yourself, or leave */
 const placeObj = S => { const P = placeXZ(S); return { id: S.id, name: S.name, x: P[0], z: P[1], kind: 'Place' }; };
-async function rideAlong(toId) {
-  if (DRIVE.on || DRIVE.entering) return; const to = STARTS.find(q => q.id === toId) || STARTS[0], far = cam.dist > 2600; let from = null, bd = 1e9;
-  for (const S of STARTS) { if (S === to) continue; const P = placeXZ(S), T = placeXZ(to); if (!P || Math.hypot(P[0] - T[0], P[1] - T[1]) < 400) continue; const d = far ? (S.id === 'pier' ? 0 : 1e8) : Math.hypot(P[0] - cam.tx, P[1] - cam.tz); if (d < bd) { bd = d; from = S; } }
+async function rideAlong(to) {   /* to: { name, x, z } and, for one of the places, its id */
+  if (DRIVE.on || DRIVE.entering || !to) return; const far = cam.dist > 2600; let from = null, bd = 1e9;
+  for (const S of STARTS) { const P = placeXZ(S); if (!P || Math.hypot(P[0] - to.x, P[1] - to.z) < 400) continue; const d = far ? (S.id === 'pier' ? 0 : 1e8) : Math.hypot(P[0] - cam.tx, P[1] - cam.tz); if (d < bd) { bd = d; from = S; } }
   plClose(); await enterDrive(); if (!DRIVE.on || !DRIVE.car || !from) return;
-  dStart(from.id); closeGarage(placeObj(to), true); DRIVE.ride = true; ctlHint.first = false; ctlHint.show(['Riding to ' + to.name, 'Auto to take the wheel', '✕ to leave'], 8000);
+  dStart(from.id); closeGarage(to, true); DRIVE.ride = true; ctlHint.first = false; ctlHint.show(['Riding to ' + to.name, 'Auto to take the wheel', '✕ to leave'], 8000);
 }
 function rideNext() {
   const car = DRIVE.car, i = Math.max(0, STARTS.findIndex(q => q.id === DRIVE.lastDest));
@@ -3393,19 +3419,19 @@ function rideNext() {
 }
 function initPlaces() {
   const q = id => document.getElementById(id), el = q('places'); if (!el) return;
-  q('plQ').addEventListener('input', e => plSearch(e.target.value)); q('plRide').onclick = () => rideAlong(STARTS[PLC.i].id);
+  q('plQ').addEventListener('input', e => plSearch(e.target.value)); q('plRide').onclick = () => rideAlong(PLC.sel ? { name: PLC.sel.name, x: PLC.sel.x, z: PLC.sel.z, kind: PLC.sel.kind } : placeObj(STARTS[PLC.i]));
   q('bPlaces').onclick = () => PLC.on ? plClose() : plOpen(); q('plX').onclick = plClose; q('plPrev').onclick = () => plSet(PLC.i - 1); q('plNext').onclick = () => plSet(PLC.i + 1); q('plGo').onclick = plFly;
   q('plIsland').onclick = () => { plClose(); stopTour(); goPreset(0); };
   el.addEventListener('pointerup', e => { if (e.target === el) plClose(); });
   for (const t of ['pointerdown', 'pointermove', 'wheel', 'touchstart', 'mousedown', 'click', 'dblclick', 'keyup']) el.addEventListener(t, e => e.stopPropagation(), { passive: true });
   /* swipe across the map or the name for the next place; tap a dot to choose it */
-  for (const [node, isMap] of [[q('plMap'), true], [el.querySelector('.pcar'), false]]) { let s = null; node.addEventListener('pointerdown', e => { s = { x: e.clientX, y: e.clientY }; try { node.setPointerCapture(e.pointerId); } catch (err) { /* synthetic */ } });
+  for (const [node, isMap] of [[q('plMap'), true], [el.querySelector('.psel'), false]]) {   /* (the name itself, not the row: holding the pointer for the whole row kept taps from the arrow buttons) */ let s = null; node.addEventListener('pointerdown', e => { s = { x: e.clientX, y: e.clientY }; try { node.setPointerCapture(e.pointerId); } catch (err) { /* synthetic */ } });
     node.addEventListener('pointerup', e => { if (!s) return; const dx = e.clientX - s.x, dy = e.clientY - s.y; s = null; if (Math.abs(dx) > 36 && Math.abs(dx) > Math.abs(dy)) { plSet(PLC.i + (dx < 0 ? 1 : -1)); return; }
       if (!isMap || Math.hypot(dx, dy) > 8) return; const r = node.getBoundingClientRect(), T = plXf(node), px = e.clientX - r.left, pz = e.clientY - r.top; let best = -1, bd = 30;
       STARTS.forEach((S, j) => { const P = placeXZ(S); if (!P) return; const d = Math.hypot(P[0] * T.k + T.ox - px, P[1] * T.k + T.oz - pz); if (d < bd) { bd = d; best = j; } }); if (best >= 0) plSet(best); });
     node.addEventListener('pointercancel', () => { s = null; }); }
   addEventListener('resize', () => { if (PLC.on) plDraw(); });
-  addEventListener('keydown', e => { if (!PLC.on) return; if (e.target && e.target.id === 'plQ') { e.stopPropagation(); if (e.code === 'Escape') { e.preventDefault(); if (e.target.value) { e.target.value = ''; plSearch(''); } else plClose(); } else if (e.code === 'Enter' && PLC.hits && PLC.hits.length) { e.preventDefault(); plPick(PLC.hits[0]); } return; }   /* typing: none of the page's own keys */
+  addEventListener('keydown', e => { if (!PLC.on) return; if (e.target && e.target.id === 'plQ') { e.stopPropagation(); if (e.code === 'Escape') { e.preventDefault(); if (e.target.value) { e.target.value = ''; plSearch(''); } else plClose(); } else if (e.code === 'Enter') { e.preventDefault(); if (PLC.hits && PLC.hits.length) plPick(PLC.hits[0]); } return; }   /* typing: none of the page's own keys */
     if (e.code === 'Escape') plClose(); else if (e.code === 'ArrowLeft') plSet(PLC.i - 1); else if (e.code === 'ArrowRight') plSet(PLC.i + 1); else if (e.code === 'Enter') plFly(); else return; e.stopPropagation(); e.preventDefault(); }, true);
 }
 /* the round clock on the screen: shows the hour, and sets it */
@@ -3619,13 +3645,18 @@ function tourLegs() {
     { p: PRESETS[0](), dwell: 0 },
   ];
 }
+/* the tour says what it is doing: a strip at the top names the stop and counts them, and a tap on it (or any touch of the view) ends the tour.
+   It starts at the first real stop when the view is already the whole island, so that pressing it does something at once */
+const TOUR_NAMES = ['The whole island', 'Victoria Harbour', 'Central: the Bank of China', 'Victoria Peak', 'Happy Valley racecourse', 'Victoria Park and Causeway Bay', 'Taikoo and Quarry Bay', 'Chai Wan, into dusk', 'Shek O', 'Stanley', 'Repulse Bay', 'Aberdeen', 'The harbour by night', 'The whole island'];
+function tourStrip(text) { const el = document.getElementById('tourS'); if (!el) return; el.classList.toggle('on', !!text); if (text) el.firstChild.textContent = text; }
 function startTour() {
-  const legs = tourLegs(); TOUR.on = true; TOUR.i = 0; document.getElementById('bTour').classList.add('on'); setTime(presetTime('golden'), false);
-  const next = () => { if (!TOUR.on) return; const L1 = legs[TOUR.i++]; if (!L1) { stopTour(); return; } if (L1.time) setTime(presetTime(L1.time), false);
-    flyTo({ ...L1.p, dur: TOUR.i === 1 ? 2.5 : 4.5 }, () => { let t = 0; return dt => { t += dt; cam.az += dt * .025; if (t > L1.dwell) next(); }; }); };
+  const legs = tourLegs(), n = legs.length - 1; TOUR.on = true; TOUR.i = cam.dist > 9000 ? 1 : 0; document.getElementById('bTour').classList.add('on'); setTime(presetTime('golden'), false); let first = true;
+  const next = () => { if (!TOUR.on) return; const k = TOUR.i, L1 = legs[TOUR.i++]; if (!L1) { stopTour(); return; } if (L1.time) setTime(presetTime(L1.time), false);
+    tourStrip(k >= n ? 'Tour · back to the whole island' : 'Tour · ' + (TOUR_NAMES[k] || '') + ' · ' + Math.max(1, k) + ' / ' + (n - 1));
+    flyTo({ ...L1.p, dur: first ? 2.5 : 4.5 }, () => { let t = 0; return dt => { t += dt; cam.az += dt * .025; if (t > L1.dwell) next(); }; }); first = false; };
   next();
 }
-function stopTour() { TOUR.on = false; const b = document.getElementById('bTour'); if (b) b.classList.remove('on'); }
+function stopTour() { const was = TOUR.on; TOUR.on = false; const b = document.getElementById('bTour'); if (b) b.classList.remove('on'); tourStrip(''); if (was && !DRIVE.on) ctlHint.show(['Tour ended'], 2500); }
 /* ---------- landmark tour: visit the landmarks in route order (Central along the harbour to Taikoo, then the hills and the south side).
    Each stop focuses the building, flies to its clearest view, circles it slowly and shows a fact; the clock runs from golden hour to dusk.
    Any input pauses it (look around freely); ◀ ▶, a swipe on the card, or [ / ] (N) step through; Exit ends it. ---------- */
@@ -3873,7 +3904,7 @@ async function b3dStreet(T, list) {
         g.setIndex(new THREE.BufferAttribute(new Uint32Array(I2), 1)); g.boundingSphere = T.mesh.geometry.boundingSphere; S.infra = new THREE.Mesh(g, B3D.mat); S.infra.layers.enable(1); scene.add(S.infra); S.infraN = kept;
         /* the guessed footbridges of this sheet give way to the real ones */
         if (PBm && DRIVE.fbAll) { const pos = PBm.geometry.attributes.position; S.fb = []; for (const [a, b, fx, fz] of DRIVE.fbAll) { if (fx < T.box[0] || fx > T.box[2] || fz < T.box[1] || fz > T.box[3]) continue; for (let v = a; v < b; v++) { S.fb.push(v, pos.array[v * 3 + 1]); pos.array[v * 3 + 1] -= 4000; } } pos.needsUpdate = true; } } }
-    SH.farDirty = SH.nearDirty = true;
+    B3D.shDue = ST.t + .4;
   } catch (err) { console.warn('b3d street ' + T.id + ': ' + (err && err.message)); }
 }
 function b3dDrop(T) { if (T.undo) b3dShow(T.undo);
@@ -3881,11 +3912,21 @@ function b3dDrop(T) { if (T.undo) b3dShow(T.undo);
 B3D.drop = b3dDrop;
 /* a few times a second: bring in the nearest sheet not yet loaded, drop the farthest when too many are held */
 function b3dStep(dt) {
+  /* shadows are redrawn once after a run of loads, not after each: each redraw of the whole island's shadow costs most of a frame */
+  if (B3D.shDue && ST.t >= B3D.shDue && !B3D.loading) { B3D.shDue = 0; SH.farDirty = SH.nearDirty = true; }
   if ((B3D.t -= dt) > 0 || !CITY.recs || !CITY.tex) return; B3D.t = .35;
   if (B3D.index === null) { B3D.index = false; fetch(b3dURL('index.json')).then(r => r.ok ? r.json() : []).then(j => { B3D.index = j; }).catch(() => { B3D.index = []; }); return; }
   if (!B3D.index || !B3D.index.length || B3D.loading) return;
-  for (const T of B3D.index) if (T.lm && GOVK.has(T.lm) && !B3D.tiles.has(T.id) && !B3D.fail.has(T.id)) { b3dLoad(T).then(() => { B3D.t = 0; }); return; }   /* landmarks with a file of their own: first, one straight after another, wherever the view is, and never dropped */
-  const driving = DRIVE.on && DRIVE.car, cx = driving ? DRIVE.car.x : cam.tx, cz = driving ? DRIVE.car.z : cam.tz; if (!driving && cam.dist > 2600) return;
+  const driving = DRIVE.on && DRIVE.car, cx = driving ? DRIVE.car.x : cam.tx, cz = driving ? DRIVE.car.z : cam.tz;
+  /* nothing is loaded while the view is being flown somewhere (to a place, on the tour): a load is a hitch in the motion. It comes on arrival */
+  if (!driving && cam.fly) return;
+  /* landmarks with a file of their own: loaded when the eye is near enough for their shape to show (a few kilometres; from the whole-island view
+     they are specks, and their weight would only slow it), the nearest first, a few frames apart; put away again well beyond that */
+  { const ex = driving ? cx : camera.position.x, ey = driving ? 0 : camera.position.y, ez = driving ? cz : camera.position.z, RL = COARSE ? 3200 : 5200; let near = null, nd = RL, far = null, fd = RL * 1.35;
+    for (const T of B3D.index) { if (!T.lm || !GOVK.has(T.lm)) continue; const d = Math.hypot((T.box[0] + T.box[2]) / 2 - ex, (T.box[1] + T.box[3]) / 2 - ez, ey * .5), has = B3D.tiles.has(T.id);
+      if (!has && !B3D.fail.has(T.id) && d < nd) { nd = d; near = T; } if (has && d > fd) { fd = d; far = B3D.tiles.get(T.id); } }
+    if (far) b3dDrop(far); if (near) { b3dLoad(near).then(() => { B3D.t = Math.min(B3D.t, .12); }); return; } }
+  if (!driving && cam.dist > 2600) return;
   const R = COARSE ? 380 : 700, MAX = COARSE ? 4 : 10, dOf = T => Math.hypot(Math.max(T.box[0] - cx, 0, cx - T.box[2]), Math.max(T.box[1] - cz, 0, cz - T.box[3]));
   let best = null, bd = R, held = 0; for (const T of B3D.tiles.values()) if (!T.lm) held++; for (const T of B3D.index) { if (T.lm || B3D.tiles.has(T.id) || B3D.fail.has(T.id)) continue; const d = dOf(T); if (d < bd) { bd = d; best = T; } }
   if (held >= MAX || (!best && held > MAX - 3)) { let far = null, fd = best && held >= MAX ? bd + 1 : R + 500; for (const T of B3D.tiles.values()) { if (T.lm) continue; const d = dOf(T); if (d > fd) { fd = d; far = T; } } if (far) b3dDrop(far); else if (held >= MAX) return; }
@@ -4127,6 +4168,10 @@ function vOpenCar(g, paint, trim, clothes, skin) {
   vLights(g, 2.31, -2.31, .56, .62);
 }
 const VEHICLES = [
+  { id: 'pink', name: 'Diva', blurb: 'Pearls, a fancy pink hat and the hood down.', len: 4.8, wid: 1.8, h: 1.3, top: 70, acc: 12, grip: 11.5,
+    build(g) { vOpenCar(g, C(.99, .66, .78), C(.96, .94, .9), C(.06, .06, .07), C(.93, .74, .62)); } },
+  { id: 'yellow', name: 'Casanova', blurb: 'Aviators on, one elbow on the door.', len: 4.8, wid: 1.8, h: 1.35, top: 70, acc: 12, grip: 11.5,
+    build(g) { vOpenCar(g, C(.98, .78, .05), C(.2, .12, .08), C(.95, .95, .93), C(.8, .58, .43)); } },
   { id: 'taxi', name: 'Red Taxi', blurb: "Hong Kong's red cab. Knows every short cut.", len: 4.6, wid: 1.72, h: 1.5, top: 70, acc: 12, grip: 11.5,
     build(g) { const red = C(.74, .05, .04), sil = C(.8, .81, .82);
       vWheels(g, [-1.4, 1.4], [-.78, .78], .32, .22);
@@ -4181,31 +4226,16 @@ const VEHICLES = [
       g.M(C(.85, .06, .05), .3).box(3.3, 1.55, -1.25, .42, .42, .03); g.M(C(1, .5, .05), .9).box(3.88, 2.95, -.9, .06, .14, .22).box(3.88, 2.95, .9, .06, .14, .22);
       vLights(g, 5.52, -5.52, .75, .95, .3); } },
   /* the open cars carry their drivers (modelled in Blender, like the rest: vehicles/<id>.glb); these stand in until the models arrive */
-  { id: 'pink', name: 'Diva', blurb: 'Pearls, a fancy pink hat and the hood down.', len: 4.8, wid: 1.8, h: 1.3, top: 70, acc: 12, grip: 11.5,
-    build(g) { vOpenCar(g, C(.99, .66, .78), C(.96, .94, .9), C(.06, .06, .07), C(.93, .74, .62)); } },
-  { id: 'yellow', name: 'Casanova', blurb: 'Aviators on, one elbow on the door.', len: 4.8, wid: 1.8, h: 1.35, top: 70, acc: 12, grip: 11.5,
-    build(g) { vOpenCar(g, C(.98, .78, .05), C(.2, .12, .08), C(.95, .95, .93), C(.8, .58, .43)); } },
   { id: 'tram', name: 'Tram', blurb: 'The ding ding: two decks and a bell.', len: 9, wid: 2.05, h: 4.4, top: 70, acc: 12, grip: 11.5,
     build(g) { const green = C(.05, .3, .16), cream = C(.93, .9, .78);
       vWheels(g, [-2.7, -1.6, 1.6, 2.7], [-.72, .72], .34, .16, C(.3, .3, .32));
       g.M(green, 0, .3).box(0, .3, 0, 8.6, 3.95, 2.0); g.M(cream, 0, .4).box(0, 2.18, 0, 8.62, .34, 2.02).box(0, 4.25, 0, 8.3, .06, 1.9);
       g.M(GLASS, 0, .5).box(0, 1.25, 0, 7.2, .8, 2.03).box(0, 2.78, 0, 7.2, .82, 2.03).box(4.3, 1.28, 0, .04, .8, 1.5).box(4.3, 2.8, 0, .04, .8, 1.5);
       vLights(g, 4.32, -4.32, .9, .25, .2, .2); } },
-  { id: 'sidecar', name: 'Motorbike and Sidecar', blurb: 'A rider, a chair and a dog in goggles.', len: 2.3, wid: 1.75, h: 1.6, top: 70, acc: 12, grip: 11.5,
-    build(g) { const teal = C(.05, .42, .45), dark = C(.07, .07, .075);
-      vWheels(g, [-.72, .78], [.38], .33, .12); vWheels(g, [-.2], [-.96], .3, .12);
-      g.M(dark).box(.03, .36, .38, 1.3, .5, .22); g.M(teal, 0, .3).box(.2, .78, .38, .6, .22, .3).box(-.05, .3, -.46, 2.0, .58, .8);
-      g.M(C(.33, .18, .08)).box(-.15, .9, .38, .32, .52, .4); g.M(C(.94, .9, .78), 0, .3).box(-.03, 1.45, .38, .26, .24, .24); g.M(C(.86, .58, .28)).box(-.25, .9, -.46, .3, .3, .28);
-      g.M(C(1, .96, .84), .95).box(.9, .92, .38, .06, .18, .18); } },
-  { id: 'monster', name: 'Monster Truck', blurb: 'Tyres taller than a taxi.', len: 5.6, wid: 3.0, h: 3.6, top: 70, acc: 12, grip: 11.5,
-    build(g) { const org = C(.95, .35, .04);
-      vWheels(g, [-1.7, 1.7], [-1.2, 1.2], .92, .78, C(.9, .9, .88));
-      g.M(C(.07, .07, .08)).box(0, .8, 0, 4.4, .8, .9); g.M(org, 0, .3).box(0, 1.62, 0, 5.05, .86, 2.04).box(.3, 2.48, 0, 1.7, .64, 1.86);
-      g.M(GLASS, 0, .6).box(.34, 2.52, 0, 1.5, .5, 1.9).box(1.02, 2.5, 0, .3, .5, 1.7); vLights(g, 2.55, -2.52, 2.02, .7, .28, .16); } },
 ];
 const VSTAT = { top: 70, acc: 12, grip: 11.5 };
 /* same pace for all; what differs is how hard they knock things away (and the supercar's light trails, the ice-cream van's chimes) */
-for (const V of VEHICLES) V.knock = { dd: 1.6, school: 1.45, cyber: 1.25, minibus: 1.15, monster: 1.7, tram: 1.5, sidecar: .85 }[V.id] || 1;
+for (const V of VEHICLES) V.knock = { dd: 1.6, school: 1.45, cyber: 1.25, minibus: 1.15, tram: 1.5 }[V.id] || 1;
 function buildVehicle(V) {
   const g = new GB(); g.M(C(0, 0, 0)).box(0, .03, 0, V.len + .2, .02, V.wid + .3);   /* contact shadow */
   V.build(g); const m = g.mesh(propMat); m.frustumCulled = false; m.matrixAutoUpdate = false; m.visible = false; scene.add(m); return m;
@@ -5448,6 +5478,7 @@ async function boot() {
   T.total = performance.now() - t0; ST.timing = T;
   initClock(); initPlaces();
   document.getElementById('bTour').onclick = () => { if (TOUR.on) stopTour(); else { plClose(); startTour(); } };
+  document.getElementById('tourS').onclick = e => { e.stopPropagation(); stopTour(); cam.fly = null; cam.tour = null; };
   document.getElementById('bLabels').onclick = e => { LABELS.on = !LABELS.on; e.currentTarget.classList.toggle('on', LABELS.on); };
   document.getElementById('bMore').onclick = () => document.body.classList.toggle('menu');
   addEventListener('pointerdown', e => { if (document.body.classList.contains('menu') && !e.target.closest('#ui')) document.body.classList.remove('menu'); }, true);   /* a tap anywhere else puts More away */
