@@ -20,12 +20,6 @@
   body.photo #ui,body.photo #cr{opacity:0;pointer-events:none}
   #cr{position:fixed;right:8px;bottom:6px;font-size:9px;letter-spacing:.04em;color:rgba(255,236,208,.5);text-shadow:0 0 3px rgba(0,0,0,.6);transition:opacity .5s}
   #cr a{color:inherit}
-  #pm{position:fixed;left:0;top:0;display:flex;flex-direction:column;align-items:center;gap:0;cursor:pointer;opacity:0;pointer-events:none;will-change:transform,opacity;
-    color:#fff4df;font-size:12px;letter-spacing:.2em;text-transform:uppercase;text-shadow:0 1px 4px rgba(0,0,0,.75)}
-  #pm b{font-weight:600;padding:3px 9px 3px 11px;background:rgba(9,20,28,.62);border:1px solid rgba(255,206,140,.55);border-radius:4px;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
-  #pm i{width:1px;height:34px;background:linear-gradient(rgba(255,206,140,.9),rgba(255,206,140,.15))}
-  #pm u{width:7px;height:7px;border-radius:50%;background:#ffc98a;box-shadow:0 0 0 2px rgba(9,20,28,.6),0 0 10px rgba(255,190,110,.9)}
-  body.photo #pm{display:none}
   /* the clock: a 24-hour dial, noon at the top, the day's daylight as a gold arc; the sun (the moon by night) is dragged round it to set the hour */
   #tClock{position:fixed;z-index:6;right:max(12px,env(safe-area-inset-right));top:calc(max(12px,env(safe-area-inset-top)) + 150px);width:68px;height:68px;border-radius:50%;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;outline:none;filter:drop-shadow(0 2px 6px rgba(0,0,0,.45))}
   #tClock svg{display:block;width:100%;height:100%} #tClock:active{cursor:grabbing} #tClock:focus-visible{box-shadow:0 0 0 2px rgba(255,196,128,.7)}
@@ -33,7 +27,7 @@
   body.driving #tClock{top:calc(max(12px,env(safe-area-inset-top)) + 158px)}
   body.photo #tClock,body.garage #tClock,body.navopen #tClock{display:none}
   @media (max-height:520px){body.driving #tClock{top:max(10px,env(safe-area-inset-top));right:calc(max(12px,env(safe-area-inset-right)) + 96px)}}   /* (a phone held sideways: beside the speed, clear of Horn and Boost) */
-  #pm.on b,.lb.hit b,.lb.hit em{pointer-events:auto}
+  .lb.hit b,.lb.hit em{pointer-events:auto}
   #ui .g{display:flex;gap:3px;align-items:center}
   #ui .g+.g{padding-left:10px;border-left:1px solid rgba(255,196,128,.22)}
   #ui button{font:inherit;letter-spacing:inherit;text-transform:inherit;color:#f3d9b4;background:rgba(255,190,110,.07);
@@ -80,12 +74,6 @@
   #fc .fact{font-size:12px;line-height:1.4;color:#fff4df;opacity:.95}
   #fc:not(.hasf) .yr,#fc:not(.hasf) .fact{display:none}
   #fc #fcS{font-size:10px;opacity:.62}
-  #fc .ltr{display:none;gap:6px}
-  #fc.lt .ltr{display:flex}
-  #fc .ltr button{min-width:38px;padding:2px 10px 4px;font-size:20px;font-weight:600;line-height:1}
-  #fc #ltPlay{font-size:11px;padding:5px 9px}
-  #fc #ltN{min-width:46px;text-align:center;font-variant-numeric:tabular-nums;font-size:10.5px;letter-spacing:.1em;opacity:.8}
-  #fc #ltBar{position:absolute;left:10px;right:10px;bottom:4px;height:2px;border-radius:1px;background:rgba(255,190,110,.75);transform-origin:left;transform:scaleX(0)}
   #fc{touch-action:none}
   #nav{position:fixed;z-index:5;transform:translateZ(0);right:max(12px,env(safe-area-inset-right));top:max(12px,env(safe-area-inset-top));display:flex;flex-direction:column;align-items:center;gap:8px;transition:opacity .5s}
   #cp{width:62px;height:62px;cursor:grab;touch-action:none;outline:none;filter:drop-shadow(0 1px 4px rgba(0,0,0,.45))}
@@ -257,6 +245,14 @@
   #mmC{display:block;width:156px;height:156px;border-radius:50%;box-shadow:0 2px 12px rgba(0,0,0,.55)}
   #mmD{max-width:100%;padding:3px 9px;border-radius:9px;background:rgba(9,20,28,.66);color:#fff4df;font-size:10px;letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   body.garage #mini{display:none}
+  /* the whole island, opened from the small map: where the car is, the route, every place (tap one to go there) */
+  #isle{position:fixed;inset:0;z-index:8;display:none;align-items:center;justify-content:center;padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));background:rgba(4,10,15,.5);touch-action:none}
+  body.isle #isle{display:flex} body.garage #isle{display:none}
+  #isle .ic{width:min(100%,820px);display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:18px;background:rgba(9,20,28,.9);border:1px solid rgba(255,196,128,.32);box-shadow:0 12px 40px rgba(0,0,0,.5)}
+  #isle .ih{display:flex;align-items:center;gap:8px} #isle .ih b{flex:1;font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#f3d9b4;padding-left:4px}
+  #isle .ih button{height:36px;padding:0 14px;border-radius:18px;border:1px solid rgba(255,196,128,.4);background:rgba(255,190,110,.12);color:#f3e6d0;font:inherit;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;touch-action:manipulation}
+  #isle #isleX{width:36px;padding:0;font-size:15px}
+  #isleC{display:block;width:100%;border-radius:12px;background:#163a50;cursor:pointer;touch-action:none}
   #dJoy{position:fixed;z-index:5;left:0;top:0;width:0;height:0;pointer-events:none;opacity:0;transition:opacity .15s}
   #dJoy.show{opacity:1}
   #dJoy::before{content:"";position:absolute;left:-62px;top:-62px;width:124px;height:124px;border-radius:50%;border:2px solid rgba(255,206,140,.55);background:rgba(9,20,28,.2)}
@@ -303,7 +299,7 @@
 <canvas id="c"></canvas>
 <div id="ui">
   <button id="bMenu" aria-label="Show controls" title="Controls">☰</button>
-  <div class="g" id="gView"><button data-v="0">Island</button><button data-v="1">Harbour</button><button data-v="2">Canyon</button><button data-v="3">Peak</button><button data-v="4">Corridor</button><button data-v="5">Stanley</button><button id="bTour" title="Guided tour, golden hour into dusk">Tour</button><button id="bLmk" title="Visit the landmarks one by one">Landmarks</button><button id="bDrive" title="Drive any street on the island">Drive</button></div>
+  <div class="g" id="gView"><button data-v="0">Island</button><button data-v="1">Harbour</button><button data-v="3">Peak</button><button data-v="4">Corridor</button><button data-v="5">Stanley</button><button id="bTour" title="Guided tour, golden hour into dusk">Tour</button><button id="bDrive" title="Drive any street on the island">Drive</button></div>
   <div class="g" id="gLight"><button data-l="golden" class="on">Golden</button><button data-l="noon">Noon</button><button data-l="dusk">Dusk</button><input id="sTime" type="range" min="5.5" max="21" step="0.0166667" value="17" aria-label="Time of day (Hong Kong)" title="Time of day, Hong Kong, today's sun"><span id="oTime">17:00</span></div>
   <div class="g"><label>Traffic<input id="sTraf" type="range" min="0" max="100" value="70"></label></div>
   <div class="g"><button id="bLabels" class="on" title="Place names">Labels</button><button id="bQ" title="Quality">High</button><button id="bPhoto">Photo</button><button id="bLink" title="Copy a link to this view">Link</button><button id="bReset">Reset</button></div>
@@ -311,8 +307,7 @@
 <div id="labels"></div>
 <div id="fc" role="dialog" aria-label="Landmark"><button class="x" id="fcX" title="Close (Esc)" aria-label="Close">✕</button><h3 id="fcN"></h3><p id="fcY" class="yr"></p><p id="fcF" class="fact"></p><p id="fcS"></p>
   <div class="r pre"><button id="fcGo" title="Quiet the surroundings (F)">Focus</button></div>
-  <div class="r foc"><button id="fcSee" class="on" title="Lower whatever stands in the way and outline anything still hidden">Clear view</button><button id="fcIso" title="Hide the neighbours, leaving their footprints (I)">Isolate</button><button id="fcClay" class="on" title="Neighbours in plain clay (C)">Clay</button><button id="fcBest" title="Fly to the clearest angle (B)">Best view</button><button id="fcOut" title="Back to the full city (Esc)">Exit</button></div>
-  <div class="r ltr"><button id="ltPrev" title="Previous landmark ([)" aria-label="Previous landmark">‹</button><span id="ltN"></span><button id="ltPlay"></button><button id="ltNext" title="Next landmark (N or ])" aria-label="Next landmark">›</button></div><i id="ltBar"></i></div>
+  <div class="r foc"><button id="fcSee" class="on" title="Lower whatever stands in the way and outline anything still hidden">Clear view</button><button id="fcIso" title="Hide the neighbours, leaving their footprints (I)">Isolate</button><button id="fcClay" class="on" title="Neighbours in plain clay (C)">Clay</button><button id="fcBest" title="Fly to the clearest angle (B)">Best view</button><button id="fcOut" title="Back to the full city (Esc)">Exit</button></div></div>
 <div id="nav"><div id="cp" role="button" tabindex="0" aria-label="Compass. Drag to turn and tilt, press to face north" title="Drag to turn and tilt · tap to face north">
   <svg viewBox="-32 -32 64 64" aria-hidden="true"><circle class="bz" r="30" fill="rgba(9,20,28,.78)" stroke="rgba(255,196,128,.4)"/>
   <g id="cpR"><circle r="20" fill="none" stroke="rgba(255,206,140,.3)" stroke-dasharray="2 3.2"/><path d="M0-18L5 0H-5Z" fill="#ff8a52"/><path d="M0 18L5 0H-5Z" fill="rgba(243,217,180,.6)"/><circle r="2" fill="#2a1a0c"/></g>
@@ -328,7 +323,7 @@
   <div id="dInfo"><span id="dSt"></span><span id="dNx"><i id="dArr">↑</i><b id="dNxD"></b><em id="dNxN"></em></span><span id="dGo"><i>➤</i><em></em></span></div>
   <div id="dSide"><div id="dSpdBox"><b id="dSpd">0</b><small>km/h</small></div><button id="dU" title="Turn round (U)">U-turn</button><button id="dAuto" title="Self-driving on or off">Auto</button></div></div>
   <canvas id="dFx" aria-hidden="true"></canvas><button id="dBoost" title="Boost: a burst of speed. Three charges; they come back with time, and faster from drifts, jumps and knocks (Space)" aria-label="Boost"><svg viewBox="0 0 84 84" aria-hidden="true"><circle class="bt" cx="42" cy="42" r="37" stroke-dasharray="71.5 6"/><circle class="bn" id="dBoostN" cx="42" cy="42" r="37" stroke-dasharray="0 232.5"/><circle class="bf" id="dBoostF" cx="42" cy="42" r="37" stroke-dasharray="0 232.5"/></svg><b>Boost</b></button><button id="dHorn" title="Horn: traffic ahead jumps aside (H)" aria-label="Horn"><b>Horn</b></button><div id="dCombo" aria-live="off"><b id="dComboN"></b><em>combo</em></div>
-  <div id="mini" title="Tap for the whole island"><canvas id="mmC"></canvas><span id="mmD"></span></div><div id="dJoy"><i></i></div><div id="dTun"></div><div id="dMsg"></div>
+  <div id="mini" title="Tap for the whole island"><canvas id="mmC"></canvas><span id="mmD"></span></div><div id="isle"><div class="ic"><div class="ih"><b>Hong Kong Island</b><button id="isleGo" type="button">Choose destination</button><button id="isleX" type="button" aria-label="Close the map">✕</button></div><canvas id="isleC" aria-label="Map of Hong Kong Island: where you are, your route, and the places to drive to"></canvas></div></div><div id="dJoy"><i></i></div><div id="dTun"></div><div id="dMsg"></div>
   <div id="navP"><div class="nh"><b>Where to?</b><button id="navX" aria-label="Close">✕</button></div><div id="navL"></div></div>
   <div id="garage" data-step="ride">
     <div id="gA" class="gp"><b class="gh">Choose your ride</b>
@@ -355,7 +350,6 @@
       <div class="gto"><em>To</em><b id="gToName"></b><i id="gToDist"></i></div>
       <div class="gmodes"><button id="gAuto" class="gmode auto"><b>Drive me</b><em>Sit back: the car drives itself there, fast</em><i id="gAutoBest"></i></button><button id="gFree" class="gmode"><b>I'll drive</b><em>You steer, following the route on the road</em><i id="gFreeBest"></i></button></div>
       <button id="gBack3" class="glink">‹ Pick another place</button></div></div></div>
-<div id="pm" title="Fly to Central"><b>Central</b><i></i><u></u></div>
 <div id="cr">Buildings and 3D building models: Lands Department, HKSAR Government, via <a href="https://data.gov.hk/en-data/dataset/hk-landsd-openmap-landsd-building" target="_blank" rel="noopener">DATA.GOV.HK</a> and <a href="https://3d.map.gov.hk/" target="_blank" rel="noopener">Open3Dhk</a> · map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors · elevation NASA SRTM</div>
 <script>window.__errs=[];addEventListener("error",function(e){window.__errs.push(String(e.message).slice(0,300)+" @"+e.lineno)});(function(){var ce=console.error;console.error=function(){try{window.__errs.push(Array.prototype.join.call(arguments," ").slice(0,900))}catch(e){}ce.apply(console,arguments)}})();</script>
 <script type="module">
@@ -3336,6 +3330,8 @@ function makeLabels() {
     ['North Point', 'northpoint'], ['Quarry Bay', 'quarrybay'], ['Sai Wan Ho', 'saiwanho'], ['Shau Kei Wan', 'shaukeiwan'], ['Chai Wan', 'chaiwan'], ['Siu Sai Wan', 'siusaiwan'], ['Pok Fu Lam', 'pokfulam'], ['Aberdeen', 'aberdeen'],
     ['Wong Chuk Hang', 'wongchukhang'], ['Deep Water Bay', 'deepwaterbay'], ['Repulse Bay', 'repulsebay'], ['Stanley', 'stanley'], ['Shek O', 'sheko'], ['Big Wave Bay', 'bigwavebay'], ['Chung Hom Kok', 'chunghomkok'], ['The Peak', 'peaktower']];
   for (const [n, k] of D) { const s = SITE(k); if (!s) continue; const g = Math.max(gyAt(s[0], s[1]), 0); add(n, 'dist', s[0], s[1], g + 130, '', { tx: s[0], tz: s[1], dist: 2400, pol: 58 * RAD }); }
+  /* Central: a district like the others (it once had a marker of its own), named over the middle of its three best-known towers */
+  { const a = SITE('ifc2'), b = SITE('hsbc'), c = SITE('boc'), x = (a[0] + b[0] + c[0]) / 3, z = (a[1] + b[1] + c[1]) / 3; add('Central', 'dist', x, z, Math.max(gyAt(x, z), 0) + 130, '', { tx: x, tz: z, dist: 2400, pol: 58 * RAD }); }
   { const alc = G.coast.reduce((a, r) => { const c = polyCen(r), s = SITE('leitung'), d = Math.hypot(c[0] - s[0], c[1] - s[1]); return d < a[0] ? [d, c] : a; }, [1e9, null])[1]; if (alc) add('Ap Lei Chau', 'dist', alc[0], alc[1], hAt(alc[0], alc[1]) + 110, '', { tx: alc[0], tz: alc[1], dist: 2200, pol: 58 * RAD }); }
   for (const n of ['Victoria Peak', 'Mount Parker', 'High West', 'Mount Kellett', 'Mount Gough', 'Mount Cameron', 'Mount Nicholson', "Jardine's Lookout", 'Violet Hill', 'Mount Butler', 'Stanley Mound', "D'Aguilar Peak", 'Mount Davis', 'Brick Hill', 'Mount Collinson', 'Pottinger Peak', 'Shek O Peak', 'Braemar Hill', 'Siu Ma Shan', 'Lung Fu Shan']) {
     const p = peakXZ(n); if (p) add(n, 'peak', p[0], p[1], p[2] + 45, p[2] + ' m', { tx: p[0], tz: p[1], dist: 1500, pol: 62 * RAD }); }
@@ -3430,13 +3426,13 @@ function focusBestView(poseOnly) {
     let vis = 0, tot = 0; for (const fy of [.12, .45, .8]) for (const fl of [-.55, 0, .55]) { tot++; if (sightClear(e, [c.x + lx * R * fl, b.min.y + H * fy, c.z + lz * R * fl], ex)) vis++; }
     const daz = Math.abs(((az - cam.az) % TAU + TAU + PI) % TAU - PI), score = vis / tot - daz * .02 - Math.abs(pd - 70) * .002; if (!best || score > best.s) best = { s: score, az, pol, vis: vis / tot }; }
   const pose = { tx: c.x, tz: c.z, dist, az: best.az, pol: best.pol, ty }; if (poseOnly) return pose;
-  if (TOUR.on) stopTour(); if (LT.on) ltPause(); flyTo(pose); return best;
+  if (TOUR.on) stopTour(); flyTo(pose); return best;
 }
 const fcEl = id => document.getElementById(id);
 function focusCard() { const c = fcEl('fc'), o = FOCUS.label; c.classList.toggle('show', !!o); if (!o) return; c.classList.toggle('focused', FOCUS.active);
   fcEl('fcN').textContent = o.name; fcEl('fcS').textContent = o.focus.info || '';
-  { const f = LT_FACTS[o.name], k = ltIndex(o), n = ltStops().length; fcEl('fcF').textContent = f ? f.fact : ''; fcEl('fcY').textContent = f ? [f.year, f.by].filter(Boolean).join(' · ') : ''; c.classList.toggle('hasf', !!f);
-    c.classList.toggle('lt', k >= 0); c.classList.toggle('touring', LT.on); c.classList.toggle('auto', LT.on && LT.auto); fcEl('ltN').textContent = k >= 0 ? (k + 1) + ' / ' + n : ''; const pb = fcEl('ltPlay'); pb.textContent = LT.on && LT.auto ? '❚❚' : '▶\uFE0E'; pb.title = LT.on && LT.auto ? 'Pause' : 'Play the landmark tour'; pb.classList.toggle('on', LT.on && LT.auto); } fcEl('fcSee').classList.toggle('on', !FOCUS.iso); fcEl('fcIso').classList.toggle('on', FOCUS.iso); fcEl('fcClay').classList.toggle('on', FOCUS.clay); }
+  { const f = LT_FACTS[o.name]; fcEl('fcF').textContent = f ? f.fact : ''; fcEl('fcY').textContent = f ? [f.year, f.by].filter(Boolean).join(' · ') : ''; c.classList.toggle('hasf', !!f);
+    } fcEl('fcSee').classList.toggle('on', !FOCUS.iso); fcEl('fcIso').classList.toggle('on', FOCUS.iso); fcEl('fcClay').classList.toggle('on', FOCUS.clay); }
 function focusOffer(o) { if (FOCUS.active && FOCUS.label !== o) exitFocus(); FOCUS.label = o; focusCard(); }
 function enterFocus(o) {
   const t = focusTargets(o); if (t.box.isEmpty()) return; FOCUS.eye.set(1e9, 0, 0);
@@ -3445,7 +3441,7 @@ function enterFocus(o) {
   const c = t.box.getCenter(new V3()), sz = t.box.getSize(new V3()); U.uFocC.value.set(c.x, c.z); U.uFocR.value = Math.hypot(sz.x, sz.z) / 2 + 40;
   buildFocusProxy(t); SH.farDirty = true; focusCard(); ctlHint.focus();
 }
-function exitFocus() { if (LT.on && !LT.sw) ltStop(); const was = FOCUS.active; FOCUS.active = false; FOCUS.label = null; focusCard(); if (was) { SH.farDirty = true; setTimeout(() => { SH.farDirty = true; }, 900); } }
+function exitFocus() { const was = FOCUS.active; FOCUS.active = false; FOCUS.label = null; focusCard(); if (was) { SH.farDirty = true; setTimeout(() => { SH.farDirty = true; }, 900); } }
 function setFocusMode(iso) { FOCUS.iso = iso; SH.farDirty = true; focusCard(); }
 function setFocusClay(on) { FOCUS.clay = on; focusCard(); }
 function initFocus() {
@@ -3507,7 +3503,6 @@ function tourLegs() {
   ];
 }
 function startTour() {
-  if (LT.on) { ltStop(); exitFocus(); }
   const legs = tourLegs(); TOUR.on = true; TOUR.i = 0; document.getElementById('bTour').classList.add('on'); setTime(presetTime('golden'), false);
   const next = () => { if (!TOUR.on) return; const L1 = legs[TOUR.i++]; if (!L1) { stopTour(); return; } if (L1.time) setTime(presetTime(L1.time), false);
     flyTo({ ...L1.p, dur: TOUR.i === 1 ? 2.5 : 4.5 }, () => { let t = 0; return dt => { t += dt; cam.az += dt * .025; if (t > L1.dwell) next(); }; }); };
@@ -3517,44 +3512,7 @@ function stopTour() { TOUR.on = false; const b = document.getElementById('bTour'
 /* ---------- landmark tour: visit the landmarks in route order (Central along the harbour to Taikoo, then the hills and the south side).
    Each stop focuses the building, flies to its clearest view, circles it slowly and shows a fact; the clock runs from golden hour to dusk.
    Any input pauses it (look around freely); ◀ ▶, a swipe on the card, or [ / ] (N) step through; Exit ends it. ---------- */
-const LT_ROUTE = ['The Center', 'One IFC', 'Two IFC', 'Exchange Square', 'Jardine House', 'Central Yards', 'The Landmark', 'HSBC', 'The Henderson', 'Cheung Kong Center', 'Champion Tower',
-  'Bank of China Tower', 'Lippo Centre', 'Queensway Government Offices', 'Central Government Offices', 'Legislative Council', 'Convention Centre', 'Central Plaza', 'Hopewell Centre',
-  'Sun Hung Kai Centre', 'Times Square', 'Hysan Place', 'Lee Garden One', 'One Island East', 'One Taikoo Place', 'Cityplaza', 'The Summit', 'Highcliff', 'Peak Tower', 'The Repulse Bay', 'Murray House'];
 const LT_FACTS = /*@@LT_FACTS@@*/{"The Center":{"year":"1998","by":"Dennis Lau & Ng Chun Man (DLN)","fact":"Neon bars wrap the tower and cycle through the rainbow each night, forming a Christmas tree in December."},"Two IFC":{"year":"2003","by":"Cesar Pelli, with Rocco Design","fact":"There is no 14th or 24th floor: both were skipped because 4 sounds like 'death' in Cantonese."},"One IFC":{"year":"1998","by":"Cesar Pelli, with Rocco Design","fact":"It opened on 6 July 1998, the day the new airport began flights; the Airport Express stops right beneath it."},"Exchange Square":{"year":"1985 (Tower 3: 1988)","by":"P&T Group (Remo Riva)","fact":"Home of the Hong Kong stock exchange, its plaza of Henry Moore and Ju Ming sculptures sits atop a bus terminus."},"Jardine House":{"year":"1973","by":"Palmer & Turner","fact":"Its round porthole windows earned it a cheeky nickname, politely 'House of a Thousand Orifices'."},"Central Yards":{"year":"due 2027","by":"Lead8, AL_A, UNStudio","fact":"Plans include a 1,100-seat theatre in a lattice shell, billed as Hong Kong's first Broadway-calibre stage."},"The Landmark":{"year":"1983","by":"P&T Group","fact":"Sun Yat-sen once stayed at the Hong Kong Hotel, whose north wing stood on this very site."},"HSBC":{"year":"1985","by":"Foster Associates (Norman Foster)","fact":"Its bronze lions are named Stephen and Stitt; Stephen still bears shrapnel scars from the Battle of Hong Kong."},"The Henderson":{"year":"2024","by":"Zaha Hadid Architects","fact":"Its curving glass is modelled on a bauhinia bud, and its plot was called the world's priciest when sold in 2017."},"Champion Tower":{"year":"1992","by":"Rocco Yim (Rocco Design)","fact":"Called Citibank Tower until 2016, it was billed as Hong Kong's first 'intelligent' office building."},"Cheung Kong Center":{"year":"1999","by":"Cesar Pelli, Leo A. Daly","fact":"Its height was capped by an imaginary line drawn between its neighbours, the Bank of China Tower and HSBC."},"Bank of China Tower":{"year":"1990","by":"I. M. Pei & Partners","fact":"Feng shui critics likened its sharp edges to a meat cleaver, earning it the nickname 'vertical knife'."},"Legislative Council":{"year":"2011","by":"Rocco Design Architects","fact":"A light funnel pours daylight into the debating chamber, and a lily pond outside helps keep the site cool."},"Central Government Offices":{"year":"2011","by":"Rocco Design Architects","fact":"Its two wings join overhead to form a giant 'Door Always Open' that frames the view from park to harbour."},"Lippo Centre":{"year":"1988","by":"Paul Rudolph, with Wong & Ouyang","fact":"Its bulging glass bays look like koalas climbing a tree, apt for a tower first named for Australian Alan Bond."},"Queensway Government Offices":{"year":"1985","by":"K. M. Tseng, Architectural Services Dept","fact":"It stands on old Victoria Barracks land, and the Brand Hong Kong dragon has crowned its roof since 2002."},"Convention Centre":{"year":"1997","by":"SOM (Larry Oltmanns), Wong & Ouyang","fact":"The 1997 handover was held in this wing, whose roof is likened to a seabird or, by critics, a turtle."},"Central Plaza":{"year":"1992","by":"Ng Chun Man & Associates (DLN)","fact":"Its top is a clock: four neon bars change colour every 15 minutes to tell the time through the night."},"Sun Hung Kai Centre":{"year":"1981","by":"David Woo + Associates","fact":"Five extra floors were stacked onto its roof in 1991, a decade after it opened."},"Hopewell Centre":{"year":"1980","by":"Gordon Wu, WMKY","fact":"Its round rooftop pool was added for feng shui, because people thought the tower looked like a cigarette."},"Times Square":{"year":"1994","by":"Wong & Ouyang","fact":"Built on an old tram depot, its plaza dropped a giant apple every New Year's Eve from 1993 to 2014."},"Hysan Place":{"year":"2012","by":"Kohn Pedersen Fox, with DLN","fact":"Hong Kong's first building pre-certified LEED Platinum, its shifting boxes open up into gardens and terraces."},"Lee Garden One":{"year":"1997","by":"Dennis Lau & Ng Chun Man (DLN)","fact":"Long known as Manulife Plaza, it replaced the 1971 Lee Gardens Hotel, demolished in 1994."},"One Island East":{"year":"2008","by":"Wong & Ouyang","fact":"Its glass walls run past the corners and open at top and bottom, a trick meant to make the tower look afloat."},"One Taikoo Place":{"year":"2018","by":"Wong & Ouyang","fact":"It makes some of its own power from biodiesel refined from local restaurants' used cooking oil."},"Cityplaza":{"year":"1982 (mall)","by":"Wong Tung & Partners","fact":"Inside the mall is Ice Palace, the largest real-ice skating rink on Hong Kong Island."},"Peak Tower":{"year":"1997","by":"Terry Farrell","fact":"Its wok-shaped roof was kept low on purpose so the tower would not break the line of the hills."},"Highcliff":{"year":"2003","by":"Dennis Lau & Ng Chun Man (DLN)","fact":"One of the world's thinnest towers, it hides a water-tank damper on top to calm its sway in typhoons."},"The Summit":{"year":"2001","by":"Dennis Lau & Ng Chun Man (DLN)","fact":"Its butterfly-shaped floors hold duplex flats; with Highcliff next door it forms 'the Chopsticks'."},"The Repulse Bay":{"year":"1986","by":"Kwan Ng Wong & Associates","fact":"A 1986 copy of the 1920 hotel sits below towers whose giant square hole is said to let dragons reach the sea."},"Murray House":{"year":"1846 (rebuilt 2001)","by":"Royal Engineers (Aldrich, Collinson)","fact":"Built in Central in 1846, it was taken apart into 3,000+ numbered blocks in 1982 and rebuilt in Stanley."}};
-const LT = { on: false, auto: false, i: 0, stops: [], t: 0, dwell: 10, arrived: false, sw: false };
-const ltStops = () => { if (LT.stops.length) return LT.stops; const by = new Map(LABELS.list.filter(o => o.focus).map(o => [o.name, o])); return LT.stops = LT_ROUTE.map(n => by.get(n)).filter(Boolean); };
-const ltIndex = o => ltStops().indexOf(o);
-function ltGo(i, auto = LT.auto) {
-  const S = ltStops(), n = S.length; if (!n) return; if (TOUR.on) stopTour();
-  if (i >= n && auto) { ltStop(); return; }   /* the end of the route: stay on the last landmark */
-  LT.i = (i % n + n) % n; LT.on = true; LT.auto = auto; LT.t = 0; LT.arrived = false; const o = S[LT.i];
-  LT.sw = true; if (FOCUS.label !== o || !FOCUS.active) { if (FOCUS.active) exitFocus(); FOCUS.label = o; enterFocus(o); } LT.sw = false;
-  if (auto) setTime(lerp(presetTime('golden'), presetTime('dusk'), LT.i / Math.max(n - 1, 1)), false);
-  const p = { ...((FOCUS.active && FOCUS.label === o && focusBestView(true)) || o.fly) }, asp = innerWidth / Math.max(innerHeight, 1);
-  p.dist *= asp < 1 ? 1.25 + .6 * (1 - asp) : 1.2;   /* step back a little more on a portrait screen so the whole building fits beside the card */
-  flyTo({ ...p, dur: undefined }, () => { LT.arrived = true; return ltOrbit; });
-  focusCard();
-}
-function ltOrbit(dt) { cam.az += dt * .055; if (!LT.auto) return; LT.t += dt; if (LT.t > LT.dwell) ltGo(LT.i + 1, true); }
-function ltPlay() { if (!LT.on) { const k = FOCUS.label ? ltIndex(FOCUS.label) : -1; ltGo(k < 0 ? 0 : k, true); return; }
-  LT.auto = !LT.auto; if (LT.auto) { if (LT.arrived && !cam.fly) cam.tour = ltOrbit; else ltGo(LT.i, true); } focusCard(); }
-function ltStep(d) { const k = LT.on ? LT.i : FOCUS.label ? ltIndex(FOCUS.label) : -1; ltGo(k < 0 ? 0 : k + d, LT.auto); }
-function ltPause() { if (LT.auto) { LT.auto = false; focusCard(); } }
-function ltStop() { LT.on = false; LT.auto = false; LT.t = 0; if (cam.tour === ltOrbit) cam.tour = null; focusCard(); }
-function initLT() {
-  fcEl('ltPrev').onclick = () => ltStep(-1); fcEl('ltNext').onclick = () => ltStep(1); fcEl('ltPlay').onclick = ltPlay;
-  document.getElementById('bLmk').onclick = () => { if (LT.on && LT.auto) exitFocus(); else if (LT.on) ltPlay(); else ltGo(0, true); };
-  /* a sideways swipe across the card steps through the landmarks */
-  const c = fcEl('fc'); let s = null;
-  c.addEventListener('pointerdown', e => { s = e.target.closest('input') ? null : { x: e.clientX, y: e.clientY, id: e.pointerId }; });
-  c.addEventListener('pointermove', e => { if (!s || e.pointerId !== s.id) return; const dx = e.clientX - s.x, dy = e.clientY - s.y;
-    if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.5) { s = null; if (FOCUS.label && ltIndex(FOCUS.label) >= 0) { c.dataset.swiped = Date.now(); ltStep(dx < 0 ? 1 : -1); } } });
-  const end = () => { s = null; }; c.addEventListener('pointerup', end); c.addEventListener('pointercancel', end);
-  /* a swipe that ends over a button is not a press */
-  c.addEventListener('click', e => { if (Date.now() - (+c.dataset.swiped || 0) < 400) { e.stopPropagation(); e.preventDefault(); } }, true);
-  hooks.push(() => { const bar = fcEl('ltBar'); if (bar) bar.style.transform = 'scaleX(' + (LT.on && LT.auto ? clamp(LT.t / LT.dwell, 0, 1) : 0).toFixed(3) + ')';
-    const b = document.getElementById('bLmk'); if (b) b.classList.toggle('on', LT.on && LT.auto); });
-}
 
 /* ═════════════ DRIVE — every street on the island ═════════════
    hk-drive.bin (loaded on first use) holds every drivable OpenStreetMap way on Hong Kong Island, motorways to service lanes,
@@ -4212,16 +4170,24 @@ function dSelect(i) {
 }
 function gStep(s) { const g = document.getElementById('garage'); g.dataset.step = s; DRIVE.gStep = s;
   if (s === 'where') { const i = STARTS.findIndex(q => q.id === DRIVE.start); pickSet('start', i >= 0 ? i : STARTS.findIndex(q => q.id === 'pier')); document.getElementById('gHere').style.display = DRIVE.hereXZ ? '' : 'none'; }
-  if (s === 'dest') { document.getElementById('gDestH').textContent = DRIVE.gNext ? 'Where next?' : 'Where to?'; const L = pickList('dest'), cur = PICK.dest.id && L.findIndex(q => q.id === PICK.dest.id); pickSet('dest', cur >= 0 ? cur : (L.findIndex(q => q.id === 'peak') + L.length) % L.length); }
+  if (s === 'dest') { document.getElementById('gDestH').textContent = DRIVE.gMid ? (DRIVE.nav ? 'Change destination' : 'Where to?') : DRIVE.gNext ? 'Where next?' : 'Where to?'; const L = pickList('dest'), cur = PICK.dest.id && L.findIndex(q => q.id === PICK.dest.id); pickSet('dest', cur >= 0 ? cur : (L.findIndex(q => q.id === 'peak') + L.length) % L.length); }
   if (s === 'mode') { const p = DRIVE.gDest, m = p.km; document.getElementById('gToName').textContent = p.name; document.getElementById('gToDist').textContent = m ? (m < 1 ? Math.round(m * 100) * 10 + ' m' : m.toFixed(1) + ' km') + ' by road' : '';
     const bt = DRIVE.start && DRIVE.start !== 'here' ? bestOf(DRIVE.start, p.id) : {}; document.getElementById('gAutoBest').textContent = bt.a ? 'Best ' + fmtT(bt.a) : ''; document.getElementById('gFreeBest').textContent = bt.m ? 'Your best ' + fmtT(bt.m) : 'Timed: set a best'; } }
 /* after arriving: the same big place picker as at the start (the island map, swipe from place to place), then drive me / I'll drive.
    The trip starts where the car stands; the place just reached counts as its start for the timed runs */
 function openNext(from) {
-  const car = DRIVE.car; if (!car) return; DRIVE.hereXZ = [car.x, car.z]; if (from) DRIVE.start = from;
+  const car = DRIVE.car; if (!car) return; isleClose(); DRIVE.gMid = null; DRIVE.hereXZ = [car.x, car.z]; if (from) DRIVE.start = from;
   DRIVE.garage = true; DRIVE.gNext = true; DRIVE.run = null; DRIVE.boosting = false; DRIVE.joy = null; dJoyDraw(); car.v = 0; car.fly = null; document.body.classList.add('garage'); ctlHint.hide(); navClose();
   PICK.dest.id = undefined; gStep('dest');
 }
+/* the destination button while driving (mid-trip, or just roaming): the same big place picker, with the place being driven to chosen. The drive
+   waits; the back arrow returns to it as it was, a new place starts a new trip from where the car stands */
+function openDest(id) {
+  const car = DRIVE.car; if (!car || DRIVE.garage) return; isleClose(); DRIVE.hereXZ = [car.x, car.z]; DRIVE.gMid = { start: DRIVE.start }; DRIVE.start = 'here';
+  DRIVE.garage = true; DRIVE.gNext = true; DRIVE.boosting = false; DRIVE.burst = 0; DRIVE.joy = null; dJoyDraw(); car.v = 0; car.fly = null; document.body.classList.add('garage'); ctlHint.hide(); navClose();
+  PICK.dest.id = id || (DRIVE.nav && DRIVE.nav.dest ? DRIVE.nav.dest.id : undefined); gStep('dest');
+}
+function resumeDrive() { const m = DRIVE.gMid; if (!m) return; DRIVE.gMid = null; DRIVE.start = m.start; DRIVE.garage = false; DRIVE.gNext = false; document.body.classList.remove('garage'); }
 function openGarage() {
   DRIVE.gNext = false;
   if (DRIVE.started && DRIVE.car) DRIVE.hereXZ = [DRIVE.car.x, DRIVE.car.z]; DRIVE.started = false;
@@ -4230,7 +4196,7 @@ function openGarage() {
 }
 /* leave the start screen: free driving; with a destination, the route shown and either you drive (auto false) or the car does */
 function closeGarage(dest, auto = true) {
-  DRIVE.garage = false; DRIVE.started = true; DRIVE.gNext = false; document.body.classList.remove('garage');
+  DRIVE.garage = false; DRIVE.started = true; DRIVE.gNext = false; DRIVE.gMid = null; document.body.classList.remove('garage');
   DRIVE.run = dest && dest.id && DRIVE.start && DRIVE.start !== 'here' ? { key: runEnd(DRIVE.start) + '>' + runEnd(dest.id) + (auto ? '|a' : '|m'), dest: dest.id, t0: ST.t } : null;
   if (dest && !auto) { setAuto(false); navStart(dest); ctlHint.first = true; ctlHint.show(['Follow the arrows to ' + dest.name].concat(COARSE ? ['Hold anywhere to drive', 'Slide to steer'] : ['↑ drive', '← → steer']), 9000); return; }
   if (dest) { setAuto(true); navStart(dest); ctlHint.first = false; ctlHint.show(['Driving you to ' + dest.name, COARSE ? 'Steer to turn off' : '← → to turn off', 'Auto to take over'], 7000); return; }
@@ -4297,7 +4263,7 @@ function initGarage() {
   q('gGo').onclick = () => gStep('where'); q('gPrev').onclick = () => dSelect(DRIVE.vi - 1); q('gNext').onclick = () => dSelect(DRIVE.vi + 1);
   const pickedDest = () => { const S = pickList('dest')[PICK.dest.i], P = placeXZ(S); return { id: S.id, name: S.name, x: P[0], z: P[1], kind: 'Place', km: PICK.dest.km }; };
   q('gBack').onclick = () => gStep('ride'); q('gTo3').onclick = () => { dStart(STARTS[PICK.start.i].id); gStep('dest'); }; q('gHere').onclick = () => { dStart('here'); gStep('dest'); };
-  q('gBack2').onclick = () => DRIVE.gNext ? closeGarage() : gStep('where'); q('gRoam').onclick = () => closeGarage(); q('gToMode').onclick = () => { DRIVE.gDest = pickedDest(); gStep('mode'); };
+  q('gBack2').onclick = () => DRIVE.gMid ? resumeDrive() : DRIVE.gNext ? closeGarage() : gStep('where'); q('gRoam').onclick = () => closeGarage(); q('gToMode').onclick = () => { DRIVE.gDest = pickedDest(); gStep('mode'); };
   q('gSPrev').onclick = () => pickSet('start', PICK.start.i - 1); q('gSNext').onclick = () => pickSet('start', PICK.start.i + 1); q('gDPrev').onclick = () => pickSet('dest', PICK.dest.i - 1); q('gDNext').onclick = () => pickSet('dest', PICK.dest.i + 1);
   pickInput('start', q('gMapS'), true); pickInput('start', document.querySelector('#gB .gcar'), false); pickInput('dest', q('gMapD'), true); pickInput('dest', document.querySelector('#gC .gcar'), false);
   addEventListener('resize', () => { if (DRIVE.garage && DRIVE.gStep === 'where') pickMap('start'); if (DRIVE.garage && DRIVE.gStep === 'dest') pickMap('dest'); });
@@ -4332,6 +4298,7 @@ function autoPilot(car, e, plan, vmax, V, dt) {
   else if (plan && plan.dead) vt = Math.min(vt, Math.sqrt(2 * DEC * Math.max(0, plan.left - 4)));
   /* the destination */
   const left = navLeft(); vt = Math.min(vt, Math.sqrt(2 * 5 * Math.max(0, left - 6)) + 2);
+  const clear = vt >= cruise - .5;   /* nothing ahead to slow for: a car running over its cruising speed (after a burst of boost) coasts down and does not brake */
   if (sp < vt - .5) return { thr: 1, brk: 0 };
   if (sp > vt + 1.5) return { thr: 0, brk: clear ? 0 : 1 };
   return { thr: .5, brk: 0 };
@@ -4917,7 +4884,7 @@ async function enterDrive() {
   if (DRIVE.on || DRIVE.entering) return; DRIVE.entering = true; try { await enterDrive0(); } finally { DRIVE.entering = false; }
 }
 async function enterDrive0() {
-  if (DRIVE.on) return; if (TOUR.on) stopTour(); if (LT.on) ltStop(); if (FOCUS.label) exitFocus();
+  if (DRIVE.on) return; if (TOUR.on) stopTour(); if (FOCUS.label) exitFocus();
   document.body.classList.remove('menu');
   if (!DRIVE.ready) {
     ctlHint.show(['Loading every street…'], 30000);
@@ -4975,15 +4942,51 @@ function drawMini(dt) {
   if ((MM.dT -= dt) <= 0) { MM.dT = .6; let best = null, bd = 2600; for (const o of LABELS.list) { if (o.kind !== 'dist') continue; const d = Math.hypot(o.x - car.x, o.z - car.z); if (d < bd) { bd = d; best = o.name; } }
     const el = document.getElementById('mmD'), t = best || 'Hong Kong Island'; if (el.textContent !== t) el.textContent = t; }
 }
+/* ---------- the whole-island map ---------- */
+const ISLE = { on: false, t: 0 };
+function isleOpen() { if (!DRIVE.on || DRIVE.garage || !MM.base) return; ISLE.on = true; ISLE.t = 0; document.body.classList.add('isle'); DRIVE.joy = null; dJoyDraw();
+  const cv = document.getElementById('isleC'), B = pickBox(), w = cv.clientWidth || 320; cv.style.height = Math.round(Math.min(w * (B[3] - B[1]) / (B[2] - B[0]), innerHeight - 90)) + 'px'; isleDraw(); }
+function isleClose() { if (!ISLE.on) return; ISLE.on = false; document.body.classList.remove('isle'); }
+function isleDraw() {
+  const cv = document.getElementById('isleC'), car = DRIVE.car; if (!cv || !MM.base || !cv.clientWidth || !car) return;
+  const dpr = Math.min(devicePixelRatio || 1, 2), W = Math.round(cv.clientWidth * dpr), H = Math.round(cv.clientHeight * dpr); if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+  const g = cv.getContext('2d'), T = pickXf(cv), X = x => x * T.k + T.ox, Z = z => z * T.k + T.oz, NV = DRIVE.nav, ff = getComputedStyle(document.body).fontFamily;
+  g.setTransform(dpr, 0, 0, dpr, 0, 0); g.fillStyle = '#163a50'; g.fillRect(0, 0, T.w, T.h); g.imageSmoothingEnabled = true; g.drawImage(MM.base, X(X0), Z(Z0), MM.W * MM.mpp * T.k, MM.H * MM.mpp * T.k);
+  /* the route still to drive */
+  if (NV && NV.pts && NV.pts.length > 3) { const P = NV.pts; g.beginPath(); g.moveTo(X(car.x), Z(car.z)); for (let i = 0; i < P.length; i += 2) g.lineTo(X(P[i]), Z(P[i + 1]));
+    g.lineCap = g.lineJoin = 'round'; g.strokeStyle = 'rgba(9,20,28,.7)'; g.lineWidth = 7; g.stroke(); g.strokeStyle = '#4fc3f2'; g.lineWidth = 4; g.stroke(); }
+  /* every place, named where there is room; the one being driven to large */
+  const pill = (name, x, z, r, big) => { g.font = (big ? '700 13px ' : '600 10.5px ') + ff; const t = name.toUpperCase(), h = big ? 24 : 17, tw = g.measureText(t).width + (big ? 16 : 10), bx = clamp(x - tw / 2, 3, T.w - tw - 3), by = z - r - 5 - h < 3 ? z + r + 5 : z - r - 5 - h; return [bx, by, tw, h, t]; };
+  const put = (q, big) => { g.fillStyle = big ? 'rgba(9,20,28,.9)' : 'rgba(9,20,28,.72)'; g.beginPath(); g.roundRect ? g.roundRect(q[0], q[1], q[2], q[3], q[3] / 2) : g.rect(q[0], q[1], q[2], q[3]); g.fill(); g.fillStyle = '#fff4df'; g.textBaseline = 'middle'; g.fillText(q[4], q[0] + (big ? 8 : 5), q[1] + q[3] / 2 + .5); };
+  const used = [], hits = q => used.some(u => q[0] < u[0] + u[2] + 2 && q[0] + q[2] + 2 > u[0] && q[1] < u[1] + u[3] + 2 && q[1] + q[3] + 2 > u[1]);
+  let dq = null; if (NV && NV.dest) { dq = pill(NV.dest.name || 'Destination', X(NV.dest.x), Z(NV.dest.z), 10, true); used.push(dq); }
+  used.push([X(car.x) - 14, Z(car.z) - 14, 28, 28]);
+  for (const S of STARTS) { const P = placeXZ(S); if (!P || (NV && NV.dest && NV.dest.id === S.id)) continue; const x = X(P[0]), z = Z(P[1]);
+    g.fillStyle = '#ffb054'; g.strokeStyle = 'rgba(9,20,28,.9)'; g.lineWidth = 2; g.beginPath(); g.arc(x, z, 5, 0, TAU); g.fill(); g.stroke(); const q = pill(S.name, x, z, 5, false); if (!hits(q)) { used.push(q); put(q, false); } }
+  if (dq) { const x = X(NV.dest.x), z = Z(NV.dest.z); g.fillStyle = '#4fc3f2'; g.strokeStyle = '#fff4df'; g.lineWidth = 3; g.beginPath(); g.arc(x, z, 10, 0, TAU); g.fill(); g.stroke(); put(dq, true); }
+  /* you */
+  g.save(); g.translate(X(car.x), Z(car.z)); g.rotate(car.yaw + PI / 2); g.beginPath(); g.moveTo(0, -12); g.lineTo(8.5, 9); g.lineTo(0, 4.5); g.lineTo(-8.5, 9); g.closePath(); g.fillStyle = '#ffd08f'; g.strokeStyle = '#2a1606'; g.lineWidth = 2; g.fill(); g.stroke(); g.restore();
+}
+function initIsle() {
+  const el = document.getElementById('isle'), cv = document.getElementById('isleC'); if (!el) return; let s = null;
+  for (const t of ['pointerdown', 'pointermove', 'pointerup', 'click', 'touchstart', 'mousedown', 'wheel']) el.addEventListener(t, e => e.stopPropagation(), { passive: true });
+  el.addEventListener('pointerup', e => { if (e.target === el) isleClose(); });   /* (a tap outside the card) */
+  document.getElementById('isleX').onclick = isleClose; document.getElementById('isleGo').onclick = () => openDest();
+  cv.addEventListener('pointerdown', e => { s = { x: e.clientX, y: e.clientY }; });
+  cv.addEventListener('pointerup', e => { if (!s || Math.hypot(e.clientX - s.x, e.clientY - s.y) > 8) { s = null; return; } s = null; const r = cv.getBoundingClientRect(), T = pickXf(cv), px = e.clientX - r.left, pz = e.clientY - r.top; let best = null, bd = 26;
+    for (const S of pickList('dest')) { const P = placeXZ(S), d = Math.hypot(P[0] * T.k + T.ox - px, P[1] * T.k + T.oz - pz); if (d < bd) { bd = d; best = S; } } if (best) openDest(best.id); });
+  addEventListener('resize', () => { if (ISLE.on) isleOpen(); });
+  hooks.push(dt => { if (!ISLE.on) return; if (!DRIVE.on || DRIVE.garage) { isleClose(); return; } if ((ISLE.t -= dt) <= 0) { ISLE.t = .15; isleDraw(); } });
+}
 function initMini() {
   const cv = MM.cv = document.getElementById('mmC'), size = () => { const r = cv.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2), n = Math.round((r.width || 132) * dpr); if (cv.width !== n) { cv.width = cv.height = n; } };
-  MM.g = cv.getContext('2d'); size(); addEventListener('resize', size); document.getElementById('mini').onclick = () => { MM.wide = !MM.wide; document.getElementById('mini').classList.toggle('wide', MM.wide); };
+  MM.g = cv.getContext('2d'); size(); addEventListener('resize', size); document.getElementById('mini').onclick = () => ISLE.on ? isleClose() : isleOpen(); initIsle();
   hooks.push(dt => { if (DRIVE.on && cv.width < 8) size(); drawMini(dt); });
 }
 function initDrive() {
   const H = DRIVE.hud, q = id => document.getElementById(id); Object.assign(H, { spd: q('dSpd'), st: q('dSt'), nx: q('dNx'), arr: q('dArr'), nxd: q('dNxD'), nxn: q('dNxN'), tun: q('dTun'), msg: q('dMsg'), joy: q('dJoy'), boost: q('dBoost'), bF: q('dBoostF'), bN: q('dBoostN'), combo: q('dCombo'), comboN: q('dComboN') });
   { const b = q('dBoost'), on = e => { e.preventDefault(); DRIVE.boostBtn = true; DRIVE.boostTap = true; }, off = () => { DRIVE.boostBtn = false; }; b.addEventListener('pointerdown', on); for (const t of ['pointerup', 'pointercancel', 'pointerleave']) b.addEventListener(t, off); { const hb = q('dHorn'); hb.addEventListener('pointerdown', e => { e.preventDefault(); dHorn(); }); hb.addEventListener('keydown', e => { if (e.code === 'Enter' || e.code === 'Space') { e.preventDefault(); if (!e.repeat) dHorn(); } }); } }
-  q('dNavB').onclick = () => document.body.classList.contains('navopen') ? navClose() : navOpen(); q('navX').onclick = navClose;
+  q('dNavB').onclick = () => openDest(); q('navX').onclick = navClose;
   q('bDrive').onclick = () => DRIVE.on ? exitDrive() : enterDrive(); q('bigDrive').onclick = () => enterDrive(); q('bigDrive').classList.add('ready'); q('dExit').onclick = exitDrive; q('dU').onclick = dUturn;
   addEventListener('keydown', e => { if (!DRIVE.on) return; if (e.code === 'KeyU' && !DRIVE.garage) dUturn(); if (e.code === 'KeyH' && !DRIVE.garage && !e.repeat) dHorn(); if (e.code === 'KeyG' && !DRIVE.garage) openGarage(); if (e.code === 'Escape') exitDrive(); });
   initGarage(); initMini();
@@ -5031,7 +5034,7 @@ function pickGround(cx, cy) {
    together to tilt. Double-tap zooms in; double-tap, hold and slide zooms smoothly; a two-finger tap zooms out. ---------- */
 const ptrs = new Map(); let userTouched = false, lastMoveT = 0, moveDt = .016;
 const GS = { mode: null, a: null, two: null, lastTap: null, zp: null, panned: 0 };
-function userInput() { cam.fly = null; cam.tour = null; userTouched = true; if (TOUR.on) stopTour(); if (LT.on) ltPause(); }
+function userInput() { cam.fly = null; cam.tour = null; userTouched = true; if (TOUR.on) stopTour(); }
 canvas.addEventListener('contextmenu', e => e.preventDefault());
 const panBy = (dx, dy) => { const k = cam.dist * 2 * Math.tan(cam.fov * RAD / 2) / canvas.clientHeight, fx = -Math.cos(cam.az), fz = -Math.sin(cam.az), rx = -fz, rz = fx, c = Math.max(Math.cos(cam.pol), .25);
   const mx = (-dx * rx + dy * fx / c) * k, mz = (-dx * rz + dy * fz / c) * k; cam.tx += mx; cam.tz += mz; cam.vx = lerp(cam.vx, mx / moveDt, .4); cam.vz = lerp(cam.vz, mz / moveDt, .4); };
@@ -5152,7 +5155,6 @@ addEventListener('gesturechange', e => { if (e.target !== canvas) return; e.prev
 const keys = {};
 addEventListener('keydown', e => { keys[e.code] = 1; if (DRIVE.on && !['KeyP', 'KeyL'].includes(e.code)) { if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault(); return; } if (e.code.startsWith('Digit')) { const i = +e.code.slice(5) - 1; if (i >= 0 && i < 6) goPreset(i); }
   if (e.code === 'KeyR') goPreset(0); if (e.code === 'KeyP' || (e.code === 'Escape' && document.body.classList.contains('photo'))) togglePhoto(); else if (e.code === 'Escape' && FOCUS.label) exitFocus();
-  if ((e.code === 'KeyN' || e.code === 'BracketRight') && FOCUS.label) ltStep(1); if (e.code === 'BracketLeft' && FOCUS.label) ltStep(-1);
   if (e.code === 'KeyF' && FOCUS.label) FOCUS.active ? exitFocus() : enterFocus(FOCUS.label); if (e.code === 'KeyI' && FOCUS.active) setFocusMode(!FOCUS.iso); if (e.code === 'KeyC' && FOCUS.active) setFocusClay(!FOCUS.clay); if (e.code === 'KeyB' && FOCUS.active) focusBestView(); if (e.code === 'KeyL') setLight({ golden: 'noon', noon: 'dusk', dusk: 'golden' }[L.name]); if (e.code === 'KeyT') TOUR.on ? stopTour() : startTour(); });
 addEventListener('keyup', e => { keys[e.code] = 0; });
 function stepCamera(dt) {
@@ -5324,7 +5326,7 @@ async function boot() {
   initTod(); setQuality(2);
   const shared = readHash(); setTime(presetTime('golden'), true);   /* always the golden afternoon, whatever hour a link or the last visit left in the address */
   Object.assign(cam, shared ? shared.pose : heroState()); placeCamera(0);
-  makeLabels(); hooks.push(keepHash); initFocus(); initNav(); initLT(); initDrive();
+  makeLabels(); hooks.push(keepHash); initFocus(); initNav(); initDrive();
   if (shared && shared.f) { let nm = ''; try { nm = decodeURIComponent(shared.f); } catch (e) { } const o = LABELS.list.find(l => l.focus && l.name === nm); if (o) { FOCUS.iso = shared.iso; FOCUS.clay = shared.clay; enterFocus(o); } }
   T.total = performance.now() - t0; ST.timing = T;
   document.querySelectorAll('#gView button[data-v]').forEach(b => b.onclick = () => goPreset(+b.dataset.v));
@@ -5337,13 +5339,6 @@ async function boot() {
   document.getElementById('bLink').onclick = async e => { const b = e.currentTarget, url = location.href.split('#')[0] + viewHash(); try { history.replaceState(null, '', viewHash()); await navigator.clipboard.writeText(url); b.textContent = 'Copied'; } catch (err) { b.textContent = 'In URL'; } setTimeout(() => { b.textContent = 'Link'; }, 1600); };
   document.getElementById('bReset').onclick = () => { stopTour(); goPreset(0); };
   document.getElementById('bPhoto').onclick = togglePhoto;
-  { /* the Central placemark: a screen-space pin over the landmark cluster */
-    const pm = document.getElementById('pm'), a = SITE('ifc2'), b = SITE('hsbc'), c = SITE('boc'), ax = (a[0] + b[0] + c[0]) / 3, az = (a[1] + b[1] + c[1]) / 3, ay = hAt(a[0], a[1]) + 480, v = new THREE.Vector3(); let op = 0;
-    pm.onclick = () => goPreset(1);
-    hooks.push(dt => { v.set(ax, ay, az); const d = v.distanceTo(camera.position); v.project(camera);
-      const on = v.z < 1 && Math.abs(v.x) < .98 && v.y < .97 && v.y > -.9 ? sm(650, 1300, d) : 0; op = lerp(op, on, 1 - Math.exp(-dt * 6));
-      pm.style.opacity = op.toFixed(3); pm.classList.toggle('on', op > .5);
-      pm.style.transform = `translate(${((v.x * .5 + .5) * innerWidth).toFixed(1)}px,${((-v.y * .5 + .5) * innerHeight).toFixed(1)}px) translate(-50%,-100%)`; }); }
   document.getElementById('bQ').onclick = () => setQuality((qi + 2) % 3, true);
   document.getElementById('sTraf').oninput = e => { ST.traffic = e.target.value / 100; };
   hooks.push(() => { DYN.uTraffic.value = ST.traffic * Q.traffic; DYN.uPx.value = 2 * Math.tan(camera.fov * RAD / 2) / renderer.getDrawingBufferSize(_sz).y; });
@@ -5352,7 +5347,7 @@ async function boot() {
 }
 window.__hk = {
   THREE, TRAMS, TOD, TOUR, LABELS, HAND, GOVX, setTime, startTour, stopTour, viewHash, flyTo, scene, camera, renderer, cam, U, ST, L, ROADS, DAMS, LAKES, LL, SH, STATS, BI, FA, G, SITES, PATHS, CITY, get GEO() { return GEO; },
-  get terr() { return terr; }, QUALS, resize, get composer() { return composer; }, get scenePass() { return scenePass; }, NEAR, hooks, hAt: (x, z) => hAt(x, z), pick: (x, y) => pickGround(x, y), GS, LT, ltGo, FOCUS, DRIVE, keys, HIT, PROPS, TRAFS, B3D, dPlan, navStart, navRoute, navPlaces, dPaths, get TRAF() { return TRAF; }, trafAt, goPreset, setLight, setQuality,
+  get terr() { return terr; }, QUALS, resize, get composer() { return composer; }, get scenePass() { return scenePass; }, NEAR, hooks, hAt: (x, z) => hAt(x, z), pick: (x, y) => pickGround(x, y), GS, FOCUS, DRIVE, keys, HIT, PROPS, TRAFS, B3D, dPlan, navStart, navRoute, navPlaces, dPaths, get TRAF() { return TRAF; }, trafAt, goPreset, setLight, setQuality,
   pose(o) { userInput(); Object.assign(cam, o); cam.vaz = cam.vpol = cam.vx = cam.vz = cam.vzoom = 0; placeCamera(0); },
   at(lat, lon, dist, azDeg, polDeg, fov) { const p = LL(lat, lon); this.pose({ tx: p[0], tz: p[1], dist, az: azDeg * RAD, pol: polDeg * RAD, fov: fov || 36, ty: 0 }); },
   step(n = 1, dt = 1 / 60) { for (let i = 0; i < n; i++) frame(dt); },
