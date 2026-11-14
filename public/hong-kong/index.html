@@ -217,15 +217,17 @@
   #dBoost b{font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase}
   #drv #dBoost.ready{color:#e9f8ff}
   #drv #dBoost.on{color:#fff;background:radial-gradient(circle,rgba(40,130,190,.95) 57%,transparent 59%),conic-gradient(#bfeaff var(--b,50%),rgba(255,255,255,.14) 0);transform:scale(1.06)}
-  #drv #dHorn{padding:8px 10px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
-  #drv #dHorn.hot{background:rgba(255,176,84,.8);color:#241405}
+  #drv #dHorn{position:fixed;z-index:6;right:calc(max(14px,env(safe-area-inset-right)) + 9px);bottom:calc(max(18px,env(safe-area-inset-bottom)) + 106px);width:66px;height:66px;border-radius:50%;padding:0;
+    border:2px solid rgba(255,196,128,.55);background:rgba(9,20,28,.9);color:#f3d9b4;touch-action:manipulation;user-select:none;-webkit-user-select:none;box-shadow:0 4px 16px rgba(0,0,0,.45);-webkit-backdrop-filter:none;backdrop-filter:none}
+  #dHorn b{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+  #drv #dHorn.hot{background:rgba(255,176,84,.92);color:#241405;transform:scale(1.06)}
   #dCombo{position:fixed;z-index:6;right:max(16px,env(safe-area-inset-right));top:44%;display:flex;flex-direction:column;align-items:flex-end;line-height:1;opacity:0;pointer-events:none;transition:opacity .25s;text-shadow:0 2px 10px rgba(0,0,0,.8)}
   #dCombo.show{opacity:1}
   #dCombo b{font-size:clamp(34px,9vw,54px);font-weight:700;color:#ffc98a;font-variant-numeric:tabular-nums}
   #dCombo em{font-style:normal;font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:#fff4df;margin-top:2px}
   #dCombo.pop b{animation:cbPop .22s ease-out}
   @keyframes cbPop{from{transform:scale(1.35)}to{transform:scale(1)}}
-  body.garage #dBoost,body.garage #dCombo,body.garage #dFx,body.navopen #dBoost{display:none}
+  body.garage #dBoost,body.garage #dHorn,body.garage #dCombo,body.garage #dFx,body.navopen #dBoost,body.navopen #dHorn{display:none}
   .gmode i{font-style:normal;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.8;min-height:1.2em}
   /* self-driving: the Auto button shows while a route is set */
   #drv #dAuto{display:none;padding:8px 10px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
@@ -300,8 +302,8 @@
 <button id="bigDrive" type="button" aria-label="Drive around Hong Kong Island"><i><svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="24" cy="24" r="4.5" fill="currentColor"/><path d="M8 21.5c5-2.6 10.4-3.6 16-3.6s11 1 16 3.6M24 28.5v11.5M20 26l-9.5 9M28 26l9.5 9" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg></i><span><b>Drive</b><em>Every street on the island</em></span></button>
 <div id="drv"><div id="dTop"><button id="dExit" title="Stop driving (Esc)" aria-label="Stop driving">✕</button><button id="dNavB" title="Go somewhere" aria-label="Navigate"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 1 7 7c0 4.9-5.6 11.2-6.3 12a1 1 0 0 1-1.4 0C10.6 20.2 5 13.9 5 9a7 7 0 0 1 7-7zm0 4.2A2.8 2.8 0 1 0 12 11.8 2.8 2.8 0 0 0 12 6.2z"/></svg></button><button id="dCar" title="Change vehicle (G)" aria-label="Change vehicle"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M5 11l1.5-4.2A2 2 0 0 1 8.4 5.5h7.2a2 2 0 0 1 1.9 1.3L19 11h.5A1.5 1.5 0 0 1 21 12.5V17h-2v1.5a1 1 0 0 1-2 0V17H7v1.5a1 1 0 0 1-2 0V17H3v-4.5A1.5 1.5 0 0 1 4.5 11zm2.2 0h9.6l-1.1-3.2a.5.5 0 0 0-.5-.3H8.8a.5.5 0 0 0-.5.3zM6.5 15a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6zm11 0a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6z"/></svg></button>
   <div id="dInfo"><span id="dSt"></span><span id="dNx"><i id="dArr">↑</i><b id="dNxD"></b><em id="dNxN"></em></span><span id="dGo"><i>➤</i><em></em></span></div>
-  <div id="dSide"><div id="dSpdBox"><b id="dSpd">0</b><small>km/h</small></div><button id="dU" title="Turn round (U)">U-turn</button><button id="dAuto" title="Self-driving on or off">Auto</button><button id="dHorn" title="Horn: traffic ahead jumps aside (H)">Horn</button></div></div>
-  <canvas id="dFx" aria-hidden="true"></canvas><button id="dBoost" title="Boost (Space)" aria-label="Boost"><b>Boost</b></button><div id="dCombo" aria-live="off"><b id="dComboN"></b><em>combo</em></div>
+  <div id="dSide"><div id="dSpdBox"><b id="dSpd">0</b><small>km/h</small></div><button id="dU" title="Turn round (U)">U-turn</button><button id="dAuto" title="Self-driving on or off">Auto</button></div></div>
+  <canvas id="dFx" aria-hidden="true"></canvas><button id="dBoost" title="Boost (Space)" aria-label="Boost"><b>Boost</b></button><button id="dHorn" title="Horn: traffic ahead jumps aside (H)" aria-label="Horn"><b>Horn</b></button><div id="dCombo" aria-live="off"><b id="dComboN"></b><em>combo</em></div>
   <div id="mini" title="Tap for the whole island"><canvas id="mmC"></canvas><span id="mmD"></span></div><div id="dJoy"><i></i></div><div id="dTun"></div><div id="dMsg"></div>
   <div id="navP"><div class="nh"><b>Where to?</b><button id="navX" aria-label="Close">✕</button></div><div id="navL"></div></div>
   <div id="garage" data-step="ride">
@@ -1988,8 +1990,10 @@ function buildLandmarks(R) {
   LB.fid = PB.fid = tagOf('The Henderson'); buildHenderson(LB, PB);
   LB.fid = PB.fid = tagOf('Central Government Offices');
   /* Tamar: the open gateway, on the surveyed footprint of the government complex */
-  { const s = SITE('cgo'); site('cgo', LB, { fp: 1, long: 1, add: PI / 2 }); const L = Math.max(s[3], s[4]), Wd = Math.min(s[3], s[4]);
-    LB.B(C(.50, .56, .60), 2, 0, .9).q(121, .55).box(-L / 2 + 17, -8, 0, 30, 129, Wd * .7).box(L / 2 - 17, -8, 0, 30, 129, Wd * .7).box(0, 97, 0, L - 4, 24, Wd * .7);   // roof 126.4 mPD (Lands Department)
+  { /* centre, long axis and size measured off the Lands Department outline of the office block: the wings stand east and west, the
+       opening looks from Admiralty to the harbour, and the whole block lies north of Harcourt Road */
+    const cx = -2544, cz = -3396, L = 124, Wd = 50; LB.at(cx, cz, .275, gyAt(cx, cz));
+    LB.B(C(.50, .56, .60), 2, 0, .9).q(121, .55).box(-L / 2 + 15, -8, 0, 30, 129, Wd).box(L / 2 - 15, -8, 0, 30, 129, Wd).box(0, 97, 0, L - 4, 24, Wd);   // roof 126.4 mPD (Lands Department)
   }
   /* — Wan Chai — Convention Centre with winged roof, Central Plaza, Hopewell */
   LB.fid = PB.fid = tagOf('Hong Kong Convention and Exhibition Centre');
@@ -2067,16 +2071,21 @@ function buildLandmarks(R) {
     const t = SITE('oceantower') || [hi[0] - 60, hi[2] + 60], sy = gyAt(t[0], t[1]); PB.at(t[0], t[1], .4, sy).M(C(.9, .9, .88)).cyl(0, 0, 0, 2.4, 70, 8).M(C(.2, .5, .75)).cyl(0, 46, 0, 7.5, 4.5, 14);
     const cols = [C(.9, .7, .2), C(.3, .6, .8), C(.85, .4, .3), C(.9, .5, .2), C(.3, .7, .6)]; let ci = 0;
     for (const [e, n] of [[hi, 5], [lo, 4]]) for (let k = 0; k < n; k++) { const a = k * 1.9 + 1, x = e[0] + Math.cos(a) * (60 + k * 22), z = e[2] + Math.sin(a) * (60 + k * 22); if (!inDom(x, z) || sdAt(x, z) < 14 || Math.abs(hAt(x + 12, z) - hAt(x - 12, z)) > 9) continue; PB.at(x, z, a, hAt(x, z)).M(cols[ci++ % 5]).box(0, -3, 0, 30, 11, 20).M(C(.9, .9, .88)).box(0, 8, 0, 32, 1, 22); } }
-  /* elevated-road structure: decks and columns */
+  /* elevated-road structure: decks and columns (their place in the mesh is kept: once the drive map has re-graded the roads and built
+     decks to the new heights, these are taken away) */
+  DRIVE.oldDecks = [PB.p.length / 3, 0];
   for (const r of ROADS) { if (r.tram) continue; let lastCol = -99;
     for (let i = 0; i < r.n - 1; i += 2) { if (r.el[i] < 2.5) continue; const x = r.pts[i * 3], y = r.pts[i * 3 + 1], z = r.pts[i * 3 + 2], j = Math.min(i + 2, r.n - 1), dx = r.pts[j * 3] - x, dz = r.pts[j * 3 + 2] - z, yaw = Math.atan2(dz, dx);
       PB.at(x + dx / 2, z + dz / 2, yaw, 0).M(C(.58, .57, .55)).box(0, y - 1.7, 0, Math.hypot(dx, dz) + .6, 1.5, r.w + 1.2);
       PB.M(C(.66, .65, .62)).box(0, y - .2, -(r.w / 2 + .3), Math.hypot(dx, dz) + .6, 1.1, .5).box(0, y - .2, r.w / 2 + .3, Math.hypot(dx, dz) + .6, 1.1, .5);
       if (i - lastCol >= 4) { lastCol = i; const wet = !inDom(x, z) || sdAt(x, z) < 0, g = wet ? -8 : Math.min(hAt(x, z), y - 3) - 2; PB.box(0, g, 0, 2.2, y - 1.7 - g, 2.2); } } }
+  DRIVE.oldDecks[1] = PB.p.length / 3;
   /* footbridges over the harbour-front trunk roads and the tram streets */
   for (const r of roadsNamed('Connaught Road Central', 'Harcourt Road', 'Gloucester Road', 'Hennessy Road', 'Queensway', "King's Road", 'Des Voeux Road Central')) {
     for (let i = 20; i < r.n - 20; i += r.ow ? 64 : 52) { if (r.el[i] > 1) continue; const x = r.pts[i * 3], y = r.pts[i * 3 + 1], z = r.pts[i * 3 + 2], yaw = Math.atan2(r.pts[i * 3 + 5] - z, r.pts[i * 3 + 3] - x) + PI / 2, L = r.w + (r.ow ? 26 : 14);
-      PB.at(x, z, yaw, y).M(C(.70, .70, .68)).box(0, 6, 0, L, .9, 4.2).M(C(.45, .55, .6), 0, 1).box(0, 6.9, 0, L, 2.6, 4.4).M(C(.62, .62, .6)).box(-L / 2 + 1.5, 0, 0, 2.2, 6, 2.2).box(L / 2 - 1.5, 0, 0, 2.2, 6, 2.2); } }
+      PB.at(x, z, yaw, y).M(C(.70, .70, .68)).box(0, 6, 0, L, .9, 4.2).M(C(.45, .55, .6), 0, 1).box(0, 6.9, 0, L, 2.6, 4.4).M(C(.62, .62, .6));
+      /* its two legs, each remembered: one found standing in a street's lanes once the drive map is in is taken away */
+      for (const sd of [-1, 1]) { const v0 = PB.p.length / 3, w = PB.W(sd * (L / 2 - 1.5), 0, 0); PB.box(sd * (L / 2 - 1.5), 0, 0, 2.2, 6, 2.2); (DRIVE.fbLegs || (DRIVE.fbLegs = [])).push([v0, PB.p.length / 3, w[0], w[1], w[2]]); } } }
   /* Mid-Levels escalator and Peak Tram on their surveyed lines */
   { const pth = resample(G.esc || [[SITE('center')[0], SITE('center')[1]], [SITE('center')[0] - 300, SITE('center')[1] + 300]], 10); PATHS.esc = pth.map(p => [p[0], hAt(p[0], p[1]) + 4.6, p[1]]);
     for (let i = 0; i < pth.length - 1; i++) { const a = pth[i], b = pth[i + 1], yaw = Math.atan2(b[1] - a[1], b[0] - a[0]), mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2, g = hAt(mx, mz);
@@ -2772,12 +2781,12 @@ function makeRail() {
     for (let k = 0; k < 6; k++) { const q = y.slice(); for (let i = 2; i < n - 2; i++) y[i] = (q[i - 2] + q[i - 1] + q[i] + q[i + 1] + q[i + 2]) / 5; }
     for (let i = 0; i < n - 1; i++) { if (!fl[i]) continue; const a = P[i], b = P[i + 1], yaw = Math.atan2(b[1] - a[1], b[0] - a[0]), mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2, ym = (y[i] + y[i + 1]) / 2;
       RB.at(mx, mz, yaw, 0).M(C(.66, .65, .62)).box(0, ym - 1.4, 0, 6.3, 1.4, 8.6).M(C(.52, .51, .49)).box(0, ym, -4.2, 6.3, 1.1, .3).box(0, ym, 4.2, 6.3, 1.1, .3);
-      if (i % 5 === 0) { const wet = sdAt(mx, mz) < 0, g = wet ? -6 : hAt(mx, mz) - 2; RB.M(C(.62, .61, .58)).box(0, g, 0, 2.6, ym - 1.4 - g, 2.6).box(0, ym - 2.4, 0, 2, 1, 7.5); } }
+      if (i % 5 === 0) { const wet = sdAt(mx, mz) < 0, g = wet ? -6 : hAt(mx, mz) - 2; RB.M(C(.62, .61, .58)); const v0 = RB.p.length / 3; RB.box(0, g, 0, 2.6, ym - 1.4 - g, 2.6); (DRIVE.railLegs || (DRIVE.railLegs = [])).push([v0, RB.p.length / 3, mx, g + 2, mz, ym - 1.4]); RB.box(0, ym - 2.4, 0, 2, 1, 7.5); } }   /* (a column found standing in a street once the drive map is in is taken away) */
     const pts = P.map((p, i) => [p[0], y[i] + .25, p[1]]), cars = L > 1500 ? 8 : 3;
     /* OpenStreetMap maps each track separately: one train per track, alternating direction */
     runs.push({ pts, L, lane: runs.length % 2 ? 1.9 : -1.9, cars, ids: Array.from({ length: cars }, () => mv.add()), t0: Math.random() * 200, period: 150 + Math.random() * 60, v: 16 }); trains++;
   }
-  if (RB.i.length) { const m = RB.mesh(propMat); m.layers.enable(1); m.layers.enable(2); scene.add(m); }
+  if (RB.i.length) { const m = RB.mesh(propMat); m.layers.enable(1); m.layers.enable(2); scene.add(m); DRIVE.railM = m; }
   const t6 = [0, 0, 0, 0, 0, 0];
   hooks.push(() => {
     for (const r of runs) { const cyc = ((ST.t + r.t0) % r.period), head = cyc * r.v - 30, rev = r.lane > 0;
@@ -3419,6 +3428,9 @@ function buildLaneHash() {
   for (const e of DRIVE.E) { if (e.tun || e.dead) continue; for (let i = 0; i < e.n; i++) { const r = e.hw + 1.5, x0 = Math.floor((Math.min(e.xs[i], e.xs[i + 1]) - r) / cs), x1 = Math.floor((Math.max(e.xs[i], e.xs[i + 1]) + r) / cs), z0 = Math.floor((Math.min(e.zs[i], e.zs[i + 1]) - r) / cs), z1 = Math.floor((Math.max(e.zs[i], e.zs[i + 1]) + r) / cs);
     for (let gx = x0; gx <= x1; gx++) for (let gz = z0; gz <= z1; gz++) { const k = gx * 65536 + gz; let a = SG.get(k); if (!a) SG.set(k, a = []); a.push(e.i, i); } } }
   DRIVE.SG = SG;
+  /* the tunnels apart (nothing stands in them but the buildings drawn over their mouths) */
+  const TG = new Map(); for (const e of DRIVE.E) { if (!e.tun || e.dead) continue; for (let i = 0; i < e.n; i++) { const k = Math.floor((e.xs[i] + e.xs[i + 1]) / 2 / cs) * 65536 + Math.floor((e.zs[i] + e.zs[i + 1]) / 2 / cs); let a = TG.get(k); if (!a) TG.set(k, a = []); a.push(e.i, i); } }
+  DRIVE.TG = TG;
 }
 function laneIn(x, z, y0, y1, r) {
   const SG = DRIVE.SG; if (!SG) return -1e9; const a = SG.get(Math.floor(x / LANE_CS) * 65536 + Math.floor(z / LANE_CS)); if (!a) return -1e9; const E = DRIVE.E; let best = -1e9;
@@ -3487,6 +3499,28 @@ function b3dHide(set) {
   for (let k = 0; k < FA.n; k++) { const o = k * 10, h = FA.a[o + 6]; if (h <= 0) continue; const x = FA.a[o], z = FA.a[o + 1]; if (x < x0 || x > x1 || z < z0 || z > z1) continue; for (const ri of set) { const b = recs[ri]; if (x >= b.bb[0] && x <= b.bb[2] && z >= b.bb[1] && z <= b.bb[3] && inPoly(x, z, b.rings[0])) { undo.fa.push([o, h]); FA.a[o + 6] = 0; break; } } }
   return undo;
 }
+/* the carriageway stretches near a box [x0, z0, x1, z1], each as [ax, az, bx, bz, ya, yb, half width]; null when there are none */
+function b3dLanes(bb) {
+  const SG = DRIVE.SG; if (!SG) return null; const seen = new Set(), L = [], E = DRIVE.E;
+  for (const H of [SG, DRIVE.TG]) for (let gx = Math.floor((bb[0] - 8) / LANE_CS); gx <= Math.floor((bb[2] + 8) / LANE_CS); gx++) for (let gz = Math.floor((bb[1] - 8) / LANE_CS); gz <= Math.floor((bb[3] + 8) / LANE_CS); gz++) { const a = H && H.get(gx * 65536 + gz); if (!a) continue;
+    for (let j = 0; j < a.length; j += 2) { const k = a[j] * 4096 + a[j + 1]; if (seen.has(k)) continue; seen.add(k); const e = E[a[j]], i = a[j + 1]; L.push([e.xs[i], e.zs[i], e.xs[i + 1], e.zs[i + 1], e.ys[i], e.ys[i + 1], e.hw - .4]); } }
+  if (!L.length) return null;
+  /* the box that holds them all, for a quick first test */
+  L.x0 = L.z0 = L.y0 = 1e9; L.x1 = L.z1 = L.y1 = -1e9; for (const q of L) { L.x0 = Math.min(L.x0, q[0] - q[6], q[2] - q[6]); L.x1 = Math.max(L.x1, q[0] + q[6], q[2] + q[6]); L.z0 = Math.min(L.z0, q[1] - q[6], q[3] - q[6]); L.z1 = Math.max(L.z1, q[1] + q[6], q[3] + q[6]); L.y0 = Math.min(L.y0, q[4] - .3, q[5] - .3); L.y1 = Math.max(L.y1, q[4] + 4.6, q[5] + 4.6); }
+  return L;
+}
+/* does a triangle of a building stand in the driving space: inside a carriageway, between just under the road and 4.6 m above it? */
+function b3dBlocked(L, ax, ay, az, bx, by, bz, cx, cy, cz) {
+  const y0 = Math.min(ay, by, cy); if (y0 > L.y1) return false; const y1 = Math.max(ay, by, cy); if (y1 < L.y0) return false;
+  const x0 = Math.min(ax, bx, cx), x1 = Math.max(ax, bx, cx), z0 = Math.min(az, bz, cz), z1 = Math.max(az, bz, cz); if (x0 > L.x1 || x1 < L.x0 || z0 > L.z1 || z1 < L.z0) return false; let C = null;
+  for (const q of L) { if (y0 > Math.max(q[4], q[5]) + 4.6 || y1 < Math.min(q[4], q[5]) - .3) continue; const w = q[6]; if (x0 > Math.max(q[0], q[2]) + w || x1 < Math.min(q[0], q[2]) - w || z0 > Math.max(q[1], q[3]) + w || z1 < Math.min(q[1], q[3]) - w) continue; (C || (C = [])).push(q); }
+  if (!C) return false;
+  const n = clamp(Math.ceil(Math.max(x1 - x0, y1 - y0, z1 - z0) / 2.2), 1, 12);
+  for (let i = 0; i <= n; i++) for (let j = 0; j <= n - i; j++) { const u = i / n, v = j / n, w = 1 - u - v, px = ax * w + bx * u + cx * v, py = ay * w + by * u + cy * v, pz = az * w + bz * u + cz * v;
+    for (const q of C) { const dx = q[2] - q[0], dz = q[3] - q[1], t = clamp(((px - q[0]) * dx + (pz - q[1]) * dz) / (dx * dx + dz * dz || 1), 0, 1), yl = q[4] + (q[5] - q[4]) * t;
+      if (py > yl - .3 && py < yl + 4.6 && Math.hypot(px - q[0] - dx * t, pz - q[1] - dz * t) < q[6]) return true; } }
+  return false;
+}
 function b3dShow(undo) { for (const [pos, idx, ys] of undo.v) { for (let k = 0; k < idx.length; k++) pos.array[idx[k] * 3 + 1] = ys[k]; pos.needsUpdate = true; } for (const [o, h] of undo.fa) FA.a[o + 6] = h; }
 async function b3dLoad(T) {
   B3D.loading = true; const t0 = performance.now();
@@ -3501,8 +3535,8 @@ async function b3dLoad(T) {
       const hit = []; let skip = false; for (let gx = Math.floor(x0 / 64); gx <= Math.floor(x1 / 64); gx++) for (let gz = Math.floor(z0 / 64); gz <= Math.floor(z1 / 64); gz++) for (const ri of G.get(gx * 65536 + gz) || []) { const r = recs[ri]; if (r.cx < x0 || r.cx > x1 || r.cz < z0 || r.cz > z1) continue;
         const bb = r.bb, ov = Math.max(0, Math.min(bb[2], x1) - Math.max(bb[0], x0)) * Math.max(0, Math.min(bb[3], z1) - Math.max(bb[1], z0)), ar = (bb[2] - bb[0]) * (bb[3] - bb[1]) || 1; if (ov / ar < .5) continue; if (r.skip || r.flat) skip = true; else if (!r.gov) hit.push(ri); }
       if (skip) continue;   /* a hand-built landmark stands here, or a building lowered because it stood on a road */
-      list.push({ x, z, y, top, n, nt, wide, V, io, hit, po, co, nc }); nv += n; ni += nt * 3; }
-    const P = new Float32Array(nv * 3), Cc = new Float32Array(nv * 3), AP = new Float32Array(nv * 4), AQ = new Float32Array(nv * 4), I = new Uint32Array(ni), hide = new Set(); let v0 = 0, i0 = 0;
+      list.push({ x, z, y, top, n, nt, wide, V, io, hit, po, co, nc, bb: [x0, z0, x1, z1] }); nv += n; ni += nt * 3; }
+    const P = new Float32Array(nv * 3), Cc = new Float32Array(nv * 3), AP = new Float32Array(nv * 4), AQ = new Float32Array(nv * 4), I = new Uint32Array(ni), hide = new Set(); let v0 = 0, i0 = 0, cut = 0;
     for (const b of list) { let col, type, sd, roof = 0, lit, hue, flags = 0;
       if (b.hit.length) { let ri = b.hit[0]; for (const q of b.hit) { hide.add(q); recs[q].gov = T.id; if (recs[q].A > recs[ri].A) ri = q; } const k = ri * 12; col = [td[k], td[k + 1], td[k + 2]]; type = td[k + 3]; sd = td[k + 4]; roof = td[k + 5]; lit = td[k + 8]; hue = td[k + 9]; flags = td[k + 10]; }
       else { sd = hash2(Math.round(b.x * 3), Math.round(b.z * 3)); type = b.top > 70 ? 2 : b.top > 22 ? 1 : 0; const pal = type === 2 ? PAL.glass : type === 1 ? PAL.res : PAL.tong; col = pal[(sd * 997 | 0) % pal.length]; lit = .4 + sd * .3; hue = sd; }
@@ -3513,8 +3547,11 @@ async function b3dLoad(T) {
       for (let k = 0; k < b.n; k++) { const q = (v0 + k) * 3, w = (v0 + k) * 4; P[q] = b.x + b.V[k * 3] / 10; P[q + 1] = b.y + b.V[k * 3 + 1] / 10; P[q + 2] = b.z + b.V[k * 3 + 2] / 10;
         const pc = pal[u8[b.co + k]] || col; Cc[q] = pc[0]; Cc[q + 1] = pc[1]; Cc[q + 2] = pc[2]; AP[w] = sd; AP[w + 1] = type; AP[w + 2] = roof; AP[w + 3] = b.y; AQ[w] = b.y + b.top; AQ[w + 1] = lit; AQ[w + 2] = hue; AQ[w + 3] = flags; }
       const nI = b.nt * 3, src = u8.buffer.slice(u8.byteOffset + b.io, u8.byteOffset + b.io + nI * (b.wide ? 4 : 2)), J = b.wide ? new Uint32Array(src) : new Uint16Array(src); /* a few of the models hold triangles with no area (three points in a line): left out, as they have no facing */
+      const LN = b3dLanes(b.bb);   /* once the streets are known, parts of a model standing in a carriageway are left out too */
       for (let k = 0, V = b.V; k < nI; k += 3) { const a = J[k] * 3, e = J[k + 1] * 3, c = J[k + 2] * 3, ux = V[e] - V[a], uy = V[e + 1] - V[a + 1], uz = V[e + 2] - V[a + 2], wx = V[c] - V[a], wy = V[c + 1] - V[a + 1], wz = V[c + 2] - V[a + 2];
-        if (uy * wz === uz * wy && uz * wx === ux * wz && ux * wy === uy * wx) continue; I[i0++] = v0 + J[k]; I[i0++] = v0 + J[k + 1]; I[i0++] = v0 + J[k + 2]; } v0 += b.n; }
+        if (uy * wz === uz * wy && uz * wx === ux * wz && ux * wy === uy * wx) continue;
+        if (LN && b.y + Math.min(V[a + 1], V[e + 1], V[c + 1]) / 10 <= LN.y1 && b3dBlocked(LN, b.x + V[a] / 10, b.y + V[a + 1] / 10, b.z + V[a + 2] / 10, b.x + V[e] / 10, b.y + V[e + 1] / 10, b.z + V[e + 2] / 10, b.x + V[c] / 10, b.y + V[c + 1] / 10, b.z + V[c + 2] / 10)) { cut++; continue; }
+        I[i0++] = v0 + J[k]; I[i0++] = v0 + J[k + 1]; I[i0++] = v0 + J[k + 2]; } v0 += b.n; }
     const NRM = new Float32Array(nv * 3); for (let k = 1; k < nv * 3; k += 3) NRM[k] = 1;
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setAttribute('aCol', new THREE.BufferAttribute(Cc, 3)); g.setAttribute('aP', new THREE.BufferAttribute(AP, 4)); g.setAttribute('aQ', new THREE.BufferAttribute(AQ, 4));
     g.setAttribute('aF', new THREE.BufferAttribute(new Float32Array(nv), 1)); g.setAttribute('normal', new THREE.BufferAttribute(NRM, 3)); g.setIndex(new THREE.BufferAttribute(I.subarray(0, i0), 1));
@@ -3522,7 +3559,7 @@ async function b3dLoad(T) {
     let ylo = 1e9, yhi = -1e9; for (const b of list) { ylo = Math.min(ylo, b.y - 20); yhi = Math.max(yhi, b.y + b.top + 5); } if (!list.length) ylo = yhi = 0;
     g.boundingSphere = new THREE.Sphere(new THREE.Vector3((T.box[0] + T.box[2]) / 2, (ylo + yhi) / 2, (T.box[1] + T.box[3]) / 2), Math.hypot(T.box[2] - T.box[0], yhi - ylo, T.box[3] - T.box[1]) / 2 + 30);
     const mesh = new THREE.Mesh(g, mat); mesh.layers.enable(1); scene.add(mesh);   /* casts shadows; left out of the water's reflection pass */
-    T.mesh = mesh; T.undo = b3dHide(hide); T.hide = hide; T.tris = i0 / 3; T.ms = Math.round(performance.now() - t0); T.sync = Math.round(performance.now() - t1); B3D.tiles.set(T.id, T); SH.farDirty = SH.nearDirty = true; NEAR.fx = NEAR.fz = 1e9;
+    T.mesh = mesh; T.undo = b3dHide(hide); T.hide = hide; T.tris = i0 / 3; T.cut = cut; T.ms = Math.round(performance.now() - t0); T.sync = Math.round(performance.now() - t1); B3D.tiles.set(T.id, T); SH.farDirty = SH.nearDirty = true; NEAR.fx = NEAR.fz = 1e9;
   } catch (err) { B3D.fail.add(T.id); console.warn('b3d ' + T.id + ': ' + (err && err.message)); }
   B3D.loading = false;
 }
@@ -3713,7 +3750,7 @@ function buildDriveGraph(H) {
   DRIVE.N = N; DRIVE.E = E;
   /* every street sample in a spatial hash, so a tree can ask how far it stands from the nearest kerb */
   const RH = new Map(); for (const e of E) { if (e.tun || e.dead) continue; for (let i = 0; i <= e.n; i++) { const k = Math.floor(e.xs[i] / 16) * 65536 + Math.floor(e.zs[i] / 16); let a = RH.get(k); if (!a) RH.set(k, a = []); a.push(e.xs[i], e.zs[i], e.hw, e.ys[i]); } } DRIVE.RH = RH;
-  buildLaneHash(); syncRoads();
+  buildLaneHash(); syncRoads(); for (const T of [...B3D.tiles.values()]) b3dDrop(T);   /* real-shape sheets come in again, clear of the carriageways */
   /* every drivable street joins the occupancy map: no trees on it (bit 1), only small ones within a crown's width of it (bit 32) */
   for (const e of E) { if (e.tun || e.dead) continue; for (let i = 0; i <= e.n; i++) { if (!e.br) occDisc(e.xs[i], e.zs[i], e.hw + 1.2, 1); occDisc(e.xs[i], e.zs[i], e.hw + 7, 32); } }
   NEAR.fx = NEAR.fz = 1e9;   /* re-plant the near trees */
@@ -3726,14 +3763,26 @@ function buildStreetRibbons() {
   for (const e of DRIVE.E) { if ((e.c <= 5 && !e.bare) || e.tun || e.dead) continue; const hw = e.hw, one = e.c >= 7 || e.lanes < 2, fl = 8 + (e.c <= 5 ? (e.c <= 1 ? 2 : 0) + (e.ow ? 32 : 0) + Math.max(e.lanes, 1) * 64 + (e.br ? 16 : 0) : (one ? 32 : 0) + (one ? 1 : 2) * 64); let base = p.length / 3;
     /* a deck under every stretch that stands clear of the ground: bridges, and roads the grading left on an embankment */
     for (let i = 0; i < e.n; i += 2) { const j = Math.min(i + 2, e.n), dx = e.xs[j] - e.xs[i], dz = e.zs[j] - e.zs[i], L = Math.hypot(dx, dz); if (L < .5) continue; const y = (e.ys[i] + e.ys[j]) / 2, gy = dGround(e.xs[i], e.zs[i]);
-      if (y - gy < 2.5) continue; deck.at((e.xs[i] + e.xs[j]) / 2, (e.zs[i] + e.zs[j]) / 2, Math.atan2(dz, dx), 0).M(C(.58, .57, .55)).box(0, y - 1.6, 0, L + .4, 1.5, hw * 2 + 1);
-      deck.M(C(.66, .65, .62)).box(0, y - .1, -(hw + .3), L + .4, 1.0, .45).box(0, y - .1, hw + .3, L + .4, 1.0, .45); if (i % 8 === 0) deck.box(0, gy - 2, 0, 2, y - 1.6 - gy + 2, 2); }
+      if (y - gy < 2.5) continue;
+      if (laneIn((e.xs[i] + e.xs[j]) / 2, (e.zs[i] + e.zs[j]) / 2, y + 2, y - .55, 0) > 0) continue;   /* another road runs up to 2.6 m under this surface, through where the slab would be */
+      deck.at((e.xs[i] + e.xs[j]) / 2, (e.zs[i] + e.zs[j]) / 2, Math.atan2(dz, dx), 0).M(C(.58, .57, .55)).box(0, y - 1.6, 0, L + .4, 1.5, hw * 2 + 1);
+      /* parapets, except where one would stand across another road's lanes (slip roads joining, decks side by side) */
+      { const mx = (e.xs[i] + e.xs[j]) / 2, mz = (e.zs[i] + e.zs[j]) / 2, nx = dz / L, nz = -dx / L, o = hw + .3; deck.M(C(.66, .65, .62));
+        for (const sd of [-1, 1]) { let clear = true; for (const t of [.15, .5, .85]) { const qx = e.xs[i] + dx * t - nx * o * sd, qz = e.zs[i] + dz * t - nz * o * sd; if (laneIn(qx, qz, y + 3.6, y + .7, -.7) > 0) { clear = false; break; }   /* lanes within a metre of this deck's own level */ } if (clear) deck.box(0, y - .1, o * sd, L + .4, 1.0, .45); } }
+      if (i % 8 === 0 && !(laneIn((e.xs[i] + e.xs[j]) / 2, (e.zs[i] + e.zs[j]) / 2, gy - 1, y - 2, 1.3) > 0)) deck.box(0, gy - 2, 0, 2, y - 1.6 - gy + 2, 2); }   /* a column, unless it would stand in a road below */
     for (let i = 0; i <= e.n; i++) { const j = Math.min(i + 1, e.n), k = Math.max(i - 1, 0); let dx = e.xs[j] - e.xs[k], dz = e.zs[j] - e.zs[k]; const l = Math.hypot(dx, dz) || 1; dx /= l; dz /= l; const y = e.ys[i] + (e.br ? .12 : .3);
       p.push(e.xs[i] + dz * hw, y, e.zs[i] - dx * hw, e.xs[i] - dz * hw, y, e.zs[i] + dx * hw); a.push(-1, i * e.st, hw, fl, 1, i * e.st, hw, fl);
       if (i < e.n) { const b = base + i * 2; idx.push(b, b + 1, b + 2, b + 1, b + 3, b + 2); } } }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3)); g.setAttribute('aR', new THREE.Float32BufferAttribute(a, 4)); g.setIndex(idx);
   const m = new THREE.Mesh(g, DYN.ribMat); m.frustumCulled = false; m.renderOrder = 19; scene.add(m); DRIVE.ribbons = m;
   if (deck.p.length) { const dm = deck.mesh(propMat); dm.layers.enable(1); scene.add(dm); DRIVE.decks = dm; }
+  /* the city view's own flyover decks stand at the heights the roads had before grading (up to a few metres off, over or under the car): out they go */
+  if (DRIVE.oldDecks && PBm) { const pos = PBm.geometry.attributes.position; for (let v = DRIVE.oldDecks[0]; v < DRIVE.oldDecks[1]; v++) pos.array[v * 3 + 1] -= 4000; pos.needsUpdate = true; DRIVE.oldDecks = null; SH.farDirty = SH.nearDirty = true; }
+  /* footbridge legs and railway viaduct columns that stand in a street's lanes */
+  DRIVE.legsOut = 0;
+  for (const [list, mesh] of [[DRIVE.fbLegs, PBm], [DRIVE.railLegs, DRIVE.railM]]) { if (!list || !mesh) continue; const pos = mesh.geometry.attributes.position;
+    for (const [v0, v1, x, y, z, top] of list) { if (!(laneIn(x, z, y, top === undefined ? y + 6 : top, 1.5) > 0)) continue; for (let v = v0; v < v1; v++) pos.array[v * 3 + 1] -= 4000; DRIVE.legsOut++; } pos.needsUpdate = true; }
+  DRIVE.fbLegs = DRIVE.railLegs = null;
 }
 /* a Hong Kong taxi: red body, silver roof, roof sign; built facing +x */
 /* ---------- the garage: vehicles to drive, each built facing +x with its own pace, grip, size and camera ---------- */
@@ -3860,6 +3909,11 @@ function loadVehicleModel(i) {
     (DRIVE.meshes = DRIVE.meshes || [])[i] = mesh; if (DRIVE.vi === i) DRIVE.mesh = mesh; V.model = true; V.loading = false;
     gl.scene.traverse(o => { if (o.isMesh) o.geometry.dispose(); });
   }, undefined, err => { V.loading = false; console.warn('vehicle model ' + V.id + ': ' + (err && err.message)); });
+}
+function dGhost() {
+  const m = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.ShaderMaterial({ transparent: true, depthWrite: false, depthFunc: THREE.GreaterDepth,
+    vertexShader: 'void main(){gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}', fragmentShader: 'void main(){gl_FragColor=vec4(.42,.80,1.,.62);}' }));
+  m.frustumCulled = false; m.matrixAutoUpdate = false; m.renderOrder = 26; m.visible = false; scene.add(m); return m;
 }
 function dSelect(i) {
   i = (i + VEHICLES.length) % VEHICLES.length; const V = VEHICLES[i]; DRIVE.vi = i; DRIVE.V = V;
@@ -4235,7 +4289,10 @@ function driveStep(dt) {
   car.yR = car.yR === undefined || Math.abs(car.y - car.yR) > 2 || !dt ? car.y : car.yR + (car.y - car.yR) * (1 - Math.exp(-dt * 14));
   if (car.sq !== undefined) { car.sqV += (-90 * car.sq - 11 * car.sqV) * Math.min(dt, .04); car.sq = clamp(car.sq + car.sqV * Math.min(dt, .04), -.26, .1); if (Math.abs(car.sq) < .002 && Math.abs(car.sqV) < .02) car.sq = undefined; }
   const yD = (car.fly ? Math.max(car.fly.y, car.yR) : car.yR) + (car.sq || 0); car.yD = yD;
-  M.setPosition(car.x, yD + (e.br ? .14 : .32), car.z);   /* road surfaces are drawn just above the height profile (0.3 m, 0.12 m on decks) */ DRIVE.mesh.matrixWorldNeedsUpdate = true;
+  /* drawn after the roads, with its outline first: wherever a deck, a crest or a lorry covers the car, a pale shape of it shows through */
+  { const gh = DRIVE.ghost || (DRIVE.ghost = dGhost()); if (DRIVE.mesh.material === propMat) DRIVE.mesh.material = DRIVE.carMat || (DRIVE.carMat = new THREE.ShaderMaterial({ uniforms: U, vertexShader: BLD_VS, fragmentShader: PROP_FS(), side: THREE.DoubleSide, transparent: true, blending: THREE.NoBlending }));
+    DRIVE.mesh.renderOrder = 27; gh.geometry = DRIVE.mesh.geometry; gh.visible = !G0; }
+  M.setPosition(car.x, yD + (e.br ? .14 : .32), car.z); DRIVE.ghost.matrix.copy(M); DRIVE.ghost.matrixWorldNeedsUpdate = true;   /* road surfaces are drawn just above the height profile (0.3 m, 0.12 m on decks) */ DRIVE.mesh.matrixWorldNeedsUpdate = true;
   if (!G0) { crashStep(); propStep(dt, car, V, sp, h0); }
   /* the combo runs out a couple of seconds after the last knock */
   if (DRIVE.comboT > 0 && (DRIVE.comboT -= dt) <= 0) { if (DRIVE.combo >= 8) dMsg('Combo ×' + DRIVE.combo); DRIVE.combo = 0; }
@@ -4249,7 +4306,16 @@ function driveStep(dt) {
   cam.tx = car.x + chx * fwd; cam.tz = car.z + chz * fwd; cam.ty = car.yC + V.h * (G0 ? .45 : .75) - groundY(cam.tx, cam.tz);
   /* while choosing where to start and where to go, the camera rises to show the place round the car */
   const wide = G0 && DRIVE.gStep && DRIVE.gStep !== 'ride', BK = DRIVE.boostK || 0;
-  cam.dist = lerp(cam.dist, wide ? 230 : (G0 ? 1.05 : 1) * (7 + V.len * 1.3 + Math.min(V.h, 3) * 1.2) + Math.min(sp, 34) * .2 + BK * 2 + DRIVE.zoom, 1 - Math.exp(-dt * (wide ? 1.6 : 3))); cam.pol = lerp(cam.pol, (wide ? 48 : G0 ? 72 : big ? 74 : 76) * RAD, 1 - Math.exp(-dt * 3));
+  cam.dist = lerp(cam.dist, wide ? 230 : (G0 ? 1.05 : 1) * (7 + V.len * 1.3 + Math.min(V.h, 3) * 1.2) + Math.min(sp, 34) * .2 + BK * 2 + DRIVE.zoom, 1 - Math.exp(-dt * (wide ? 1.6 : 3))); 
+  /* over a crest the road itself hides the car from a camera still climbing behind it: the camera lifts until its line to the car
+     clears the road the car has just driven */
+  let polT = (wide ? 48 : G0 ? 72 : big ? 74 : 76) * RAD;
+  { const T = DRIVE.crest || (DRIVE.crest = []), l = T[T.length - 1]; if (l && Math.hypot(car.x - l[0], car.z - l[1]) > 40) T.length = 0;
+    if (!T.length || Math.hypot(car.x - T[T.length - 1][0], car.z - T[T.length - 1][1]) > 1.5) { T.push([car.x, car.z, yD]); if (T.length > 30) T.shift(); }
+    if (!G0) { const dh = cam.dist * Math.sin(cam.pol), ax = Math.cos(cam.az), az = Math.sin(cam.az); let need = 0;
+      for (const p of T) { const rx = p[0] - car.x, rz = p[1] - car.z, s = rx * ax + rz * az; if (s < 2 || s > dh || Math.abs(rz * ax - rx * az) > 5) continue; need = Math.max(need, (p[2] - yD - .15) * dh / s); }
+      if (need > 0) polT = Math.min(polT, Math.max(Math.acos(clamp((need + .5 - V.h * .75) / cam.dist, 0, .82)), 35 * RAD)); } }
+  cam.pol = lerp(cam.pol, polT, 1 - Math.exp(-dt * (polT < cam.pol - .01 ? 7 : 3)));
   cam.fov = lerp(cam.fov, G0 ? 46 : 56 + Math.min(sp, 36) * .36 + BK * 6, 1 - Math.exp(-dt * 2.5)) + (G0 ? 0 : DRIVE.punch * 40 * dt);
   cam.vaz = cam.vpol = cam.vx = cam.vz = cam.vzoom = 0;
   if (!G0) { dTrails(dt, car, V, sp, yD); dFx(dt, sp, BK); }
@@ -4542,7 +4608,7 @@ async function enterDrive0() {
   document.body.classList.add('driving'); DYN.uNoNear.value = 12; trafDetail(true); U.uDrv.value = 1; cam.dist = 30; openGarage(); dStart(DRIVE.pendingStart);
 }
 function exitDrive() {
-  if (!DRIVE.on) return; DRIVE.on = false; DRIVE.joy = null; dJoyDraw(); LABELS.on = DRIVE.labelsWas; document.body.classList.remove('driving', 'garage'); DRIVE.garage = false; if (DRIVE.mesh) DRIVE.mesh.visible = false; DYN.uNoNear.value = 0; trafDetail(false); U.uDrv.value = 0; for (let i = 0; i < HITN; i++) hitFree(i); for (const k of [...PROPS.spots.keys()]) propDrop(k); if (TRL.mesh) { TRL.hist.length = 0; TRL.mesh.visible = false; } dFx(0, 0, 0); DRIVE.boosting = false; DRIVE.combo = 0; DRIVE.run = null; if (DRIVE.car) DRIVE.car.fly = null; navStop(); navClose(); setAuto(false); DRIVE.autoStop = false;
+  if (!DRIVE.on) return; DRIVE.on = false; DRIVE.joy = null; dJoyDraw(); LABELS.on = DRIVE.labelsWas; document.body.classList.remove('driving', 'garage'); DRIVE.garage = false; if (DRIVE.ghost) DRIVE.ghost.visible = false; if (DRIVE.mesh) DRIVE.mesh.visible = false; DYN.uNoNear.value = 0; trafDetail(false); U.uDrv.value = 0; for (let i = 0; i < HITN; i++) hitFree(i); for (const k of [...PROPS.spots.keys()]) propDrop(k); if (TRL.mesh) { TRL.hist.length = 0; TRL.mesh.visible = false; } dFx(0, 0, 0); DRIVE.boosting = false; DRIVE.combo = 0; DRIVE.run = null; if (DRIVE.car) DRIVE.car.fly = null; navStop(); navClose(); setAuto(false); DRIVE.autoStop = false;
   const c = DRIVE.car; flyTo({ tx: c.x, tz: c.z, dist: 700, pol: 62 * RAD, az: cam.az, fov: 40, ty: 0, dur: 2.2 });
 }
 function dUturn() { const c = DRIVE.car; if (!c) return; c.d = -c.d; c.lat = -c.lat; c.v = 0; c.yaw += PI; DRIVE.req = null; DRIVE.queue = []; DRIVE.lock = null; if (DRIVE.nav) navStart(DRIVE.nav.dest); }
