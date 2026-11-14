@@ -20,15 +20,22 @@
   body.photo #ui,body.photo #cr{opacity:0;pointer-events:none}
   #cr{position:fixed;right:8px;bottom:6px;font-size:9px;letter-spacing:.04em;color:rgba(255,236,208,.5);text-shadow:0 0 3px rgba(0,0,0,.6);transition:opacity .5s}
   #cr a{color:inherit}
-  /* the light: one button, three settings (day, golden hour, night). It shows the one that is on; a tap moves to the next */
-  #tMode{position:fixed;z-index:6;right:max(12px,env(safe-area-inset-right));top:calc(max(12px,env(safe-area-inset-top)) + 150px);width:66px;height:66px;border-radius:50%;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
-    border:1px solid rgba(255,196,128,.5);background:rgba(9,20,28,.88);color:#ffc46a;font:inherit;cursor:pointer;touch-action:manipulation;box-shadow:0 2px 8px rgba(0,0,0,.45);transition:color .4s,border-color .4s}
-  #tMode b{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#f3e6d0}
-  #tMode g{display:none} #tMode[data-m="day"] .m-day,#tMode[data-m="golden"] .m-golden,#tMode[data-m="night"] .m-night{display:inline}
-  #tMode[data-m="day"]{color:#ffe9a8} #tMode[data-m="night"]{color:#cfe0ff;border-color:rgba(170,195,255,.5)}
-  body.driving #tMode{top:calc(max(12px,env(safe-area-inset-top)) + 158px)}
-  body.photo #tMode,body.garage #tMode,body.navopen #tMode,body.places #tMode{display:none}
-  @media (max-height:520px){body.driving #tMode{top:max(10px,env(safe-area-inset-top));right:calc(max(12px,env(safe-area-inset-right)) + 96px)}}   /* (a phone held sideways: beside the speed, clear of Horn and Boost) */
+  /* the clock: it shows the hour; a tap opens a small panel with the hours on a bar, a way back to the golden hour, and a switch for shadows */
+  #tClock{position:fixed;z-index:6;right:max(12px,env(safe-area-inset-right));top:calc(max(12px,env(safe-area-inset-top)) + 150px);width:64px;height:64px;border-radius:50%;padding:0;border:0;background:none;cursor:pointer;touch-action:manipulation;filter:drop-shadow(0 2px 6px rgba(0,0,0,.45))}
+  #tClock svg{display:block;width:100%;height:100%}
+  #tPanel{position:fixed;z-index:7;right:calc(max(12px,env(safe-area-inset-right)) + 76px);top:calc(max(12px,env(safe-area-inset-top)) + 138px);box-sizing:border-box;width:min(292px,calc(100vw - 100px));display:none;flex-direction:column;gap:9px;padding:12px 14px 13px;border-radius:14px;
+    background:rgba(9,20,28,.94);border:1px solid rgba(255,196,128,.4);box-shadow:0 10px 30px rgba(0,0,0,.5);color:#f3e6d0;touch-action:none}
+  body.tp #tPanel{display:flex}
+  #tPanel .tp1{display:flex;align-items:center;justify-content:space-between;gap:10px} #tpT{font-size:22px;font-weight:700;letter-spacing:.04em;font-variant-numeric:tabular-nums;color:#fff4df}
+  #tPanel button{font:inherit;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:8px 12px;border-radius:16px;border:1px solid rgba(255,196,128,.45);background:rgba(255,190,110,.1);color:#f3e6d0;cursor:pointer;touch-action:manipulation}
+  #tpSh.on{background:rgba(255,176,84,.34);color:#fff4df;border-color:rgba(255,206,140,.7)}
+  #tpBar{-webkit-appearance:none;appearance:none;width:100%;height:6px;margin:8px 0 0;border-radius:3px;outline:none;background:linear-gradient(90deg,#1b2850 0%,#1b2850 22%,#e9a85a 29%,#ffe6a0 50%,#e9a85a 71%,#1b2850 78%,#1b2850 100%);touch-action:none}
+  #tpBar::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:#fff4df;border:2px solid #5a3a12;cursor:pointer;box-shadow:0 1px 5px rgba(0,0,0,.5)}
+  #tpBar::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff4df;border:2px solid #5a3a12;cursor:pointer}
+  #tPanel .tpH{display:flex;justify-content:space-between;font-size:10px;letter-spacing:.06em;opacity:.7;font-variant-numeric:tabular-nums;margin-top:-3px}
+  body.driving #tClock{top:calc(max(12px,env(safe-area-inset-top)) + 158px)} body.driving #tPanel{top:calc(max(12px,env(safe-area-inset-top)) + 146px)}
+  body.photo #tClock,body.garage #tClock,body.navopen #tClock,body.places #tClock,body.garage #tPanel,body.navopen #tPanel,body.places #tPanel{display:none}
+  @media (max-height:520px){body.driving #tClock{top:max(10px,env(safe-area-inset-top));right:calc(max(12px,env(safe-area-inset-right)) + 96px)} body.driving #tPanel{top:calc(max(10px,env(safe-area-inset-top)) + 72px);right:max(12px,env(safe-area-inset-right))}}   /* (a phone held sideways: beside the speed, clear of Horn and Boost) */
   .lb.hit b,.lb.hit em{pointer-events:auto}
   #ui .g{display:flex;gap:3px;align-items:center}
   #ui .g+.g{padding-left:10px;border-left:1px solid rgba(255,196,128,.22)}
@@ -383,10 +390,15 @@
   <text id="cpN">N</text></svg></div>
   <div id="zm"><button id="zIn" title="Zoom in" aria-label="Zoom in">+</button><button id="zOut" title="Zoom out" aria-label="Zoom out">−</button></div></div>
 <div id="brand"><b>Hong Kong: <span>Golden Hour</span></b><em>© 2026 Butterfly Farm Studio Limited</em></div>
-<button id="tMode" type="button" data-m="golden" aria-label="Light: golden hour. Tap for night" title="Light: tap to change — day, golden hour, night"><svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true">
-  <g class="m-day" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="16" cy="16" r="5.5" fill="currentColor" stroke="none"/><path d="M16 3.5v3.2M16 25.3v3.2M3.5 16h3.2M25.3 16h3.2M7.2 7.2l2.3 2.3M22.5 22.5l2.3 2.3M7.2 24.8l2.3-2.3M22.5 9.5l2.3-2.3"/></g>
-  <g class="m-golden" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 21a7 7 0 0 1 14 0Z" fill="currentColor" stroke="none"/><path d="M4 21h24M8 26h16M16 7.5v3M6.8 12.3l2.2 2.2M25.2 12.3L23 14.5"/></g>
-  <g class="m-night"><path fill="currentColor" d="M20.5 4.5a11.5 11.5 0 1 0 7 15.3A9.5 9.5 0 0 1 20.5 4.5Z"/></g></svg><b>Golden</b></button>
+<button id="tClock" type="button" aria-label="Time of day" aria-expanded="false" title="Time of day: tap to set the hour, or to turn shadows off"><svg viewBox="0 0 64 64" aria-hidden="true">
+  <circle cx="32" cy="32" r="30" fill="rgba(9,20,28,.9)" stroke="rgba(255,196,128,.55)" stroke-width="1.5"/><path d="M32 5v5M32 54v5M5 32h5M54 32h5M18.5 8.6l2 3.5M45.5 8.6l-2 3.5M8.6 18.5l3.5 2M8.6 45.5l3.5-2M55.4 18.5l-3.5 2M55.4 45.5l-3.5-2M18.5 55.4l2-3.5M45.5 55.4l-2-3.5" stroke="rgba(243,217,180,.65)" stroke-width="1.6" stroke-linecap="round"/>
+  <line id="tcH" x1="32" y1="32" x2="32" y2="17" stroke="#ffc46a" stroke-width="3.4" stroke-linecap="round"/><line id="tcM" x1="32" y1="32" x2="32" y2="10" stroke="#fff4df" stroke-width="2.2" stroke-linecap="round"/><circle cx="32" cy="32" r="2.6" fill="#fff4df"/></svg></button>
+<div id="tPanel" role="dialog" aria-label="Time of day and shadows">
+  <div class="tp1"><b id="tpT">15:20</b><button id="tpGold" type="button" title="Back to the golden afternoon">Golden hour</button></div>
+  <input id="tpBar" type="range" min="0" max="24" step="0.0833333" value="15.3" aria-label="Hour of the day">
+  <div class="tpH"><span>0</span><span>6</span><span>12</span><span>18</span><span>24</span></div>
+  <button id="tpSh" type="button" class="on" aria-pressed="true" title="Shadows cast by the sun, on or off">Shadows on</button>
+</div>
 <button id="tourS" type="button" title="End the tour" aria-live="polite"><span></span><i>✕</i></button>
 <div id="pin"><div class="pb"><div class="pt"><b></b><em></em></div><button type="button" aria-label="Remove this label">✕</button></div><i></i><u></u></div>
 <div id="hint" aria-live="polite"></div>
@@ -3318,8 +3330,8 @@ const sunVec = (azS, el) => { const a = azS * RAD, e = el * RAD; return [-Math.c
 const LIGHTS = {
   /* warm: the afternoon the page opens on. The sun is still well up (about 28 degrees), so streets and waterfront stand in sunlight and not in the
      towers' long shadows, and the light is graded gold: warm sun, warm fill from the ground, a deep sky for it to stand against */
-  warm: { sun: sunVec(40, 28), sunCol: [4.9, 2.7, .80], glow: [1.5, .95, .50], zen: [.06, .20, .56], horW: [.86, .80, .70], horE: [.42, .58, .84], ambS: [.80, .82, .90], ambG: [.70, .52, .32],
-    fog: [.70, .76, .86], fogDen: 1.5e-5, water: [.018, .115, .20], night: 0, sh: 1, cloud: .46, expo: 1.02, bloom: .28 },   /* (the sky's own light is strong: a street in a tower's shadow is in open shade, about a third as bright as one in the sun, not black) */   /* (gold in the sunlight and its bounce; the sky and the sea blue, the air clear) */
+  warm: { sun: sunVec(40, 28), sunCol: [3.1, 1.75, .52], glow: [1.3, .85, .45], zen: [.06, .20, .56], horW: [.86, .80, .70], horE: [.42, .58, .84], ambS: [.72, .74, .83], ambG: [.66, .49, .29],
+    fog: [.70, .76, .86], fogDen: 1.5e-5, water: [.018, .115, .20], night: 0, sh: 1, cloud: .46, expo: 1.0, bloom: .24 },   /* (a deeper gold and a weaker sun, so pale walls take the colour and do not burn out to white; the shade kept nearly as bright as it was; the sky and the sea blue) */
   golden: { sun: sunVec(9, 11.5), sunCol: [3.1, 1.80, .80], glow: [1.5, .82, .34], zen: [.10, .22, .50], horW: [1.15, .70, .36], horE: [.46, .50, .66], ambS: [.42, .44, .52], ambG: [.36, .26, .16],
     fog: [.82, .62, .46], fogDen: 2.3e-5, water: [.030, .105, .135], night: .1, sh: 1, cloud: .42, expo: 1.06, bloom: .32 },
   noon: { sun: sunVec(62, 62), sunCol: [3.3, 3.15, 2.9], glow: [.9, .9, .85], zen: [.10, .27, .62], horW: [.62, .74, .88], horE: [.58, .72, .88], ambS: [.34, .44, .60], ambG: [.20, .19, .16],
@@ -3362,8 +3374,10 @@ function lightAtTime(h) {
 }
 const fmtH = h => { const m = Math.round(h * 60); return String(Math.floor(m / 60) % 24).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
 function applyTime(h, force) {
-  TOD.h = h; const p = lightAtTime(h); L.cur = p; applyLight(p); L.name = p.el >= 38 ? 'noon' : p.el >= -1 ? 'golden' : 'dusk'; todBtn(p.el);
-  if (force || ST.t - TOD.shT > (COARSE ? .5 : .25)) { SH.farDirty = true; TOD.shT = ST.t; }   /* (while the hour is moving: the island's shadow redrawn a few times a second, fewer on a phone) */
+  const was = TOD.h; TOD.h = h; const p = lightAtTime(h); L.cur = p; applyLight(p); L.name = p.el >= 38 ? 'noon' : p.el >= -1 ? 'golden' : 'dusk'; clockSet(h);
+  /* while the hour is moving the shadows are faded out, and drawn once for the new hour when it comes to rest (stepLight): redrawing the island's
+     shadow a few times a second as the sun went round made every shadow on the screen jump in steps */
+  if (force) { SH.farDirty = true; TOD.moveT = -9; } else if (Math.abs(h - was) > 1e-4) TOD.moveT = ST.t;   /* (an hour set to what it already is, as at the start of the tour, moves nothing) */
 }
 /* ---------- Places: the island with every place on it; choose one and the view flies there ---------- */
 const PLC = { i: 0, box: null, on: false };
@@ -3492,17 +3506,28 @@ function initPlaces() {
   addEventListener('keydown', e => { if (!PLC.on) return; if (e.target && e.target.id === 'plQ') { e.stopPropagation(); if (e.code === 'Escape') { e.preventDefault(); if (e.target.value) { e.target.value = ''; plSearch(''); } else plClose(); } else if (e.code === 'Enter') { e.preventDefault(); if (PLC.hits && PLC.hits.length) plPick(PLC.hits[0]); } return; }   /* typing: none of the page's own keys */
     if (e.code === 'Escape') plClose(); else if (e.code === 'ArrowLeft') plSet(PLC.i - 1); else if (e.code === 'ArrowRight') plSet(PLC.i + 1); else if (e.code === 'Enter') plFly(); else return; e.stopPropagation(); e.preventDefault(); }, true);
 }
-/* the light button: day (late morning), golden hour, night. It shows what the light now is, however it came to be so (the tour moves the hour too) */
-const TOD_MODES = ['day', 'golden', 'night'], TOD_NAMES = { day: 'Day', golden: 'Golden', night: 'Night' };
-function todBtn(el) { const b = document.getElementById('tMode'); if (!b) return; const m = el < -4 ? 'night' : el < 34 ? 'golden' : 'day'; if (b.dataset.m === m) return; b.dataset.m = m; b.lastChild.textContent = TOD_NAMES[m];
-  const nx = TOD_MODES[(TOD_MODES.indexOf(m) + 1) % 3]; b.setAttribute('aria-label', 'Light: ' + (m === 'golden' ? 'golden hour' : m) + '. Tap for ' + (nx === 'golden' ? 'golden hour' : nx)); }
-function initLightBtn() { const b = document.getElementById('tMode'); if (!b) return; for (const t of ['pointerdown', 'touchstart', 'mousedown']) b.addEventListener(t, e => e.stopPropagation(), { passive: true });
-  b.onclick = e => { e.stopPropagation(); const cur = TOD.anim ? TOD.goal || b.dataset.m : b.dataset.m, nx = TOD_MODES[(TOD_MODES.indexOf(cur) + 1) % 3]; TOD.goal = nx; if (TOUR.on) stopTour(); setTime(presetTime(nx), false); }; }
+/* the clock on the screen and its panel */
+function clockSet(h) { const q = Math.round(h * 12); if (clockSet.q === q) return; clockSet.q = q; const hh = document.getElementById('tcH'); if (!hh) return; const hq = q / 12;
+  hh.setAttribute('transform', 'rotate(' + ((hq % 12) * 30).toFixed(1) + ' 32 32)'); document.getElementById('tcM').setAttribute('transform', 'rotate(' + (((hq * 60) % 60) * 6).toFixed(1) + ' 32 32)');
+  document.getElementById('tpT').textContent = fmtH(hq); const bar = document.getElementById('tpBar'); if (bar && document.activeElement !== bar) bar.value = hq; document.getElementById('tClock').setAttribute('aria-label', 'Time of day: ' + fmtH(hq)); }
+function initClock() {
+  const q = id => document.getElementById(id), c = q('tClock'), pn = q('tPanel'); if (!c) return; const open = on => { document.body.classList.toggle('tp', on); c.setAttribute('aria-expanded', on ? 'true' : 'false'); };
+  for (const el of [c, pn]) for (const t of ['pointerdown', 'pointermove', 'pointerup', 'touchstart', 'mousedown', 'click', 'wheel']) el.addEventListener(t, e => e.stopPropagation(), { passive: true });
+  c.onclick = () => { document.body.classList.remove('menu'); open(!document.body.classList.contains('tp')); };
+  addEventListener('pointerdown', e => { if (document.body.classList.contains('tp') && !(e.target.closest && e.target.closest('#tPanel,#tClock'))) open(false); }, true);
+  /* (the bar, dragged: with a mouse the shadows follow the hour, drawn again each frame; on a phone, where that costs too much, they fade and come back when the bar rests) */
+  q('tpBar').addEventListener('input', e => { const h = +e.target.value; if (TOUR.on) stopTour(); TOD.anim = null; applyTime(Math.min(h, 23.99), !COARSE); U.uIgnite.value = lightAtTime(h).el < 1.5 ? 1 : 0; });
+  q('tpBar').addEventListener('keydown', e => e.stopPropagation());
+  q('tpGold').onclick = () => { if (TOUR.on) stopTour(); setTime(presetTime('golden'), false); };
+  q('tpSh').onclick = e => { TOD.noSh = !TOD.noSh; const b = e.currentTarget; b.classList.toggle('on', !TOD.noSh); b.setAttribute('aria-pressed', TOD.noSh ? 'false' : 'true'); b.textContent = TOD.noSh ? 'Shadows off' : 'Shadows on'; if (!TOD.noSh) SH.farDirty = SH.nearDirty = true; };
+}
 const presetTime = n => n === 'noon' ? 12.5 : n === 'day' ? 11 : n === 'night' ? TOD.set + 1.6 : n === 'dusk' ? TOD.set + .45 : TOD.gold;
 function setLight(name, instant) { setTime(presetTime(name), instant); }
 function setTime(h, instant) { if (instant) { TOD.anim = null; applyTime(h, true); U.uIgnite.value = lightAtTime(h).el < 1.5 ? 1 : 0; } else TOD.anim = { a: TOD.h, b: h, t: 0, d: clamp(Math.abs(h - TOD.h) * .9, 2.5, 6) }; }
 function stepLight(dt) {
-  if (TOD.anim) { const A = TOD.anim; A.t = Math.min(1, A.t + dt / A.d); const e = A.t * A.t * (3 - 2 * A.t); applyTime(lerp(A.a, A.b, e)); if (A.t >= 1) { TOD.anim = null; SH.farDirty = true; } }
+  if (TOD.anim) { const A = TOD.anim; A.t = Math.min(1, A.t + dt / A.d); const e = A.t * A.t * (3 - 2 * A.t); applyTime(lerp(A.a, A.b, e)); if (A.t >= 1) TOD.anim = null; }
+  { const moving = ST.t - (TOD.moveT ?? -9) < .3; if (!moving && TOD.wasMoving) SH.farDirty = SH.nearDirty = true; TOD.wasMoving = moving;
+    TOD.shK = clamp((TOD.shK ?? 1) + (moving ? -dt * 3 : dt * 2.2), 0, 1); U.uShOn.value = (L.cur ? L.cur.sh : 1) * (TOD.noSh ? 0 : TOD.shK); }
   const ig = L.cur && L.cur.el < 1.5 ? 1 : 0; U.uIgnite.value += clamp(ig - U.uIgnite.value, -dt / 2.5, dt / 14);
 }
 
@@ -5516,8 +5541,8 @@ function loop(now) {
   if (dt < .09 && !document.hidden) { fpsAcc += dt; fpsN++; }
   if (fpsAcc > .5) { ST.fps = fpsN / fpsAcc; fpsAcc = 0; fpsN = 0;
     if (autoQ && !forced && ST.t > 2) {
-      if (ST.fps < 53) { fastAcc = 0; if (++slowAcc >= 3 && drs > .62) { drs = Math.max(.6, drs - (ST.fps < 40 ? .2 : .1)); slowAcc = 0; resize(); } }
-      else { slowAcc = 0; if (ST.fps > 58.5 && drs < 1 && drsUp < 2 && ++fastAcc > 40) { drs = Math.min(1, drs + .1); drsUp++; fastAcc = 0; resize(); } } } }
+      if (ST.fps < 53) { fastAcc = 0; if (++slowAcc >= 3 && drs > .62) { drs = Math.max(.6, drs - (ST.fps < 40 ? .2 : .1)); slowAcc = 0; resize(); frame(0); } }   /* (a resize empties the picture: it is drawn again at once, or the empty one is shown for a frame, a flash of the whole screen) */
+      else { slowAcc = 0; if (ST.fps > 58.5 && drs < 1 && drsUp < 2 && ++fastAcc > 40) { drs = Math.min(1, drs + .1); drsUp++; fastAcc = 0; resize(); frame(0); } } } }
 }
 
 async function boot() {
@@ -5539,7 +5564,7 @@ async function boot() {
   makeLabels(); hooks.push(keepHash); initFocus(); initNav(); initDrive();
   if (shared && shared.f) { let nm = ''; try { nm = decodeURIComponent(shared.f); } catch (e) { } const o = LABELS.list.find(l => l.focus && l.name === nm); if (o) { FOCUS.iso = shared.iso; FOCUS.clay = shared.clay; enterFocus(o); } }
   T.total = performance.now() - t0; ST.timing = T;
-  initLightBtn(); initPlaces();
+  initClock(); initPlaces();
   document.getElementById('bTour').onclick = () => { if (TOUR.on) { stopTour(); cam.fly = null; cam.tour = null; } else { plClose(); pinClear(); if (FOCUS.label) exitFocus(); startTour(); } };
   document.getElementById('tourS').onclick = e => { e.stopPropagation(); stopTour(); cam.fly = null; cam.tour = null; };
   document.getElementById('bLabels').onclick = e => { LABELS.on = !LABELS.on; e.currentTarget.classList.toggle('on', LABELS.on); };
