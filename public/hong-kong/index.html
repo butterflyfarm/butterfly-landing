@@ -3933,7 +3933,8 @@ function b3dShow(undo) { for (const [pos, idx, ys] of undo.v) { for (let k = 0; 
    above it, within 3 m of the model's lowest point. Left alone: feet already in the ground, feet more than 30 m up (a raised structure, not a base), and
    feet that stand at the edge of another model's roof (a tower flush with the side of its podium: another model has a wall within about 3 m that begins
    lower and ends at the foot's level; brought down, the tower's wall would lie in the podium's and the two would flicker). A tower standing well inside
-   its podium is brought down too, out of sight within it; a taller neighbour in a terrace is no support. Returns how many feet were moved. */
+   its podium is brought down too, out of sight within it; a taller neighbour in a terrace is no support. Left alone as a whole: a model standing clear
+   of level ground (a bridge or a walkway, see below). Returns how many feet were moved. */
 function b3dFeet(list, hand) {
   const C = 2, G = new Map(); let moved = 0;
   /* every wall position of every model, by 2 m cell: model, lowest and highest point there */
@@ -3941,7 +3942,11 @@ function b3dFeet(list, hand) {
     for (let k = 0; k < n * 3; k += 3) { const vy = V[k + 1], key = (V[k] + 32768) * 65536 + (V[k + 2] + 32768), f = foot.get(key); if (f === undefined) foot.set(key, [vy, vy]); else { if (vy < f[0]) f[0] = vy; if (vy > f[1]) f[1] = vy; } if (vy < ymin) ymin = vy; }
     b.ymin = ymin;
     for (const [key, f] of foot) { if (f[1] - f[0] < 5) continue; const X = b.x + (Math.floor(key / 65536) - 32768) / 10, Z = b.z + (key % 65536 - 32768) / 10, ck = Math.floor(X / C) * 65536 + Math.floor(Z / C); let a = G.get(ck); if (!a) G.set(ck, a = []); a.push(bi, b.y + f[0] / 10, b.y + f[1] / 10); } });
-  list.forEach((b, bi) => { const V = b.V, n = b.n; let drop = null;
+  list.forEach((b, bi) => { const V = b.V, n = b.n; let drop = null, lmin = 1e9, g0 = 1e9, g1 = -1e9;
+    /* a thing that stands wholly clear of level ground (every foot 2.5 m up or more, the ground under it within 2 m of level) is not a building on a slope
+       but a bridge, a walkway or a deck on columns: brought down, it would become a solid block across the street beneath it */
+    for (const [key, f] of b.ft) { if (f[1] - f[0] < 5 || f[0] > b.ymin + 30) continue; const g = groundY(b.x + (Math.floor(key / 65536) - 32768) / 10, b.z + (key % 65536 - 32768) / 10), l = b.y + f[0] / 10 - g; if (l < lmin) lmin = l; if (g < g0) g0 = g; if (g > g1) g1 = g; }
+    if (lmin >= 2.5 && g1 - g0 < 2) { b.ft = null; return; }
     for (const [key, f] of b.ft) { if (f[1] - f[0] < 5 || f[0] > b.ymin + 30) continue; const X = b.x + (Math.floor(key / 65536) - 32768) / 10, Z = b.z + (key % 65536 - 32768) / 10, fy = b.y + f[0] / 10;
       const g = Math.min(groundY(X, Z), groundY(X + 2.5, Z), groundY(X - 2.5, Z), groundY(X, Z + 2.5), groundY(X, Z - 2.5)), lift = fy - g; if (lift <= .15 || lift > 30) continue;
       let on = false; const cx = Math.floor(X / C), cz = Math.floor(Z / C);
