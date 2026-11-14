@@ -38,9 +38,31 @@
   #ui input[type=range]{-webkit-appearance:none;appearance:none;width:64px;height:2px;background:rgba(255,196,128,.45);border-radius:2px;outline:none}
   #ui input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;border-radius:50%;background:#ffc98a;border:1px solid #5a3a12;cursor:pointer}
   #ui input[type=range]::-moz-range-thumb{width:11px;height:11px;border-radius:50%;background:#ffc98a;border:1px solid #5a3a12;cursor:pointer}
-  #ui #sTime{width:96px}
-  #ui #oTime{min-width:34px;text-align:left;font-variant-numeric:tabular-nums}
-  #bMenu{display:none}
+  /* the bar: Places and More. (Drive is the big button of its own; the hour is set on the clock) */
+  #ui>button{padding:8px 16px;font-size:11.5px;font-weight:700;letter-spacing:.14em}
+  #more{position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);display:none;flex-direction:column;gap:9px;min-width:240px;padding:11px 12px;background:rgba(9,20,28,.92);border:1px solid rgba(255,196,128,.32);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+  body.menu #more{display:flex} body.menu #ui{opacity:1;z-index:8} body.menu #hint{opacity:0}
+  #more .mr{display:flex;gap:6px;align-items:center}
+  #more .mr button{flex:1;white-space:nowrap;padding:7px 10px}
+  #more label.mr{justify-content:space-between;gap:12px} #more label.mr input{flex:1;width:auto}
+  #bQ::before{content:"Detail: "}
+  /* Places: the island with every place on it; swipe, or tap one, and fly there */
+  #places{position:fixed;inset:0;z-index:9;display:none;align-items:center;justify-content:center;padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));background:rgba(4,10,15,.45)}
+  body.places #places{display:flex} body.driving #places,body.photo #places{display:none}
+  #places .pc{width:min(100%,640px);max-height:100%;overflow-y:auto;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;padding:14px 14px 16px;border-radius:20px;background:rgba(9,20,28,.9);border:1px solid rgba(255,196,128,.32);box-shadow:0 12px 40px rgba(0,0,0,.5);color:#f3e6d0}
+  #places .ph{display:flex;align-items:center;gap:8px} #places .ph b{flex:1;font-size:clamp(14px,3.6vw,17px);font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#fff4df;padding-left:4px}
+  #places button{font:inherit;color:#f3e6d0;background:rgba(255,190,110,.1);border:1px solid rgba(255,196,128,.38);border-radius:18px;cursor:pointer;touch-action:manipulation}
+  #plX{width:36px;height:36px;font-size:15px}
+  #plMap{display:block;width:100%;height:min(42vh,340px);border-radius:14px;background:#163a50;touch-action:none;cursor:pointer}
+  #places .pcar{display:flex;align-items:center;gap:10px;touch-action:none}
+  #places .parr{flex:none;width:50px;height:50px;border-radius:50%;font-size:30px;line-height:1;padding:0 0 5px}
+  #places .psel{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;text-align:center}
+  #places .psel b{font-size:clamp(22px,6vw,32px);font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff4df;line-height:1.08}
+  #places .psel em{font-style:normal;font-size:clamp(12px,3.2vw,14px);opacity:.88;margin-top:4px;min-height:1.3em}
+  #places .pdots{display:flex;justify-content:center;gap:7px;flex-wrap:wrap} #places .pdots i{width:8px;height:8px;border-radius:50%;background:rgba(255,214,160,.28)} #places .pdots i.on{background:#ffc98a}
+  #places .pgo{align-self:center;padding:14px 54px;font-size:16px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;background:rgba(255,176,84,.95);color:#241405;border-color:rgba(255,224,176,.95);border-radius:28px}
+  #places .pl{display:flex;justify-content:center;gap:8px;flex-wrap:wrap} #places .pl button{padding:8px 14px;font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+  #places .pl button.on{background:rgba(255,176,84,.36);color:#fff4df}
   #labels{position:fixed;inset:0;pointer-events:none;overflow:hidden}
   .lb{position:absolute;left:0;top:0;display:none;flex-direction:column;align-items:center;cursor:pointer;will-change:transform,opacity;color:#fff4df;text-shadow:0 1px 3px rgba(0,0,0,.85);white-space:nowrap}
   .lb b{font-weight:600;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;padding:2px 7px;background:rgba(9,20,28,.5);border:1px solid rgba(255,206,140,.35);border-radius:3px;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
@@ -263,7 +285,6 @@
   #dMsg{position:fixed;z-index:6;left:50%;top:38%;transform:translate(-50%,6px);padding:7px 14px;border-radius:16px;background:rgba(9,20,28,.75);color:#fff4df;font-size:12px;letter-spacing:.1em;text-transform:uppercase;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s}
   #dMsg.show{opacity:1;transform:translate(-50%,0)}
   @media (max-width:760px){
-    body.menu #nav{opacity:0;pointer-events:none}
     #fc{max-width:calc(100vw - 100px)}
     #fc.auto .foc{display:none}
     #drv .garr{width:54px;height:54px;font-size:34px}
@@ -277,20 +298,16 @@
     #bigDrive i{width:50px;height:50px}
     #bigDrive b{font-size:17px}
     #bigDrive em{font-size:9px}
-    body.menu #bigDrive{opacity:0;pointer-events:none}
     #dSt{font-size:12px;letter-spacing:.07em;padding:6px 10px}
     #dTop{gap:8px}
     #hint{bottom:calc(max(12px,env(safe-area-inset-bottom)) + 62px);font-size:10px}
     body:not(.driving) #hint{bottom:calc(max(10px,env(safe-area-inset-bottom)) + 122px)}   /* above the big Drive button */
-    #ui{left:auto;right:max(8px,env(safe-area-inset-right));transform:none;flex-direction:column;align-items:stretch;gap:6px;padding:5px;font-size:10px;opacity:.85;max-height:calc(100vh - 24px);overflow:auto}
-    #bMenu{display:block;align-self:flex-end;font-size:15px !important;padding:2px 9px !important}
-    #ui .g{display:none;flex-wrap:wrap}
-    body.menu #ui .g{display:flex}
+    #ui{left:auto;right:max(8px,env(safe-area-inset-right));transform:none;gap:6px;padding:5px;opacity:.92;flex-wrap:nowrap}
+    #ui>button{padding:9px 13px}
+    #more{left:auto;right:0;transform:none}
     body.menu #cr{opacity:0}
-    #ui .g+.g{padding-left:0;border-left:0;padding-top:6px;border-top:1px solid rgba(255,196,128,.2)}
-    #ui button{padding:5px 8px}
-    #ui #sTime{width:120px}
-    #cr{right:auto;left:max(8px,env(safe-area-inset-left));bottom:max(6px,env(safe-area-inset-bottom));max-width:calc(100vw - 86px);text-align:left;line-height:1.3}
+    #more .mr button{padding:9px 10px}
+    #cr{right:auto;left:max(8px,env(safe-area-inset-left));bottom:max(6px,env(safe-area-inset-bottom));max-width:calc(100vw - 186px);text-align:left;line-height:1.3}   /* (clear of Places and More) */
   }
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
@@ -298,12 +315,22 @@
 <body>
 <canvas id="c"></canvas>
 <div id="ui">
-  <button id="bMenu" aria-label="Show controls" title="Controls">☰</button>
-  <div class="g" id="gView"><button data-v="0">Island</button><button data-v="1">Harbour</button><button data-v="3">Peak</button><button data-v="4">Corridor</button><button data-v="5">Stanley</button><button id="bTour" title="Guided tour, golden hour into dusk">Tour</button><button id="bDrive" title="Drive any street on the island">Drive</button></div>
-  <div class="g" id="gLight"><button data-l="golden" class="on">Golden</button><button data-l="noon">Noon</button><button data-l="dusk">Dusk</button><input id="sTime" type="range" min="5.5" max="21" step="0.0166667" value="17" aria-label="Time of day (Hong Kong)" title="Time of day, Hong Kong, today's sun"><span id="oTime">17:00</span></div>
-  <div class="g"><label>Traffic<input id="sTraf" type="range" min="0" max="100" value="70"></label></div>
-  <div class="g"><button id="bLabels" class="on" title="Place names">Labels</button><button id="bQ" title="Quality">High</button><button id="bPhoto">Photo</button><button id="bLink" title="Copy a link to this view">Link</button><button id="bReset">Reset</button></div>
+  <button id="bPlaces" title="Fly to a place on the island">Places</button>
+  <button id="bMore" title="Settings and extras" aria-haspopup="true">More</button>
+  <div id="more">
+    <div class="mr"><button id="bLabels" class="on" title="Place names on or off">Place names</button><button id="bQ" title="How much detail is drawn">High</button></div>
+    <label class="mr">Traffic<input id="sTraf" type="range" min="0" max="100" value="70"></label>
+    <div class="mr"><button id="bPhoto" title="Hide everything but the view (P)">Photo</button><button id="bLink" title="Copy a link to this view">Copy link</button><button id="bReset" title="Back to the whole island">Whole island</button></div>
+  </div>
 </div>
+<div id="places" role="dialog" aria-label="Places"><div class="pc">
+  <div class="ph"><b>Fly to a place</b><button id="plX" type="button" aria-label="Close">✕</button></div>
+  <canvas id="plMap" aria-label="Map of the island with the places to fly to"></canvas>
+  <div class="pcar"><button id="plPrev" class="parr" type="button" aria-label="Previous place">‹</button><div class="psel"><b id="plName"></b><em id="plSub"></em></div><button id="plNext" class="parr" type="button" aria-label="Next place">›</button></div>
+  <div id="plDots" class="pdots"></div>
+  <button id="plGo" class="pgo" type="button">Fly there</button>
+  <div class="pl"><button id="bTour" type="button" title="Guided tour, golden afternoon into dusk">Play the tour</button><button id="plIsland" type="button">Whole island</button></div>
+</div></div>
 <div id="labels"></div>
 <div id="fc" role="dialog" aria-label="Landmark"><button class="x" id="fcX" title="Close (Esc)" aria-label="Close">✕</button><h3 id="fcN"></h3><p id="fcY" class="yr"></p><p id="fcF" class="fact"></p><p id="fcS"></p>
   <div class="r pre"><button id="fcGo" title="Quiet the surroundings (F)">Focus</button></div>
@@ -3288,8 +3315,47 @@ const fmtH = h => { const m = Math.round(h * 60); return String(Math.floor(m / 6
 function applyTime(h, force) {
   TOD.h = h; const p = lightAtTime(h); L.cur = p; applyLight(p); L.name = p.el >= 38 ? 'noon' : p.el >= -1 ? 'golden' : 'dusk'; todDial(h);
   if (force || ST.t - TOD.shT > .2) { SH.farDirty = true; TOD.shT = ST.t; }
-  document.querySelectorAll('#gLight button').forEach(b => b.classList.toggle('on', b.dataset.l === L.name));
-  const s = document.getElementById('sTime'); if (s && document.activeElement !== s) s.value = h; const o = document.getElementById('oTime'); if (o) o.textContent = fmtH(h);
+}
+/* ---------- Places: the island with every place on it; choose one and the view flies there ---------- */
+const PLC = { i: 0, box: null, on: false };
+function plBox() { if (PLC.box) return PLC.box; let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9; const ext = (x, z) => { x0 = Math.min(x0, x); x1 = Math.max(x1, x); z0 = Math.min(z0, z); z1 = Math.max(z1, z); };
+  for (const p of G.coast[0]) ext(p[0], p[1]); for (const S of STARTS) { const P = placeXZ(S); if (P) ext(P[0], P[1]); } return (PLC.box = [x0 - 380, z0 - 380, x1 + 380, z1 + 380]); }
+function plXf(cv) { const B = plBox(), w = cv.clientWidth, h = cv.clientHeight, k = Math.min(w / (B[2] - B[0]), h / (B[3] - B[1])); return { k, ox: (w - (B[2] - B[0]) * k) / 2 - B[0] * k, oz: (h - (B[3] - B[1]) * k) / 2 - B[1] * k, w, h }; }
+function plDraw() {
+  const cv = document.getElementById('plMap'); if (!cv || !cv.clientWidth) return; const dpr = Math.min(devicePixelRatio || 1, 2), W = Math.round(cv.clientWidth * dpr), H = Math.round(cv.clientHeight * dpr); if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+  const g = cv.getContext('2d'), T = plXf(cv), X = x => x * T.k + T.ox, Z = z => z * T.k + T.oz;
+  g.setTransform(dpr, 0, 0, dpr, 0, 0); g.fillStyle = '#163a50'; g.fillRect(0, 0, T.w, T.h);
+  /* the land, then its roads, faintly */
+  g.fillStyle = '#26352d'; g.strokeStyle = 'rgba(255,214,160,.35)'; g.lineWidth = 1; for (const r of G.coast) { if (r.length < 3) continue; g.beginPath(); g.moveTo(X(r[0][0]), Z(r[0][1])); for (let i = 1; i < r.length; i++) g.lineTo(X(r[i][0]), Z(r[i][1])); g.closePath(); g.fill(); g.stroke(); }
+  g.strokeStyle = 'rgba(255,196,128,.26)'; g.lineWidth = .8; g.beginPath(); for (const r of ROADS) { if (!r.pts || r.n < 2) continue; g.moveTo(X(r.pts[0]), Z(r.pts[2])); for (let i = 1; i < r.n; i++) g.lineTo(X(r.pts[i * 3]), Z(r.pts[i * 3 + 2])); } g.stroke();
+  /* where the view is now */
+  g.strokeStyle = '#fff4df'; g.lineWidth = 1.6; g.beginPath(); g.arc(X(cam.tx), Z(cam.tz), 6, 0, TAU); g.stroke(); g.beginPath(); g.arc(X(cam.tx), Z(cam.tz), 1.5, 0, TAU); g.fillStyle = '#fff4df'; g.fill();
+  /* every place; the chosen one large, with its name */
+  STARTS.forEach((S, j) => { if (j === PLC.i) return; const P = placeXZ(S); if (!P) return; g.fillStyle = '#ffb054'; g.strokeStyle = 'rgba(9,20,28,.9)'; g.lineWidth = 2; g.beginPath(); g.arc(X(P[0]), Z(P[1]), 5.5, 0, TAU); g.fill(); g.stroke(); });
+  const S = STARTS[PLC.i], P = placeXZ(S), x = X(P[0]), z = Z(P[1]); g.fillStyle = '#4fc3f2'; g.strokeStyle = '#fff4df'; g.lineWidth = 3; g.beginPath(); g.arc(x, z, 11, 0, TAU); g.fill(); g.stroke();
+  g.font = '700 13px ' + getComputedStyle(document.body).fontFamily; const t = S.name.toUpperCase(), tw = g.measureText(t).width + 16, bx = clamp(x - tw / 2, 4, T.w - tw - 4), by = z - 17 - 24 < 4 ? z + 17 : z - 17 - 24;
+  g.fillStyle = 'rgba(9,20,28,.88)'; g.beginPath(); g.roundRect ? g.roundRect(bx, by, tw, 24, 12) : g.rect(bx, by, tw, 24); g.fill(); g.fillStyle = '#fff4df'; g.textBaseline = 'middle'; g.fillText(t, bx + 8, by + 12.5);
+}
+function plSet(i) { const n = STARTS.length; PLC.i = ((i % n) + n) % n; const S = STARTS[PLC.i]; document.getElementById('plName').textContent = S.name; document.getElementById('plSub').textContent = S.blurb || '';
+  const dots = document.getElementById('plDots'); if (dots.children.length !== n) { dots.innerHTML = ''; STARTS.forEach(() => dots.appendChild(document.createElement('i'))); } [...dots.children].forEach((d, j) => d.classList.toggle('on', j === PLC.i)); plDraw(); }
+function plOpen() { if (DRIVE.on) return; PLC.on = true; document.body.classList.remove('menu'); document.body.classList.add('places');
+  let best = 0, bd = 1e9; STARTS.forEach((S, j) => { const P = placeXZ(S); if (!P) return; const d = Math.hypot(P[0] - cam.tx, P[1] - cam.tz); if (d < bd) { bd = d; best = j; } }); plSet(best); }
+function plClose() { PLC.on = false; document.body.classList.remove('places'); }
+function plFly() { const P = placeXZ(STARTS[PLC.i]); plClose(); if (TOUR.on) stopTour(); if (FOCUS.label) exitFocus(); userInput(); flyTo({ tx: P[0], tz: P[1], dist: 950, pol: 64 * RAD }); }
+function initPlaces() {
+  const q = id => document.getElementById(id), el = q('places'); if (!el) return;
+  q('bPlaces').onclick = () => PLC.on ? plClose() : plOpen(); q('plX').onclick = plClose; q('plPrev').onclick = () => plSet(PLC.i - 1); q('plNext').onclick = () => plSet(PLC.i + 1); q('plGo').onclick = plFly;
+  q('plIsland').onclick = () => { plClose(); stopTour(); goPreset(0); };
+  el.addEventListener('pointerup', e => { if (e.target === el) plClose(); });
+  for (const t of ['pointerdown', 'pointermove', 'wheel', 'touchstart', 'mousedown', 'click', 'dblclick']) el.addEventListener(t, e => e.stopPropagation(), { passive: true });
+  /* swipe across the map or the name for the next place; tap a dot to choose it */
+  for (const [node, isMap] of [[q('plMap'), true], [el.querySelector('.pcar'), false]]) { let s = null; node.addEventListener('pointerdown', e => { s = { x: e.clientX, y: e.clientY }; try { node.setPointerCapture(e.pointerId); } catch (err) { /* synthetic */ } });
+    node.addEventListener('pointerup', e => { if (!s) return; const dx = e.clientX - s.x, dy = e.clientY - s.y; s = null; if (Math.abs(dx) > 36 && Math.abs(dx) > Math.abs(dy)) { plSet(PLC.i + (dx < 0 ? 1 : -1)); return; }
+      if (!isMap || Math.hypot(dx, dy) > 8) return; const r = node.getBoundingClientRect(), T = plXf(node), px = e.clientX - r.left, pz = e.clientY - r.top; let best = -1, bd = 30;
+      STARTS.forEach((S, j) => { const P = placeXZ(S); if (!P) return; const d = Math.hypot(P[0] * T.k + T.ox - px, P[1] * T.k + T.oz - pz); if (d < bd) { bd = d; best = j; } }); if (best >= 0) plSet(best); });
+    node.addEventListener('pointercancel', () => { s = null; }); }
+  addEventListener('resize', () => { if (PLC.on) plDraw(); });
+  addEventListener('keydown', e => { if (!PLC.on) return; if (e.code === 'Escape') plClose(); else if (e.code === 'ArrowLeft') plSet(PLC.i - 1); else if (e.code === 'ArrowRight') plSet(PLC.i + 1); else if (e.code === 'Enter') plFly(); else return; e.stopPropagation(); e.preventDefault(); }, true);
 }
 /* the round clock on the screen: shows the hour, and sets it */
 function todDial(h) {
@@ -4987,7 +5053,7 @@ function initDrive() {
   const H = DRIVE.hud, q = id => document.getElementById(id); Object.assign(H, { spd: q('dSpd'), st: q('dSt'), nx: q('dNx'), arr: q('dArr'), nxd: q('dNxD'), nxn: q('dNxN'), tun: q('dTun'), msg: q('dMsg'), joy: q('dJoy'), boost: q('dBoost'), bF: q('dBoostF'), bN: q('dBoostN'), combo: q('dCombo'), comboN: q('dComboN') });
   { const b = q('dBoost'), on = e => { e.preventDefault(); DRIVE.boostBtn = true; DRIVE.boostTap = true; }, off = () => { DRIVE.boostBtn = false; }; b.addEventListener('pointerdown', on); for (const t of ['pointerup', 'pointercancel', 'pointerleave']) b.addEventListener(t, off); { const hb = q('dHorn'); hb.addEventListener('pointerdown', e => { e.preventDefault(); dHorn(); }); hb.addEventListener('keydown', e => { if (e.code === 'Enter' || e.code === 'Space') { e.preventDefault(); if (!e.repeat) dHorn(); } }); } }
   q('dNavB').onclick = () => openDest(); q('navX').onclick = navClose;
-  q('bDrive').onclick = () => DRIVE.on ? exitDrive() : enterDrive(); q('bigDrive').onclick = () => enterDrive(); q('bigDrive').classList.add('ready'); q('dExit').onclick = exitDrive; q('dU').onclick = dUturn;
+  q('bigDrive').onclick = () => enterDrive(); q('bigDrive').classList.add('ready'); q('dExit').onclick = exitDrive; q('dU').onclick = dUturn;
   addEventListener('keydown', e => { if (!DRIVE.on) return; if (e.code === 'KeyU' && !DRIVE.garage) dUturn(); if (e.code === 'KeyH' && !DRIVE.garage && !e.repeat) dHorn(); if (e.code === 'KeyG' && !DRIVE.garage) openGarage(); if (e.code === 'Escape') exitDrive(); });
   initGarage(); initMini();
 }
@@ -5329,15 +5395,13 @@ async function boot() {
   makeLabels(); hooks.push(keepHash); initFocus(); initNav(); initDrive();
   if (shared && shared.f) { let nm = ''; try { nm = decodeURIComponent(shared.f); } catch (e) { } const o = LABELS.list.find(l => l.focus && l.name === nm); if (o) { FOCUS.iso = shared.iso; FOCUS.clay = shared.clay; enterFocus(o); } }
   T.total = performance.now() - t0; ST.timing = T;
-  document.querySelectorAll('#gView button[data-v]').forEach(b => b.onclick = () => goPreset(+b.dataset.v));
-  document.getElementById('gView').addEventListener('click', e => { if (e.target.closest('button')) document.body.classList.remove('menu'); });
-  document.querySelectorAll('#gLight button').forEach(b => b.onclick = () => setLight(b.dataset.l));
-  document.getElementById('sTime').oninput = e => { TOD.anim = null; applyTime(+e.target.value); }; initClock();
-  document.getElementById('bTour').onclick = () => TOUR.on ? stopTour() : startTour();
+  initClock(); initPlaces();
+  document.getElementById('bTour').onclick = () => { if (TOUR.on) stopTour(); else { plClose(); startTour(); } };
   document.getElementById('bLabels').onclick = e => { LABELS.on = !LABELS.on; e.currentTarget.classList.toggle('on', LABELS.on); };
-  document.getElementById('bMenu').onclick = () => document.body.classList.toggle('menu');
-  document.getElementById('bLink').onclick = async e => { const b = e.currentTarget, url = location.href.split('#')[0] + viewHash(); try { history.replaceState(null, '', viewHash()); await navigator.clipboard.writeText(url); b.textContent = 'Copied'; } catch (err) { b.textContent = 'In URL'; } setTimeout(() => { b.textContent = 'Link'; }, 1600); };
-  document.getElementById('bReset').onclick = () => { stopTour(); goPreset(0); };
+  document.getElementById('bMore').onclick = () => document.body.classList.toggle('menu');
+  addEventListener('pointerdown', e => { if (document.body.classList.contains('menu') && !e.target.closest('#ui')) document.body.classList.remove('menu'); }, true);   /* a tap anywhere else puts More away */
+  document.getElementById('bLink').onclick = async e => { const b = e.currentTarget, url = location.href.split('#')[0] + viewHash(); try { history.replaceState(null, '', viewHash()); await navigator.clipboard.writeText(url); b.textContent = 'Copied'; } catch (err) { b.textContent = 'In URL'; } setTimeout(() => { b.textContent = 'Copy link'; }, 1600); };
+  document.getElementById('bReset').onclick = () => { stopTour(); document.body.classList.remove('menu'); goPreset(0); };
   document.getElementById('bPhoto').onclick = togglePhoto;
   document.getElementById('bQ').onclick = () => setQuality((qi + 2) % 3, true);
   document.getElementById('sTraf').oninput = e => { ST.traffic = e.target.value / 100; };
