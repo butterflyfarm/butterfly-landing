@@ -76,6 +76,13 @@ type Flower = Point & { h: number; r: number; color: string; phase: number; afte
 type Mote = Point & { r: number; vx: number; vy: number; phase: number }
 type Seed = Point & { vx: number; vy: number; age: number; life: number; phase: number }
 type Streak = Point & { age: number; life: number; vx: number; vy: number; len: number }
+/** a touch in the grass, pushing the blades aside */
+type Part = Point & { at: number; s: number }
+type Hopper = Point & { vx: number; vy: number; ground: number; hops: number; age: number; dir: 1 | -1 }
+/** a firefly, or by day a mote of pollen */
+type Spark = Point & { vx: number; vy: number; age: number; life: number; phase: number; pollen?: boolean }
+/** a breeze running out across the meadow from a touch */
+type Gust = Point & { age: number; vx: number; len: number; life: number }
 type Bird = Point & {
   vx: number
   vy: number
@@ -108,6 +115,57 @@ function wind(x: number, t: number) {
     0.08 * Math.sin(x * 0.013 - t * 1.5 + 2) +
     0.42 * gust
   )
+}
+
+/** A small green grasshopper in mid-leap, nose tipped along its flight, in world units. */
+function hopper(c: CanvasRenderingContext2D, h: { x: number; y: number; vx: number; vy: number; dir: number }, alpha: number) {
+  if (alpha <= 0.01) return
+  const tilt = clamp(Math.atan2(h.vy, Math.abs(h.vx)) * 0.5, -0.5, 0.5)
+  c.save()
+  c.globalAlpha = alpha
+  c.translate(h.x, h.y)
+  c.scale(h.dir * 1.15, 1.15)
+  c.rotate(tilt)
+  c.lineCap = 'round'
+  // the long hind leg, stretched out behind from the leap
+  c.strokeStyle = '#5c7a3c'
+  c.lineWidth = 1.7
+  c.beginPath()
+  c.moveTo(-1, 0.5)
+  c.lineTo(-9, -3.5)
+  c.lineTo(-14, 2.5)
+  c.stroke()
+  // the little front legs and the feelers
+  c.lineWidth = 0.9
+  c.beginPath()
+  c.moveTo(3.5, 1.5)
+  c.lineTo(5.5, 4.5)
+  c.moveTo(1, 1.8)
+  c.lineTo(-0.5, 4.8)
+  c.stroke()
+  c.lineWidth = 0.6
+  c.beginPath()
+  c.moveTo(8.6, -2.6)
+  c.quadraticCurveTo(12, -8, 16.5, -8.5)
+  c.stroke()
+  // body, folded wings, head and eye
+  c.fillStyle = '#86a752'
+  c.beginPath()
+  c.ellipse(0, 0, 7.6, 2.7, 0, 0, Math.PI * 2)
+  c.fill()
+  c.fillStyle = '#9fbb68'
+  c.beginPath()
+  c.ellipse(-1.5, -1.5, 6.2, 1.3, -0.06, 0, Math.PI * 2)
+  c.fill()
+  c.fillStyle = '#86a752'
+  c.beginPath()
+  c.arc(7.2, -0.8, 2.7, 0, Math.PI * 2)
+  c.fill()
+  c.fillStyle = '#33361f'
+  c.beginPath()
+  c.arc(8.3, -1.5, 0.85, 0, Math.PI * 2)
+  c.fill()
+  c.restore()
 }
 
 function plant(vis: number, lift: number) {
@@ -546,6 +604,93 @@ export function startLife(o: LifeOptions): Life {
   const seeds: Seed[] = []
   const streaks: Streak[] = []
   const birds: Bird[] = []
+  const parts: Part[] = []
+  const hoppers: Hopper[] = []
+  const sparks: Spark[] = []
+  const gusts: Gust[] = []
+
+  /**
+   * A touch on the meadow: the land there is a painting and cannot bend, so a breeze
+   * runs out across it instead, a pale wave like wind on a far field, lifting a
+   * little pollen (or, at night, a firefly or two).
+   */
+  function breeze(p: Point) {
+    if (o.still) return
+    // a few pale streaks brushing out from the touch, mostly downwind
+    for (let i = 0; i < 4; i++) {
+      const down = i < 3 ? 1 : -1
+      gusts.push({
+        x: p.x + (rand() - 0.5) * 30,
+        y: p.y + (i - 1.5) * 9 + (rand() - 0.5) * 6,
+        age: -i * 0.07,
+        vx: down * (110 + rand() * 90),
+        len: 34 + rand() * 30,
+        life: 1.2 + rand() * 0.5,
+      })
+    }
+    if (gusts.length > 12) gusts.splice(0, gusts.length - 12)
+    const n = night > 0.5 ? 2 : 6
+    for (let i = 0; i < n; i++) {
+      sparks.push({
+        x: p.x + (rand() - 0.5) * 40,
+        y: p.y - rand() * 10,
+        vx: 12 + rand() * 20,
+        vy: -(14 + rand() * 18),
+        age: -i * 0.08,
+        life: 2.6 + rand() * 1.6,
+        phase: rand() * Math.PI * 2,
+        pollen: night <= 0.5,
+      })
+    }
+    if (sparks.length > 30) sparks.splice(0, sparks.length - 30)
+  }
+
+  /** A touch in the grass: the blades around it lean away, then spring back. */
+  function part(p: Point, s: number) {
+    if (o.still) return
+    const last = parts[parts.length - 1]
+    // a hand moving through the grass leaves a trail of these, not one every frame
+    if (last && now - last.at < 0.07 && Math.hypot(last.x - p.x, last.y - p.y) < 24 && s <= last.s) return
+    parts.push({ x: p.x, y: p.y, at: now, s })
+    if (parts.length > 8) parts.shift()
+  }
+  /** How far recent touches push a blade whose middle is at (x, y), as extra bend. */
+  function parted(x: number, y: number) {
+    let bend = 0
+    for (const q of parts) {
+      const dx = x - q.x
+      const near = Math.exp(-((dx / 80) ** 2) - ((y - q.y) / 84) ** 2)
+      if (near < 0.02) continue
+      // the push reaches blades further out a moment later, so it runs outward like a ripple
+      const a = now - q.at - Math.abs(dx) / 300
+      if (a <= 0) continue
+      const away = dx / (Math.abs(dx) + 10)
+      bend += away * q.s * near * 1.25 * (1 - Math.exp(-a * 22)) * Math.exp(-a * 2.2) * Math.cos(a * 7.5)
+    }
+    return bend
+  }
+  /** Something that lives in the grass comes out: a grasshopper by day, fireflies at night. */
+  function stir(p: Point) {
+    if (o.still) return
+    const ground = clamp(p.y + 18, 812, 880)
+    if (night > 0.5) {
+      for (let i = 0; i < 7; i++) {
+        sparks.push({
+          x: p.x + (rand() - 0.5) * 50,
+          y: Math.min(p.y, ground) - rand() * 20,
+          vx: (rand() - 0.5) * 34,
+          vy: -(48 + rand() * 30),
+          age: -i * 0.14,
+          life: 4 + rand() * 2.5,
+          phase: rand() * Math.PI * 2,
+        })
+      }
+      if (sparks.length > 30) sparks.splice(0, sparks.length - 30)
+    } else if (!hoppers.length) {
+      const dir = rand() < 0.5 ? 1 : -1
+      hoppers.push({ x: p.x, y: ground, ground, vx: dir * (70 + rand() * 50), vy: -(240 + rand() * 50), hops: 2, age: 0, dir })
+    }
+  }
 
   /** A shooting star that crosses near the tap, falling either way at its own slant and pace. */
   const shoot = (p: Point) => {
@@ -784,8 +929,11 @@ export function startLife(o: LifeOptions): Life {
   // --- touching the farm -------------------------------------------------
   const onMove = (e: PointerEvent) => {
     const p = toWorld(e.clientX, e.clientY)
-    // a hand brushed through the grass shakes a few seeds loose
-    if ((e.buttons || e.pointerType === 'touch') && p.y > 792 && rand() < 0.35) seed(p.x, p.y - 30)
+    // a hand brushed through the grass parts it and shakes a few seeds loose; a mouse
+    // passing over just ruffles it
+    const pressing = Boolean(e.buttons) || e.pointerType === 'touch'
+    if (p.y > 792) part(p, pressing ? 0.7 : 0.35)
+    if (pressing && p.y > 792 && rand() < 0.35) seed(p.x, p.y - 30)
     if (e.pointerType === 'mouse') Object.assign(pointer, p, { at: now })
   }
   const onDown = (e: PointerEvent) => {
@@ -797,7 +945,11 @@ export function startLife(o: LifeOptions): Life {
     } else if (p.y < skyline(p.x) - 4) {
       if (night > 0.5) shoot(p)
       else flock(p)
-    } else if (p.y > 792) burst(p)
+    } else if (p.y > 792) {
+      part(p, 1)
+      burst(p)
+      stir(p)
+    } else breeze(p)
     // and wherever it was, the butterfly comes to look
     Object.assign(pointer, p, { at: now + 1.5 })
     if (b.mode !== 'wander') leave(now)
@@ -830,13 +982,19 @@ export function startLife(o: LifeOptions): Life {
     fit(o.grass, c)
     // rain flattens the grass a little and hurries the wind
     const gusty = 1 + wet * 0.5
+    while (parts.length && now - parts[0].at > 3) parts.shift()
+    const touched = parts.length > 0
 
     garden.rows.forEach((buckets, r) => {
       buckets.forEach((blades, ci) => {
         c.fillStyle = garden.meta[r].colors[ci]
         c.beginPath()
         for (const bl of blades) {
-          const bend = bl.lean + wind(bl.x, t) * gusty + 0.035 * Math.sin(t * 3.1 + bl.phase)
+          const bend =
+            bl.lean +
+            wind(bl.x, t) * gusty +
+            0.035 * Math.sin(t * 3.1 + bl.phase) +
+            (touched ? parted(bl.x, bl.y - bl.h * 0.5) : 0)
           const tipX = bl.x + bend * bl.h * 0.55
           const tipY = bl.y - bl.h * (1 - 0.22 * bend * bend)
           const midX = bl.x + bend * bl.h * 0.14
@@ -850,7 +1008,8 @@ export function startLife(o: LifeOptions): Life {
 
       for (const fl of garden.flowers) {
         if (fl.after !== r) continue
-        const bend = wind(fl.x, t) * gusty + 0.04 * Math.sin(t * 2.2 + fl.phase)
+        const bend =
+          wind(fl.x, t) * gusty + 0.04 * Math.sin(t * 2.2 + fl.phase) + (touched ? parted(fl.x, fl.y - fl.h * 0.5) * 0.8 : 0)
         const hx = fl.x + bend * fl.h * 0.5
         const hy = fl.y - fl.h * (1 - 0.2 * bend * bend)
         c.strokeStyle = '#527b55'
@@ -915,7 +1074,8 @@ export function startLife(o: LifeOptions): Life {
   let fxUsed = false
   function paintFx(t: number, dt: number) {
     const glowing = night * (1 - wet)
-    const busy = wet > 0.01 || glowing > 0.03 || seeds.length + streaks.length + birds.length > 0
+    const busy =
+      wet > 0.01 || glowing > 0.03 || seeds.length + streaks.length + birds.length + hoppers.length + sparks.length + gusts.length > 0
     if (!busy && !fxUsed) return
     const v = o.getView()
     const c = f!
@@ -967,6 +1127,98 @@ export function startLife(o: LifeOptions): Life {
         c.arc(x, y, 1.9, 0, 7)
         c.fill()
       }
+    }
+
+    // a breeze across the meadow: soft pale streaks, like wind running over grass
+    // seen from afar, kept to the land and off the sky
+    if (gusts.length) {
+      c.save()
+      c.beginPath()
+      c.moveTo(-v.vis / 2 - 40, 800)
+      for (let x = -v.vis / 2 - 40; x <= v.vis / 2 + 40; x += 20) c.lineTo(x, skyline(x) + 2)
+      c.lineTo(v.vis / 2 + 40, 800)
+      c.closePath()
+      c.clip()
+      const tone = night > 0.5 ? '214, 224, 240' : '252, 248, 222'
+      const strength = (night > 0.5 ? 0.16 : 0.3) * (1 - 0.5 * wet)
+      for (let i = gusts.length - 1; i >= 0; i--) {
+        const g = gusts[i]
+        g.age += dt
+        if (g.age < 0) continue
+        const k = g.age / g.life
+        if (k >= 1) {
+          gusts.splice(i, 1)
+          continue
+        }
+        // it runs out fast and slows, stretching as it goes, swelling in and fading away
+        const x = g.x + g.vx * g.life * 0.6 * (1 - (1 - k) ** 2)
+        const len = g.len * (0.6 + 0.9 * k)
+        const fade = strength * Math.sin(Math.PI * k) ** 1.3
+        // wide and faint to narrow and brighter, for a soft edge
+        for (const [h, a] of [[7, 0.4], [4, 0.6], [1.8, 0.9]] as const) {
+          c.fillStyle = `rgba(${tone}, ${(fade * a).toFixed(3)})`
+          c.beginPath()
+          c.ellipse(x, g.y, len, h, 0, 0, Math.PI * 2)
+          c.fill()
+        }
+      }
+      c.restore()
+    }
+
+    // fireflies stirred up out of the grass, rising slowly and drifting off, and
+    // pollen lifted by a breeze
+    for (let i = sparks.length - 1; i >= 0; i--) {
+      const s = sparks[i]
+      s.age += dt
+      if (s.age < 0) continue
+      if (s.age > s.life) {
+        sparks.splice(i, 1)
+        continue
+      }
+      s.vx += Math.sin(t * 0.9 + s.phase) * 10 * dt
+      s.vy *= 1 - 0.22 * dt
+      s.x += (s.vx + Math.sin(t * 1.3 + s.phase) * 8) * dt
+      s.y += s.vy * dt
+      if (s.pollen) {
+        const a = Math.min(1, s.age * 3, (s.life - s.age) / 1) * 0.85
+        c.fillStyle = `rgba(250, 238, 186, ${a.toFixed(3)})`
+        c.beginPath()
+        c.arc(s.x, s.y, 1.5, 0, 7)
+        c.fill()
+        continue
+      }
+      // bright as they lift off, then glowing on and off like the others
+      const pulse = Math.max(clamp(1.6 - s.age), 0.45 + 0.55 * Math.max(0, Math.sin(t * 2.2 + s.phase)) ** 2)
+      const alpha = Math.min(1, s.age * 2, (s.life - s.age) / 1.2) * pulse * (1 - 0.7 * wet)
+      c.fillStyle = `rgba(232, 238, 150, ${(alpha * 0.26).toFixed(3)})`
+      c.beginPath()
+      c.arc(s.x, s.y, 8, 0, 7)
+      c.fill()
+      c.fillStyle = `rgba(246, 248, 196, ${alpha.toFixed(3)})`
+      c.beginPath()
+      c.arc(s.x, s.y, 2.2, 0, 7)
+      c.fill()
+    }
+
+    // a grasshopper, springing out of the grass in a hop or two and dropping back in
+    for (let i = hoppers.length - 1; i >= 0; i--) {
+      const h = hoppers[i]
+      h.age += dt
+      h.vy += 620 * dt
+      h.x += h.vx * dt
+      h.y += h.vy * dt
+      if (h.y >= h.ground && h.vy > 0) {
+        if (--h.hops <= 0) {
+          hoppers.splice(i, 1)
+          continue
+        }
+        h.y = h.ground
+        h.vy = -(190 + rand() * 50)
+        h.vx *= 0.8
+      }
+      // it fades in as it leaves the grass and out as it drops back into it
+      const fading = h.age < 0.25 || (h.hops === 1 && h.vy > 0)
+      hopper(c, h, fading ? clamp((h.ground - h.y) / 12) : 1)
     }
 
     // dandelion seeds: a little parachute over a hanging seed
