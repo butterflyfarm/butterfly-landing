@@ -46,6 +46,10 @@
   #more .mr button{flex:1;white-space:nowrap;padding:7px 10px}
   #more label.mr{justify-content:space-between;gap:12px} #more label.mr input{flex:1;width:auto}
   #bQ::before{content:"Detail: "}
+  /* Photo: a camera under the clock. In photo mode everything else goes; the button stays, faint, to come back */
+  #bCam{position:fixed;z-index:6;right:calc(max(12px,env(safe-area-inset-right)) + 12px);top:calc(max(12px,env(safe-area-inset-top)) + 228px);width:44px;height:44px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;
+    color:#f3d9b4;background:rgba(9,20,28,.72);border:1px solid rgba(255,196,128,.4);cursor:pointer;touch-action:manipulation;transition:opacity .4s}
+  #bCam:hover{background:rgba(40,56,66,.9)} body.driving #bCam,body.places #bCam{display:none} body.photo #bCam{opacity:.38}
   /* Places: the island with every place on it; swipe, or tap one, and fly there */
   #places{position:fixed;inset:0;z-index:9;display:none;align-items:center;justify-content:center;padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));background:rgba(4,10,15,.45)}
   body.places #places{display:flex} body.driving #places,body.photo #places{display:none}
@@ -53,6 +57,12 @@
   #places .ph{display:flex;align-items:center;gap:8px} #places .ph b{flex:1;font-size:clamp(14px,3.6vw,17px);font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#fff4df;padding-left:4px}
   #places button{font:inherit;color:#f3e6d0;background:rgba(255,190,110,.1);border:1px solid rgba(255,196,128,.38);border-radius:18px;cursor:pointer;touch-action:manipulation}
   #plX{width:36px;height:36px;font-size:15px}
+  #plQ{box-sizing:border-box;width:100%;height:42px;padding:0 14px;border-radius:21px;border:1px solid rgba(255,196,128,.38);background:rgba(4,12,18,.6);color:#fff4df;font:inherit;font-size:16px;letter-spacing:.02em;outline:none;-webkit-appearance:none;appearance:none}
+  #plQ::placeholder{color:rgba(243,217,180,.55)} #plQ:focus{border-color:rgba(255,206,140,.85)}
+  #plRes{display:none;flex-direction:column;gap:5px} #plRes.on{display:flex}
+  #plRes button{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:9px 14px;border-radius:12px;text-align:left;font-size:14px}
+  #plRes button em{font-style:normal;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;opacity:.65;white-space:nowrap}
+  #plRes .none{padding:6px 14px;font-size:13px;opacity:.7}
   #plMap{display:block;width:100%;height:min(42vh,340px);border-radius:14px;background:#163a50;touch-action:none;cursor:pointer}
   #places .pcar{display:flex;align-items:center;gap:10px;touch-action:none}
   #places .parr{flex:none;width:50px;height:50px;border-radius:50%;font-size:30px;line-height:1;padding:0 0 5px}
@@ -320,16 +330,17 @@
   <div id="more">
     <div class="mr"><button id="bLabels" class="on" title="Place names on or off">Place names</button><button id="bQ" title="How much detail is drawn">High</button></div>
     <label class="mr">Traffic<input id="sTraf" type="range" min="0" max="100" value="70"></label>
-    <div class="mr"><button id="bPhoto" title="Hide everything but the view (P)">Photo</button><button id="bLink" title="Copy a link to this view">Copy link</button><button id="bReset" title="Back to the whole island">Whole island</button></div>
+    <div class="mr"><button id="bLink" title="Copy a link to this view">Copy link</button><button id="bReset" title="Back to the whole island">Whole island</button></div>
   </div>
 </div>
 <div id="places" role="dialog" aria-label="Places"><div class="pc">
   <div class="ph"><b>Fly to a place</b><button id="plX" type="button" aria-label="Close">✕</button></div>
+  <input id="plQ" type="search" placeholder="Search a district, landmark or street" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search a district, landmark or street"><div id="plRes"></div>
   <canvas id="plMap" aria-label="Map of the island with the places to fly to"></canvas>
   <div class="pcar"><button id="plPrev" class="parr" type="button" aria-label="Previous place">‹</button><div class="psel"><b id="plName"></b><em id="plSub"></em></div><button id="plNext" class="parr" type="button" aria-label="Next place">›</button></div>
   <div id="plDots" class="pdots"></div>
   <button id="plGo" class="pgo" type="button">Fly there</button>
-  <div class="pl"><button id="bTour" type="button" title="Guided tour, golden afternoon into dusk">Play the tour</button><button id="plIsland" type="button">Whole island</button></div>
+  <div class="pl"><button id="plRide" type="button" title="Sit back: the car drives you there along the streets, then on to the next place">Ride there by road</button><button id="bTour" type="button" title="Guided tour from the air, golden afternoon into dusk">Play the tour</button><button id="plIsland" type="button">Whole island</button></div>
 </div></div>
 <div id="labels"></div>
 <div id="fc" role="dialog" aria-label="Landmark"><button class="x" id="fcX" title="Close (Esc)" aria-label="Close">✕</button><h3 id="fcN"></h3><p id="fcY" class="yr"></p><p id="fcF" class="fact"></p><p id="fcS"></p>
@@ -340,6 +351,7 @@
   <g id="cpR"><circle r="20" fill="none" stroke="rgba(255,206,140,.3)" stroke-dasharray="2 3.2"/><path d="M0-18L5 0H-5Z" fill="#ff8a52"/><path d="M0 18L5 0H-5Z" fill="rgba(243,217,180,.6)"/><circle r="2" fill="#2a1a0c"/></g>
   <text id="cpN">N</text></svg></div>
   <div id="zm"><button id="zIn" title="Zoom in" aria-label="Zoom in">+</button><button id="zOut" title="Zoom out" aria-label="Zoom out">−</button></div></div>
+<button id="bCam" type="button" title="Photo: just the view, nothing over it (P)" aria-label="Photo: hide the controls"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M9 4 7.6 6H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2.6L15 4H9Zm3 4.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Zm0 2a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z"/></svg></button>
 <div id="tClock" role="slider" tabindex="0" aria-label="Time of day in Hong Kong" title="Time of day: drag the sun round the dial · double-tap for the golden afternoon"><svg viewBox="0 0 68 68" aria-hidden="true">
   <circle cx="34" cy="34" r="33" fill="rgba(9,20,28,.9)" stroke="rgba(255,196,128,.42)"/><circle cx="34" cy="34" r="26" fill="none" stroke="rgba(120,150,210,.30)" stroke-width="5"/><path id="tcDay" fill="none" stroke="#f0b45a" stroke-width="5" stroke-linecap="round"/>
   <path d="M34 3.5v4M34 60.5v4M3.5 34h4M60.5 34h4" stroke="rgba(243,217,180,.6)" stroke-width="1.2"/><g id="tcHand"><circle id="tcSun" cx="34" cy="8" r="6.2" fill="#ffd27a" stroke="#1a130a" stroke-width="1.4"/></g>
@@ -3338,16 +3350,54 @@ function plDraw() {
 }
 function plSet(i) { const n = STARTS.length; PLC.i = ((i % n) + n) % n; const S = STARTS[PLC.i]; document.getElementById('plName').textContent = S.name; document.getElementById('plSub').textContent = S.blurb || '';
   const dots = document.getElementById('plDots'); if (dots.children.length !== n) { dots.innerHTML = ''; STARTS.forEach(() => dots.appendChild(document.createElement('i'))); } [...dots.children].forEach((d, j) => d.classList.toggle('on', j === PLC.i)); plDraw(); }
-function plOpen() { if (DRIVE.on) return; PLC.on = true; document.body.classList.remove('menu'); document.body.classList.add('places');
+function plOpen() { if (DRIVE.on) return; PLC.on = true; { const q = document.getElementById('plQ'); if (q) { q.value = ''; plSearch(''); } } document.body.classList.remove('menu'); document.body.classList.add('places');
   let best = 0, bd = 1e9; STARTS.forEach((S, j) => { const P = placeXZ(S); if (!P) return; const d = Math.hypot(P[0] - cam.tx, P[1] - cam.tz); if (d < bd) { bd = d; best = j; } }); plSet(best); }
 function plClose() { PLC.on = false; document.body.classList.remove('places'); }
 function plFly() { const P = placeXZ(STARTS[PLC.i]); plClose(); if (TOUR.on) stopTour(); if (FOCUS.label) exitFocus(); userInput(); flyTo({ tx: P[0], tz: P[1], dist: 950, pol: 64 * RAD }); }
+/* search: the places, the districts, landmarks and peaks that carry a name on the map, and every named street. A place is chosen on the map
+   (to fly or ride there); anything else the view flies straight to */
+function plIndex() {
+  if (PLC.idx && PLC.idxD === !!DRIVE.ready) return PLC.idx; PLC.idxD = !!DRIVE.ready; const out = [], seen = new Set(), put = (name, kind, rank, run) => { const k = kind + '|' + name.toLowerCase(); if (!name || seen.has(k)) return; seen.add(k); out.push({ name, low: name.toLowerCase(), kind, rank, run }); };
+  STARTS.forEach((S, j) => put(S.name, 'Place', 0, () => plSet(j)));
+  for (const o of LABELS.list) { const kind = o.kind === 'dist' ? 'District' : o.kind === 'tower' ? 'Landmark' : o.kind === 'peak' ? 'Peak' : null; if (kind && o.fly) put(o.name, kind, kind === 'District' ? 1 : 2, () => { plClose(); if (TOUR.on) stopTour(); userInput(); flyTo(o.fly); if (o.focus) focusOffer(o); }); }
+  const best = new Map(); for (const r of ROADS) { if (!r.name || !r.pts || r.n < 2) continue; const b = best.get(r.name); if (!b || r.len > b.len) best.set(r.name, r); }
+  const street = (name, x, z) => put(name, 'Street', 3, () => { plClose(); if (TOUR.on) stopTour(); if (FOCUS.label) exitFocus(); userInput(); flyTo({ tx: x, tz: z, dist: 620, pol: 62 * RAD }); });
+  /* (the map's main roads run on under the name they start with, so a street is found a little way in from its start, not at the middle of the line.
+     Once the streets for driving have been loaded, every named street on the island can be found, each at the middle of its longest stretch) */
+  if (DRIVE.ready && DRIVE.E) { const lg = new Map(); for (const e of DRIVE.E) { const nm = DRIVE.names[e.nm]; if (!nm || e.tun || e.dead) continue; const b = lg.get(nm); if (!b || e.L > b.L) lg.set(nm, e); } for (const [nm, e] of lg) { const i = e.n >> 1; street(nm, e.xs[i], e.zs[i]); } }
+  for (const [name, r] of best) { if (name === 'tram') continue; const m = Math.min(r.n >> 1, 31) * 3; street(name, r.pts[m], r.pts[m + 2]); }
+  return (PLC.idx = out);
+}
+function plSearch(text) {
+  const box = document.getElementById('plRes'), t = text.trim().toLowerCase(); box.innerHTML = ''; PLC.hits = []; box.classList.toggle('on', !!t); if (!t) return;
+  const sc = e => e.low === t ? 0 : e.low.startsWith(t) ? 1 : e.low.includes(' ' + t) ? 2 : e.low.includes(t) ? 3 : 9;
+  PLC.hits = plIndex().map(e => [sc(e), e]).filter(q => q[0] < 9).sort((a, b) => a[0] - b[0] || a[1].rank - b[1].rank || a[1].name.length - b[1].name.length).slice(0, 6).map(q => q[1]);
+  if (!PLC.hits.length) { const d = document.createElement('div'); d.className = 'none'; d.textContent = 'Nothing by that name'; box.appendChild(d); return; }
+  for (const e of PLC.hits) { const b = document.createElement('button'); b.type = 'button'; b.innerHTML = '<span></span><em></em>'; b.firstChild.textContent = e.name; b.lastChild.textContent = e.kind; b.onclick = () => plPick(e); box.appendChild(b); }
+}
+function plPick(e) { const q = document.getElementById('plQ'); q.value = ''; q.blur(); plSearch(''); e.run(); }
+/* the ride: a tour by road. The car drives itself from the place nearest the view to the chosen one, then on from place to place, until you take the
+   wheel (Auto), choose somewhere yourself, or leave */
+const placeObj = S => { const P = placeXZ(S); return { id: S.id, name: S.name, x: P[0], z: P[1], kind: 'Place' }; };
+async function rideAlong(toId) {
+  if (DRIVE.on || DRIVE.entering) return; const to = STARTS.find(q => q.id === toId) || STARTS[0], far = cam.dist > 2600; let from = null, bd = 1e9;
+  for (const S of STARTS) { if (S === to) continue; const P = placeXZ(S), T = placeXZ(to); if (!P || Math.hypot(P[0] - T[0], P[1] - T[1]) < 400) continue; const d = far ? (S.id === 'pier' ? 0 : 1e8) : Math.hypot(P[0] - cam.tx, P[1] - cam.tz); if (d < bd) { bd = d; from = S; } }
+  plClose(); await enterDrive(); if (!DRIVE.on || !DRIVE.car || !from) return;
+  dStart(from.id); closeGarage(placeObj(to), true); DRIVE.ride = true; ctlHint.first = false; ctlHint.show(['Riding to ' + to.name, 'Auto to take the wheel', '✕ to leave'], 8000);
+}
+function rideNext() {
+  const car = DRIVE.car, i = Math.max(0, STARTS.findIndex(q => q.id === DRIVE.lastDest));
+  for (let k = 1; k <= STARTS.length; k++) { const S = STARTS[(i + k) % STARTS.length], P = placeXZ(S); if (!P || Math.hypot(P[0] - car.x, P[1] - car.z) < 300) continue;
+    DRIVE.start = DRIVE.lastDest || 'here'; DRIVE.run = null; navStart(placeObj(S)); if (DRIVE.nav) { DRIVE.ride = true; dMsg('Next: ' + S.name, 4); return true; } }
+  return false;
+}
 function initPlaces() {
   const q = id => document.getElementById(id), el = q('places'); if (!el) return;
+  q('plQ').addEventListener('input', e => plSearch(e.target.value)); q('plRide').onclick = () => rideAlong(STARTS[PLC.i].id);
   q('bPlaces').onclick = () => PLC.on ? plClose() : plOpen(); q('plX').onclick = plClose; q('plPrev').onclick = () => plSet(PLC.i - 1); q('plNext').onclick = () => plSet(PLC.i + 1); q('plGo').onclick = plFly;
   q('plIsland').onclick = () => { plClose(); stopTour(); goPreset(0); };
   el.addEventListener('pointerup', e => { if (e.target === el) plClose(); });
-  for (const t of ['pointerdown', 'pointermove', 'wheel', 'touchstart', 'mousedown', 'click', 'dblclick']) el.addEventListener(t, e => e.stopPropagation(), { passive: true });
+  for (const t of ['pointerdown', 'pointermove', 'wheel', 'touchstart', 'mousedown', 'click', 'dblclick', 'keyup']) el.addEventListener(t, e => e.stopPropagation(), { passive: true });
   /* swipe across the map or the name for the next place; tap a dot to choose it */
   for (const [node, isMap] of [[q('plMap'), true], [el.querySelector('.pcar'), false]]) { let s = null; node.addEventListener('pointerdown', e => { s = { x: e.clientX, y: e.clientY }; try { node.setPointerCapture(e.pointerId); } catch (err) { /* synthetic */ } });
     node.addEventListener('pointerup', e => { if (!s) return; const dx = e.clientX - s.x, dy = e.clientY - s.y; s = null; if (Math.abs(dx) > 36 && Math.abs(dx) > Math.abs(dy)) { plSet(PLC.i + (dx < 0 ? 1 : -1)); return; }
@@ -3355,7 +3405,8 @@ function initPlaces() {
       STARTS.forEach((S, j) => { const P = placeXZ(S); if (!P) return; const d = Math.hypot(P[0] * T.k + T.ox - px, P[1] * T.k + T.oz - pz); if (d < bd) { bd = d; best = j; } }); if (best >= 0) plSet(best); });
     node.addEventListener('pointercancel', () => { s = null; }); }
   addEventListener('resize', () => { if (PLC.on) plDraw(); });
-  addEventListener('keydown', e => { if (!PLC.on) return; if (e.code === 'Escape') plClose(); else if (e.code === 'ArrowLeft') plSet(PLC.i - 1); else if (e.code === 'ArrowRight') plSet(PLC.i + 1); else if (e.code === 'Enter') plFly(); else return; e.stopPropagation(); e.preventDefault(); }, true);
+  addEventListener('keydown', e => { if (!PLC.on) return; if (e.target && e.target.id === 'plQ') { e.stopPropagation(); if (e.code === 'Escape') { e.preventDefault(); if (e.target.value) { e.target.value = ''; plSearch(''); } else plClose(); } else if (e.code === 'Enter' && PLC.hits && PLC.hits.length) { e.preventDefault(); plPick(PLC.hits[0]); } return; }   /* typing: none of the page's own keys */
+    if (e.code === 'Escape') plClose(); else if (e.code === 'ArrowLeft') plSet(PLC.i - 1); else if (e.code === 'ArrowRight') plSet(PLC.i + 1); else if (e.code === 'Enter') plFly(); else return; e.stopPropagation(); e.preventDefault(); }, true);
 }
 /* the round clock on the screen: shows the hour, and sets it */
 function todDial(h) {
@@ -4262,7 +4313,7 @@ function openGarage() {
 }
 /* leave the start screen: free driving; with a destination, the route shown and either you drive (auto false) or the car does */
 function closeGarage(dest, auto = true) {
-  DRIVE.garage = false; DRIVE.started = true; DRIVE.gNext = false; DRIVE.gMid = null; document.body.classList.remove('garage');
+  DRIVE.garage = false; DRIVE.started = true; DRIVE.gNext = false; DRIVE.gMid = null; DRIVE.ride = false; document.body.classList.remove('garage');
   DRIVE.run = dest && dest.id && DRIVE.start && DRIVE.start !== 'here' ? { key: runEnd(DRIVE.start) + '>' + runEnd(dest.id) + (auto ? '|a' : '|m'), dest: dest.id, t0: ST.t } : null;
   if (dest && !auto) { setAuto(false); navStart(dest); ctlHint.first = true; ctlHint.show(['Follow the arrows to ' + dest.name].concat(COARSE ? ['Hold anywhere to drive', 'Slide to steer'] : ['↑ drive', '← → steer']), 9000); return; }
   if (dest) { setAuto(true); navStart(dest); ctlHint.first = false; ctlHint.show(['Driving you to ' + dest.name, COARSE ? 'Steer to turn off' : '← → to turn off', 'Auto to take over'], 7000); return; }
@@ -4350,7 +4401,7 @@ const AUTO_KMH = [150, 140, 110, 100, 90, 80, 65, 45, 40];   /* self-driving cru
    destination. It does not yield to traffic: anything in the way gets knocked flying. After arriving it stops and asks where next */
 function autoPilot(car, e, plan, vmax, V, dt) {
   const sp = car.v, LAT = 8, DEC = 7, cruise = Math.min(vmax * .95, AUTO_KMH[e.c] / 3.6); let vt = cruise;
-  if (DRIVE.autoStop) { if (sp < .5) { DRIVE.autoStop = false; setAuto(false); openNext(DRIVE.lastDest); return { thr: 0, brk: 0 }; } return { thr: 0, brk: sp > 4 ? 1 : 0 }; }
+  if (DRIVE.autoStop) { if (sp < .5) { DRIVE.autoStop = false; if (DRIVE.ride && rideNext()) return { thr: 0, brk: 0 }; setAuto(false); openNext(DRIVE.lastDest); return { thr: 0, brk: 0 }; } return { thr: 0, brk: sp > 4 ? 1 : 0 }; }
   if (!DRIVE.nav) return { thr: 0, brk: 0 };
   /* bends on this road up to 90 m ahead: the speed each one allows (sideways grip LAT), less what there is room to brake off before it */
   /* (the way ahead runs on through the planned turn and along the road it leaves by: a corner just past the junction is seen in time,
@@ -4369,7 +4420,7 @@ function autoPilot(car, e, plan, vmax, V, dt) {
   if (sp > vt + 1.5) return { thr: 0, brk: clear ? 0 : 1 };
   return { thr: .5, brk: 0 };
 }
-function setAuto(on) { DRIVE.auto = !!on; const b = document.getElementById('dAuto'); if (b) b.classList.toggle('on', DRIVE.auto); }
+function setAuto(on) { DRIVE.auto = !!on; if (!on) DRIVE.ride = false; const b = document.getElementById('dAuto'); if (b) b.classList.toggle('on', DRIVE.auto); }
 const dPos = (e, u) => { const f = clamp(u / e.st, 0, e.n - 1e-4), i = Math.floor(f), t = f - i; return [lerp(e.xs[i], e.xs[i + 1], t), lerp(e.ys[i], e.ys[i + 1], t), lerp(e.zs[i], e.zs[i + 1], t)]; };
 const dTan = (e, u) => { const i = clamp(Math.floor(u / e.st), 0, e.n - 1); return Math.atan2(e.zs[i + 1] - e.zs[i], e.xs[i + 1] - e.xs[i]); };
 const wrapA = a => ((a % TAU) + TAU + PI) % TAU - PI;
@@ -5344,7 +5395,7 @@ addEventListener('resize', resize);
 function setQuality(i, manual) { qi = clamp(i, 0, 2); Q = QUALS[qi]; U.uDetail.value = Q.detail;
   if (SH.nearRT && SH.nearRT.width !== Q.sh) { SH.nearRT.dispose(); SH.nearRT = SH.mk(Q.sh, Q.sh, THREE.UnsignedIntType); U.uShNear.value = SH.nearRT.depthTexture; U.uShRes.value.z = U.uShRes.value.w = Q.sh; SH.nearDirty = true; } document.getElementById('bQ').textContent = Q.name; if (manual) { drs = 1; drsUp = 0; } resize(); }
 let autoQ = true;
-function togglePhoto() { document.body.classList.toggle('photo'); }
+function togglePhoto() { const on = document.body.classList.toggle('photo'); document.body.classList.remove('menu'); const b = document.getElementById('bCam'); if (b) b.title = on ? 'Back to the controls (P)' : 'Photo: just the view, nothing over it (P)'; }
 
 const ST = { t: 0, frame: 0, fps: 60, paused: false, ft: [], traffic: .7 };
 const hooks = [], _sz = new THREE.Vector2();   // per-frame updaters added by later sections
@@ -5402,11 +5453,11 @@ async function boot() {
   addEventListener('pointerdown', e => { if (document.body.classList.contains('menu') && !e.target.closest('#ui')) document.body.classList.remove('menu'); }, true);   /* a tap anywhere else puts More away */
   document.getElementById('bLink').onclick = async e => { const b = e.currentTarget, url = location.href.split('#')[0] + viewHash(); try { history.replaceState(null, '', viewHash()); await navigator.clipboard.writeText(url); b.textContent = 'Copied'; } catch (err) { b.textContent = 'In URL'; } setTimeout(() => { b.textContent = 'Copy link'; }, 1600); };
   document.getElementById('bReset').onclick = () => { stopTour(); document.body.classList.remove('menu'); goPreset(0); };
-  document.getElementById('bPhoto').onclick = togglePhoto;
+  document.getElementById('bCam').onclick = togglePhoto;
   document.getElementById('bQ').onclick = () => setQuality((qi + 2) % 3, true);
   document.getElementById('sTraf').oninput = e => { ST.traffic = e.target.value / 100; };
   hooks.push(() => { DYN.uTraffic.value = ST.traffic * Q.traffic; DYN.uPx.value = 2 * Math.tan(camera.fov * RAD / 2) / renderer.getDrawingBufferSize(_sz).y; });
-  addEventListener('pointerdown', e => { if (document.body.classList.contains('photo') && e.target !== canvas) togglePhoto(); });
+  addEventListener('pointerdown', e => { if (document.body.classList.contains('photo') && e.target !== canvas && !(e.target.closest && e.target.closest('#bCam'))) togglePhoto(); });
   requestAnimationFrame(t => { lastT = t; loop(t); });
 }
 window.__hk = {
