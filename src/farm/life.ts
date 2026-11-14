@@ -291,7 +291,12 @@ export function startLife(o: LifeOptions): Life {
     }
     // left of the middle is morning, right is evening; the light is mixed across the middle
     const k = clamp(0.5 + p.x / ((s.xR - s.xL) * 0.16))
-    return { a: wrap(a), b: wrap(z), w: k * k * (3 - 2 * k) }
+    let w = k * k * (3 - 2 * k)
+    // but going down is always forward in time, wherever it happens: the sun's setting
+    // brings the evening and the moon's the morning, so the other one comes up on the
+    // morning side, low on the left and clear of the big tree
+    if (e < 0) w += (1 - w) * clamp((-e * s.h) / hidden(b))
+    return { a: wrap(a), b: wrap(z), w }
   }
 
   const sayHour = () => {
