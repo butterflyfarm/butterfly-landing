@@ -3590,8 +3590,11 @@ async function b3dLoad(T) {
       /* its outline box, and the surveyed buildings it stands for: those with their centre inside it and at least half their own box under it */
       const V = new Int16Array(u8.buffer.slice(u8.byteOffset + vo, u8.byteOffset + vo + n * 6)); let ix0 = 32767, iz0 = 32767, ix1 = -32768, iz1 = -32768; for (let k = 0; k < n * 3; k += 3) { const vx = V[k], vz = V[k + 2]; if (vx < ix0) ix0 = vx; if (vx > ix1) ix1 = vx; if (vz < iz0) iz0 = vz; if (vz > iz1) iz1 = vz; }
       const x0 = x + ix0 / 10, x1 = x + ix1 / 10, z0 = z + iz0 / 10, z1 = z + iz1 / 10;
-      const hit = []; let skip = false, flat = false; for (let gx = Math.floor(x0 / 64); gx <= Math.floor(x1 / 64); gx++) for (let gz = Math.floor(z0 / 64); gz <= Math.floor(z1 / 64); gz++) for (const ri of G.get(gx * 65536 + gz) || []) { const r = recs[ri]; if (r.cx < x0 || r.cx > x1 || r.cz < z0 || r.cz > z1) continue;
-        const bb = r.bb, ov = Math.max(0, Math.min(bb[2], x1) - Math.max(bb[0], x0)) * Math.max(0, Math.min(bb[3], z1) - Math.max(bb[1], z0)), ar = (bb[2] - bb[0]) * (bb[3] - bb[1]) || 1; if (ov / ar < .5) continue; if (r.flat) flat = true; if (r.skip || r.flat) skip = true; else if (!r.gov) hit.push(ri); }
+      const hit = [], mar = (x1 - x0) * (z1 - z0) || 1; let skip = false, flat = false; for (let gx = Math.floor(x0 / 64); gx <= Math.floor(x1 / 64); gx++) for (let gz = Math.floor(z0 / 64); gz <= Math.floor(z1 / 64); gz++) for (const ri of G.get(gx * 65536 + gz) || []) { const r = recs[ri]; if (r.cx < x0 || r.cx > x1 || r.cz < z0 || r.cz > z1) continue;
+        const bb = r.bb, ov = Math.max(0, Math.min(bb[2], x1) - Math.max(bb[0], x0)) * Math.max(0, Math.min(bb[3], z1) - Math.max(bb[1], z0)), ar = (bb[2] - bb[0]) * (bb[3] - bb[1]) || 1; if (ov / ar < .5) continue;
+        /* a hand-built landmark (or a building lowered off a road) takes this model's place only if the model is that building: a tower standing
+           in or on a much larger one (Two IFC in its mall) leaves the larger one to be drawn */
+        if (r.skip || r.flat) { if (ov / mar >= .3) { skip = true; if (r.flat) flat = true; } } else if (!r.gov) hit.push(ri); }
       if (skip) { if (!flat) hand.push({ x, z, y, top, bb: [x0, z0, x1, z1], at: [hash2(Math.round(x * 3), Math.round(z * 3)), .3, .5, 0] }); continue; }   /* a hand-built landmark stands here (its street-level walls can still be the real ones), or a building lowered because it stood on a road */
       list.push({ x, z, y, top, n, nt, wide, V, io, hit, po, co, nc, bb: [x0, z0, x1, z1] }); nv += n; ni += nt * 3; }
     const NRM = new Float32Array(nv * 3);   /* not facings: each building's own origin (x, z) and main wall direction (y); see the shader */
@@ -3630,7 +3633,7 @@ async function b3dLoad(T) {
    ones. Models of the roads themselves (flyover decks) are left out: the drive map has its own, graded to be driven on. */
 async function b3dStreet(T, list) {
   try {
-    const sfx = /[?&]sthi\b/.test(location.search) ? '.hi' : '';      /* (pilot: a sharper atlas to compare) */
+    const sfx = /[?&]stlo\b/.test(location.search) ? '' : '.hi';      /* (pilot: the 4096 px atlas by default; ?stlo=1 loads the 2048 px one to compare) */
     const res = await fetch(b3dURL(T.id + sfx + '.st.bin')); if (!res.ok) throw new Error(res.status); let u8 = new Uint8Array(await res.arrayBuffer());
     if (u8[0] === 0x1f && u8[1] === 0x8b) u8 = new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
     const tex = await new THREE.TextureLoader().loadAsync(b3dURL(T.id + sfx + '.st.webp')); tex.flipY = false; tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy()); tex.needsUpdate = true;
