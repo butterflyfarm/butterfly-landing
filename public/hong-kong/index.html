@@ -5982,12 +5982,19 @@ function cruisePath() {
   /* where the line off one stretch of shore meets the line off another it has a corner, some of them sharp: each point is put at the mean of those
      75 m either side of it, three times over, which makes of every corner a bend a boat can take (and cuts no nearer the land than about 130 m) */
   for (let it = 0; it < 3; it++) { const o = new Float32Array(n * 2), w = 5; for (let i = 0; i < n; i++) { let sx = 0, sz = 0; for (let q = -w; q <= w; q++) { const j = (i + q + n) % n; sx += pts[j * 2]; sz += pts[j * 2 + 1]; } o[i * 2] = sx / (2 * w + 1); o[i * 2 + 1] = sz / (2 * w + 1); } pts.set(o); }
-  /* the sights: the districts by the water, where the course passes nearest each; the Central piers first */
-  const S = [[Math.round(pts[0]), Math.round(pts[1]), 'Central Piers', 0]];
-  for (const o of LABELS.list) { if (o.kind !== 'dist' || S.some(q => q[2] === o.name)) continue; let bd = 800 * 800, bi = -1; for (let i = 0; i < n; i += 2) { const d = (pts[i * 2] - o.x) ** 2 + (pts[i * 2 + 1] - o.z) ** 2; if (d < bd) { bd = d; bi = i; } } if (bi >= 0) S.push([Math.round(pts[bi * 2]), Math.round(pts[bi * 2 + 1]), o.name, bi * st]); }
-  /* (and a few places on the shore that are no district of their own; each is put where the course passes nearest) */
-  for (const [nm, lat, lon] of [['Cyberport', 22.2615, 114.129], ['Aberdeen Channel', 22.2455, 114.1445], ['Ocean Park', 22.2335, 114.1745], ['South Bay', 22.22495, 114.19759], ['Tai Tam Harbour', 22.2395, 114.2225], ['Turtle Cove', 22.23308, 114.22335], ["Cape D'Aguilar", 22.2085, 114.259],   /* (South Bay and Turtle Cove: the middles of their beaches in OpenStreetMap) */ ['Chai Wan', 22.2665, 114.244]]) { if (S.some(q => q[2] === nm)) continue; const o = LL(lat, lon); let bd = 1600 * 1600, bi = -1; for (let i = 0; i < n; i += 2) { const d = (pts[i * 2] - o[0]) ** 2 + (pts[i * 2 + 1] - o[1]) ** 2; if (d < bd) { bd = d; bi = i; } } if (bi >= 0) S.push([Math.round(pts[bi * 2]), Math.round(pts[bi * 2 + 1]), nm, bi * st]); }
-  S.sort((a, b) => a[3] - b[3]); for (let i = S.length - 1; i > 0; i--) if (S[i][3] - S[i - 1][3] < 450 || L - S[i][3] < 450) S.splice(i, 1);
+  /* the boarding points: the piers and landings on the shore, and where a stretch of shore has none, a named place on the water's edge (a beach, a
+     wharf, a promenade, a typhoon shelter). Names and positions are OpenStreetMap's; each is put where the course passes nearest it, and the list
+     begins at Central Pier 9 and goes on westward */
+  const S = [];
+  for (const [nm, lat, lon] of [['Central Pier 9', 22.2861, 114.1626], ['Macau Ferry Terminal', 22.2887, 114.1521], ['Western District Cargo Working Area', 22.2876, 114.1319], ["China Merchants Wharf", 22.2829, 114.1222],
+    ['Sai Wan Swimming Shed', 22.28, 114.1174], ['Sandy Bay Swimming Shed', 22.2711, 114.1212], ['Cyberport Waterfront Park', 22.2574, 114.1309], ['Kellett Bay Waterfront', 22.2489, 114.1387], ['Aberdeen West Typhoon Shelter', 22.2464, 114.152],
+    ['Ocean Park Tai Shue Wan Pier', 22.2347, 114.1673], ['Deep Water Bay Beach', 22.24447, 114.18728], ['Middle Island Ferry Pontoon', 22.236, 114.185], ['Repulse Bay Beach', 22.23665, 114.19594], ['South Bay Beach', 22.22495, 114.19759],
+    ['Chung Hom Kok Beach', 22.2177, 114.20208], ['Blake Pier at Stanley', 22.2174, 114.2102], ["St. Stephen's Beach", 22.21262, 114.21487], ['Turtle Cove Beach', 22.23308, 114.22335], ['Tai Tam Bay Pier', 22.2388, 114.2258],
+    ["Cape D'Aguilar", 22.2085, 114.259], ['Shek O Beach', 22.22889, 114.25115], ['Big Wave Bay Beach', 22.24643, 114.24729], ['Siu Sai Wan Promenade', 22.2665, 114.2509], ['Chai Wan Cargo Working Area', 22.2696, 114.2436],
+    ['Sai Wan Ho Ferry Pier', 22.2864, 114.2241], ['Quarry Bay Promenade', 22.2907, 114.214], ['North Point Ferry Pier', 22.2941, 114.2018], ['Causeway Bay Typhoon Shelter', 22.2851, 114.1862], ['Wan Chai Pier', 22.2834, 114.1762]]) {
+    const o = LL(lat, lon); let bd = 1500 * 1500, bi = -1; for (let i = 0; i < n; i++) { const d = (pts[i * 2] - o[0]) ** 2 + (pts[i * 2 + 1] - o[1]) ** 2; if (d < bd) { bd = d; bi = i; } } if (bi >= 0) S.push([Math.round(pts[bi * 2]), Math.round(pts[bi * 2 + 1]), nm, bi * st, Math.round(Math.sqrt(bd))]); }
+  S.sort((a, b) => a[3] - b[3]); for (let i = S.length - 1; i > 0; i--) if (S[i][3] - S[i - 1][3] < 300) S.splice(i, 1);
+  { const k = S.findIndex(q => q[2] === 'Central Pier 9'); if (k > 0) S.push(...S.splice(0, k)); }
   const flat = []; for (let i = 0; i < n; i += 4) flat.push(Math.round(pts[i * 2]), Math.round(pts[i * 2 + 1])); flat.push(flat[0], flat[1]);
   return (CRUISE.path = { pts, n, st, L, sights: S, flat, closed });
 }
@@ -6078,7 +6085,7 @@ function cruiseStep(dt) {
 }
 function cruiseHud() {
   const Cz = CRUISE, P = Cz.path, S = P.sights; let best = null, bd = 1e9; for (const q of S) { const d = (((q[3] - Cz.s) * Cz.dir) % P.L + P.L) % P.L; if (d < bd) { bd = d; best = q; } }
-  const txt = best ? (bd < 120 ? 'Passing ' + best[2] : 'Next: ' + best[2] + ' · ' + (bd < 1000 ? Math.max(10, Math.round(bd / 10) * 10) + ' m' : (bd / 1000).toFixed(1) + ' km')) : ''; if (txt !== Cz.shown) { Cz.shown = txt; document.querySelector('#tramS span').textContent = txt; }
+  const ds = bd < 1000 ? Math.max(10, Math.round(bd / 10) * 10) + ' m' : (bd / 1000).toFixed(1) + ' km', txt = best ? (bd < 120 ? 'Passing ' + best[2] : best[2].length > 20 ? ds + ' to ' + best[2] : 'Next: ' + best[2] + ' · ' + ds) : '';   /* (a long name: the distance first, so that it is the name's end that a narrow strip cuts off) */ if (txt !== Cz.shown) { Cz.shown = txt; document.querySelector('#tramS span').textContent = txt; }
   const kn = Math.round(Cz.v * 1.944), el = document.querySelector('#rideSpd b'); if (el.textContent !== String(kn)) el.textContent = kn;
   let near = null, nd = 1500 * 1500; for (const q of S) { const d = (q[0] - Cz.x) ** 2 + (q[1] - Cz.z) ** 2; if (d < nd) { nd = d; near = q; } } const lb = document.getElementById('cmD'), nm = near ? near[2] : 'At sea'; if (lb.textContent !== nm) lb.textContent = nm;
 }
