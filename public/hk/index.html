@@ -3948,7 +3948,7 @@ function rideOpen(mode) { if (DRIVE.on || DRIVE.entering || CRUISE.on) return; R
   if (RIDE.mode === 'ride') { rideLoad(); rideView('list'); return; }
   const L = cardLines(), box = document.getElementById('rideLines'); box.textContent = ''; let nt = 0; for (let i = 0; i < L.length; i++) nt = Math.max(nt, tabOf(L, i) + 1);
   for (let t = 0; t < nt; t++) { const g = tabLines(L, t), b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'tab'); b.textContent = L[g[0]].tag; b.onclick = () => rideSet(g[0]); box.appendChild(b); }
-  rideView('line'); rideSet(RIDE.liBy.cruise || 0, true); }
+  document.querySelector('#ride .rh b').textContent = 'Cruise'; rideView('line'); rideSet(RIDE.liBy.cruise || 0, true); }
 /* the list of lines, or one line's page */
 function rideView(v) { RIDE.view = v; const rc = document.querySelector('#ride .rc'); rc.dataset.v = v; if (v === 'list') { document.querySelector('#ride .rh b').textContent = 'Ride'; const q = document.getElementById('rideQ'); q.value = ''; rideRows(); rc.scrollTop = 0; } }
 /* the rows: every line, or those whose number, name or stops have what was typed */
@@ -3958,7 +3958,7 @@ function rideRows() {
     if (want && !(a.tag.toLowerCase().includes(want) || (want.length > 1 && a.hay.includes(want)))) continue;
     if (a.grp !== grp) { grp = a.grp; if (grp !== 'Tram') { const h = document.createElement('h4'); h.textContent = grp; box.appendChild(h); } }
     const b = document.createElement('button'), s0 = a.stops[0][2], s1 = a.stops[a.stops.length - 1][2]; b.type = 'button'; b.innerHTML = '<b></b><span></span>'; b.firstChild.textContent = a.kind === 'tram' ? 'Tram' : a.tag;
-    b.lastChild.textContent = a.kind === 'tram' ? 'Kennedy Town – Shau Kei Wan' : a.one ? s0 + ' ↺ ' + (a.dir || '').replace(/^Round by /, '') : s0 + ' – ' + s1; if (cur !== undefined && tabOf(L, cur) === t) b.classList.add('on'); b.onclick = () => { rideView('line'); rideSet(g[0]); }; box.appendChild(b); shown++; }
+    b.lastChild.textContent = a.kind === 'tram' ? 'Kennedy Town – Shau Kei Wan' : a.one ? (/^Round by /.test(a.dir || '') ? s0 + ' ↺ ' + a.dir.replace(/^Round by /, '') : s0 + ' → ' + s1) : s0 + ' – ' + s1;   /* (a line that goes round; a line the list has one way only; a line both ways) */ if (cur !== undefined && tabOf(L, cur) === t) b.classList.add('on'); b.onclick = () => { rideView('line'); rideSet(g[0]); }; box.appendChild(b); shown++; }
   if (!shown) { const p = document.createElement('p'); p.textContent = 'No line has that number or calls at such a place.'; box.appendChild(p); }
   if (RIDE.more === 'loading') { const p = document.createElement('p'); p.textContent = 'More lines are on their way…'; box.appendChild(p); }
 }
@@ -3971,7 +3971,7 @@ function rideSet(li, keep) { const L = cardLines(); RIDE.li = (li + L.length) % 
   [...dirs.children].forEach((b, j) => { const q = L[grp[j]]; b.style.display = q ? '' : 'none'; if (!q) return; b.firstChild.textContent = q.dir || q.name; b.lastChild.textContent = q.sub; b.classList.toggle('on', grp[j] === RIDE.li); b.setAttribute('aria-pressed', grp[j] === RIDE.li ? 'true' : 'false'); }); dirs.style.gridTemplateColumns = grp.length === 1 ? '1fr' : '';
   let si = 0; if (cam.dist < 2600) { let bd = 700; ln.stops.forEach((q, i) => { const d = Math.hypot(q[0] - cam.tx, q[1] - cam.tz); if (d < bd && i < ln.stops.length - 1) { bd = d; si = i; } }); } else if (ln.kind === 'tram') { const i = ln.stops.findIndex(q => /Pedder/.test(q[2])); if (i >= 0) si = i; }
   ridePick(si); }
-function ridePick(si) { const ln = cardLines()[RIDE.li], n = ln.stops.length; RIDE.si = clamp(si, 0, ln.loop ? n - 1 : n - 2); const q = ln.stops[RIDE.si]; document.getElementById('rideStop').textContent = q[2] || 'Stop'; document.getElementById('rideGo0').textContent = 'From the start · ' + (ln.stops[0][2] || 'the first stop');
+function ridePick(si) { const ln = cardLines()[RIDE.li], n = ln.stops.length; RIDE.si = ln.loop ? ((si % n) + n) % n : clamp(si, 0, n - 2);   /* (a course that goes round has no first or last: past the last comes the first again) */ const q = ln.stops[RIDE.si]; document.getElementById('rideStop').textContent = q[2] || 'Stop'; document.getElementById('rideGo0').textContent = 'From the start · ' + (ln.stops[0][2] || 'the first stop');
   document.getElementById('rideSub').textContent = ln.loop ? 'All the way round: ' + ln.km + ' km' : (n - 1 - RIDE.si) + (n - 1 - RIDE.si === 1 ? ' stop' : ' stops') + ' to ' + (ln.stops[n - 1][2] || 'the end of the line'); rideDraw(); }
 function rideDraw() {
   const cv = document.getElementById('rideMap'); if (!cv || !cv.clientWidth) return; const dpr = Math.min(devicePixelRatio || 1, 2), W = Math.round(cv.clientWidth * dpr), H = Math.round(cv.clientHeight * dpr); if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
@@ -5029,9 +5029,11 @@ function openGarage() {
 function closeGarage(dest, auto = true) {
   DRIVE.garage = false; DRIVE.started = true; DRIVE.gNext = false; DRIVE.gMid = null; DRIVE.ride = false; document.body.classList.remove('garage');
   DRIVE.run = dest && dest.id && DRIVE.start && DRIVE.start !== 'here' ? { key: runEnd(DRIVE.start) + '>' + runEnd(dest.id) + (auto ? '|a' : '|m'), dest: dest.id, t0: ST.t } : null;
-  if (dest && !auto) { setAuto(false); navStart(dest); ctlHint.first = true; ctlHint.show(['Follow the arrows to ' + dest.name].concat(COARSE ? ['Hold anywhere to drive', 'Slide sideways to turn at the next junction'] : ['↑ drive', '← → steer']), 9000); return; }
-  if (dest) { setAuto(true); navStart(dest); ctlHint.first = false; ctlHint.show(['Driving you to ' + dest.name, COARSE ? 'Steer to turn off' : '← → to turn off', 'Auto to take over'], 7000); return; }
-  setAuto(false); navStop(); if (!DRIVE.dashGo && helpFirst('drive')) return;
+  /* (the first drive of all, whichever way it is begun: the card with the picture of the controls. A timed trip's clock starts when the card is closed) */
+  const card = !DRIVE.dashGo && !DRIVE.bus && helpFirst('drive', () => { if (DRIVE.run) DRIVE.run.t0 = ST.t; });   /* (not a ride, which begins through here too and has a card of its own: it used to use up Drive's) */
+  if (dest && !auto) { setAuto(false); navStart(dest); if (card) return; ctlHint.first = true; ctlHint.show(['Follow the arrows to ' + dest.name].concat(COARSE ? ['Hold anywhere to drive', 'Slide sideways to turn at the next junction'] : ['↑ drive', '← → steer']), 9000); return; }
+  if (dest) { setAuto(true); navStart(dest); if (card) return; ctlHint.first = false; ctlHint.show(['Driving you to ' + dest.name, COARSE ? 'Steer to turn off' : '← → to turn off', 'Auto to take over'], 7000); return; }
+  setAuto(false); navStop(); if (card) return;
   ctlHint.first = true; ctlHint.show(COARSE ? ['Hold anywhere to drive', 'Slide sideways to turn at the next junction', 'Pull back to brake', 'Boost: tap for a burst of speed', 'Horn clears traffic ahead'] : ['↑ drive', '↓ brake', '← → steer', 'Space boost (a burst of speed)', 'H horn', 'U turn round', 'Esc leave'], 9000);
 }
 /* ---------- the place pickers: the island map with every place on it; swipe (or the arrows, or tap a dot) to go from one to the next ---------- */
@@ -6114,9 +6116,9 @@ canvas.addEventListener('wheel', e => {
   cam.vzoom = Math.log(f) * 9;
 }, { passive: false });
 /* ---------- the controls cards. Each is a small drawing of the screen (a phone's, or with the keys on a computer) and a few lines. A mode shows its card
-   the first time it is entered (kept in `hk-help`); its ? shows it again; More > Controls shows the map's own ---------- */
+   the first time it is entered (kept in `hk-help2`: the first key was spent on Drive's card by a ride, before that was put right); its ? shows it again; More > Controls shows the map's own ---------- */
 const HELP = { seen: null, then: null, mode: '' };
-function helpSeen(m, set) { if (!HELP.seen) { try { HELP.seen = JSON.parse(localStorage.getItem('hk-help') || '{}') || {}; } catch (e) { HELP.seen = {}; } } if (set) { HELP.seen[m] = 1; try { localStorage.setItem('hk-help', JSON.stringify(HELP.seen)); } catch (e) { /* storage blocked */ } } return !!HELP.seen[m]; }
+function helpSeen(m, set) { if (!HELP.seen) { try { HELP.seen = JSON.parse(localStorage.getItem('hk-help2') || '{}') || {}; } catch (e) { HELP.seen = {}; } } if (set) { HELP.seen[m] = 1; try { localStorage.setItem('hk-help2', JSON.stringify(HELP.seen)); } catch (e) { /* storage blocked */ } } return !!HELP.seen[m]; }
 function helpPic(m) {
   const A = '#ffb054', W = '#fff4df', D = 'rgba(255,206,140,.55)', o = [];
   const touch = (x, y) => o.push(`<circle cx="${x}" cy="${y}" r="21" fill="none" stroke="${D}" stroke-width="1.5"/><circle cx="${x}" cy="${y}" r="12" fill="${A}"/>`);
@@ -6146,7 +6148,7 @@ function helpShow(m, then) {
     ride: ['Nothing to steer: it follows its own route.', '<b>Boost</b> is full speed, on or off' + (k ? '.' : ' (Space).'), '<b>Drag</b> to look round; ' + (k ? 'pinch' : 'scroll') + ' to zoom.', '<b>Stop</b> asks for the next stop; <b>Get off</b> ends the ride.'],
     cruise: ['Nothing to steer: the boat keeps its course round the island.', '<b>Boost</b> is full speed, on or off' + (k ? '.' : ' (Space).'), '<b>Drag</b> to look round; ' + (k ? 'pinch' : 'scroll') + ' to zoom; two quick taps put the view back.'],
     map: k ? ['<b>Drag</b> to move over the island.', '<b>Twist</b> two fingers to turn; slide two fingers <b>up or down</b> to tilt.', '<b>Double-tap</b> or pinch to zoom.'] : ['<b>Drag</b> to move over the island.', '<b>Right-drag</b> or Shift-drag to turn and tilt.', '<b>Scroll</b> to zoom.'] };
-  if (!L[m]) m = 'map'; HELP.mode = m; HELP.then = then || null; helpSeen(m, true); if (m === 'run') helpSeen('drive', true);
+  if (!L[m]) m = 'map'; HELP.mode = m; HELP.then = then || null; helpSeen(m, true);
   document.getElementById('helpT').textContent = T[m]; document.getElementById('helpP').innerHTML = helpPic(m); document.getElementById('helpL').innerHTML = L[m].map(t => '<li>' + t + '</li>').join('');
   document.body.classList.remove('menu'); document.body.classList.add('help'); ctlHint.hide(); if (DRIVE.on) { DRIVE.joy = null; dJoyDraw(); }
 }
