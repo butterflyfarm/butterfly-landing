@@ -220,7 +220,7 @@
   #bigDrive.ready{opacity:1;pointer-events:auto}
   .big:hover{transform:translateY(-2px)}
   .big i{position:relative;flex:none;width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#ffb054;color:#2a1606}
-  #bPlaces i{background:#4fc3f2;color:#05243a} #bPlaces{border-color:rgba(160,220,250,.8)}
+  #bPlaces i{background:#4fc3f2;color:#05243a} #bPlaces{border-color:rgba(160,220,250,.8)} #bCruise i{background:#7fd9c6;color:#06302b} #bCruise{border-color:rgba(150,230,212,.8)}
   .big.sm{padding:6px 16px 6px 6px;gap:10px;border-color:rgba(255,214,160,.5)} .big.sm i{width:44px;height:44px;background:rgba(255,214,160,.2);color:#fff4df} .big.sm b{font-size:15px;letter-spacing:.18em} .big.sm em{font-size:9.5px}
   #bTour.on i{background:#ffb054;color:#2a1606}
   #bigDrive i::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid rgba(255,176,84,.75);animation:bdPulse 2.2s ease-out infinite}
@@ -228,7 +228,16 @@
   .big span{display:flex;flex-direction:column;line-height:1.15}
   .big b{font-size:20px;font-weight:600;letter-spacing:.22em;text-transform:uppercase}
   .big em{font-style:normal;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;opacity:.75}
-  body.driving #bigs,body.photo #bigs,body.places #bigs{opacity:0;pointer-events:none}
+  body.driving #bigs,body.photo #bigs,body.places #bigs,body.cruising #bigs{opacity:0;pointer-events:none}
+  @media (max-width:1180px) and (min-width:561px){.big em{display:none} .big{padding:6px 14px 6px 6px;gap:9px} .big i{width:46px;height:46px} .big b{font-size:17px}}   /* (six buttons in the row on a narrow window) */
+  /* a cruise: the ride's strip (no Stop: a boat calls nowhere), a small chart of its own, and nothing else of the page's controls */
+  body.cruising #ui,body.cruising #nav,body.cruising #fc,body.cruising #pm,body.cruising #pin,body.cruising #tourS{display:none !important} body.cruising #brand{opacity:0} body.cruising #labels *{pointer-events:none !important}
+  body.cruising #tramS{display:flex} body.cruising #rideStopB{display:none} body.cruising canvas#c{cursor:crosshair}
+  body.cruising #tClock{top:calc(max(12px,env(safe-area-inset-top)) + 64px)} body.cruising #tPanel{top:calc(max(12px,env(safe-area-inset-top)) + 52px)}
+  #cmini{position:fixed;z-index:6;left:max(12px,env(safe-area-inset-left));top:calc(max(10px,env(safe-area-inset-top)) + 54px);width:156px;display:none;flex-direction:column;align-items:center;gap:5px;pointer-events:none}
+  body.cruising #cmini{display:flex} #cmC{display:block;width:156px;height:156px;border-radius:50%;box-shadow:0 2px 12px rgba(0,0,0,.55)}
+  #cmD{max-width:100%;padding:3px 9px;border-radius:9px;background:rgba(9,20,28,.66);color:#fff4df;font-size:10px;letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  @media (max-width:560px){#cmini,#cmC{width:118px} #cmC{height:118px} #cmini{top:calc(max(10px,env(safe-area-inset-top)) + 96px)} body.cruising #tClock{top:calc(max(12px,env(safe-area-inset-top)) + 104px)} body.cruising #tPanel{top:calc(max(12px,env(safe-area-inset-top)) + 92px)}}
   @media (prefers-reduced-motion:reduce){#bigDrive i::after{animation:none;opacity:0}}
   #drv{display:none}
   body.driving #drv{display:block}
@@ -402,7 +411,7 @@
     #mini{top:calc(max(10px,env(safe-area-inset-top)) + 62px)}
     #brand b{font-size:14px;letter-spacing:.16em}
     #bigs{bottom:calc(max(10px,env(safe-area-inset-bottom)) + 80px);display:grid;grid-template-columns:auto auto auto;justify-content:start;align-items:center;gap:8px}   /* (a phone: two rows of two; Drive and Places below, as Tour and Island are placed first) */
-    #bTour{grid-row:1;grid-column:1} #bReset{grid-row:1;grid-column:2 / span 2;justify-self:start} #bigDrive{grid-row:2;grid-column:1} #bPlaces{grid-row:2;grid-column:2} #bRide{grid-row:2;grid-column:3}   /* (a phone: Tour and Island above; Drive, Places and Ride below) */
+    #bTour{grid-row:1;grid-column:1} #bReset{grid-row:1;grid-column:2;justify-self:start} #bCruise{grid-row:1;grid-column:3;justify-self:start} #bigDrive{grid-row:2;grid-column:1} #bPlaces{grid-row:2;grid-column:2} #bRide{grid-row:2;grid-column:3}   /* (a phone: Tour and Island above; Drive, Places and Ride below) */
     #places .pl3{flex-wrap:nowrap;gap:7px} #places .pgo{padding:13px 13px;font-size:12.5px;letter-spacing:.12em}
     .big em{display:none} .big.sm{padding:5px 11px 5px 5px;gap:7px} .big.sm i{width:32px;height:32px} .big.sm i svg{width:19px;height:19px} .big.sm b{font-size:12.5px;letter-spacing:.12em}
     .big{padding:5px 11px 5px 5px;gap:7px}
@@ -484,10 +493,11 @@
   <button id="tpSh" type="button" class="on" aria-pressed="true" title="Shadows cast by the sun, on or off">Shadows on</button>
 </div>
 <button id="tourS" type="button" title="End the tour" aria-live="polite"><span></span><i>✕</i></button>
+<div id="cmini" aria-hidden="true"><canvas id="cmC"></canvas><span id="cmD"></span></div>
 <div id="tramS" aria-live="polite"><b id="rideTag">Tram</b><span></span><i id="rideSpd" title="Speed"><b>0</b><small>km/h</small></i><button id="rideStopB" type="button" title="Stop at the next stop (it does not stop unless asked)">Stop</button><button id="tramOff" type="button" title="Get off (Esc)">Get off ✕</button></div>
 <div id="pin"><div class="pb"><div class="pt"><b></b><em></em></div><button type="button" aria-label="Remove this label">✕</button></div><i></i><u></u></div>
 <div id="hint" aria-live="polite"></div>
-<div id="bigs"><button id="bigDrive" class="big" type="button" aria-label="Drive around Hong Kong Island"><i><svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="24" cy="24" r="4.5" fill="currentColor"/><path d="M8 21.5c5-2.6 10.4-3.6 16-3.6s11 1 16 3.6M24 28.5v11.5M20 26l-9.5 9M28 26l9.5 9" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg></i><span><b>Drive</b><em>Every street on the island</em></span></button><button id="bPlaces" class="big" type="button" aria-label="Places: search, fly or ride anywhere on the island"><i><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 4.2a2.8 2.8 0 1 1 0 5.6 2.8 2.8 0 0 1 0-5.6Z"/></svg></i><span><b>Places</b><em>Search, fly or ride there</em></span></button><button id="bRide" class="big" type="button" aria-label="Ride: the tram, or bus 6 between Central and Stanley, from the front seat upstairs"><i><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" d="M6.5 4.5h11a2 2 0 0 1 2 2v9.5a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2V6.500a2 2 0 0 1 2-2ZM4.500 11.500h15M4.500 8h15M8 18l-1 2.500M16 18l1 2.500M8 15h.010M16 15h.010"/></svg></i><span><b>Ride</b><em>Tram, or bus 6 to Stanley</em></span></button><button id="bTour" class="big sm" type="button" aria-label="Tour: a flight round the island, golden afternoon into dusk"><i><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l11-6.5-11-6.5Z"/></svg></i><span><b>Tour</b><em>Sit back and watch</em></span></button><button id="bReset" class="big sm" type="button" aria-label="Whole island: back to the full view"><i><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></i><span><b>Island</b><em>The whole view</em></span></button></div>
+<div id="bigs"><button id="bigDrive" class="big" type="button" aria-label="Drive around Hong Kong Island"><i><svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="24" cy="24" r="4.5" fill="currentColor"/><path d="M8 21.5c5-2.6 10.4-3.6 16-3.6s11 1 16 3.6M24 28.5v11.5M20 26l-9.5 9M28 26l9.5 9" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg></i><span><b>Drive</b><em>Every street on the island</em></span></button><button id="bPlaces" class="big" type="button" aria-label="Places: search, fly or ride anywhere on the island"><i><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 4.2a2.8 2.8 0 1 1 0 5.6 2.8 2.8 0 0 1 0-5.6Z"/></svg></i><span><b>Places</b><em>Search, fly or ride there</em></span></button><button id="bRide" class="big" type="button" aria-label="Ride: the tram or a bus along its real route"><i><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" d="M6.5 4.5h11a2 2 0 0 1 2 2v9.5a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2V6.500a2 2 0 0 1 2-2ZM4.500 11.500h15M4.500 8h15M8 18l-1 2.500M16 18l1 2.500M8 15h.010M16 15h.010"/></svg></i><span><b>Ride</b><em>The tram and four bus lines</em></span></button><button id="bCruise" class="big" type="button" aria-label="Cruise: a junk or a yacht round the island's shore"><i><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" d="M2.500 17.500h19l-2.300 3.500H4.800L2.500 17.500ZM12 3v12M12 4.500l6.500 10H12M10 7.500l-4.800 7H10"/></svg></i><span><b>Cruise</b><em>A junk or a yacht round the shore</em></span></button><button id="bTour" class="big sm" type="button" aria-label="Tour: a flight round the island, golden afternoon into dusk"><i><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l11-6.5-11-6.5Z"/></svg></i><span><b>Tour</b><em>Sit back and watch</em></span></button><button id="bReset" class="big sm" type="button" aria-label="Whole island: back to the full view"><i><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></i><span><b>Island</b><em>The whole view</em></span></button></div>
 <div id="drv"><div id="dTop"><button id="dExit" title="Stop driving (Esc)" aria-label="Stop driving">✕</button><button id="dNavB" title="Go somewhere" aria-label="Navigate"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 1 7 7c0 4.9-5.6 11.2-6.3 12a1 1 0 0 1-1.4 0C10.6 20.2 5 13.9 5 9a7 7 0 0 1 7-7zm0 4.2A2.8 2.8 0 1 0 12 11.8 2.8 2.8 0 0 0 12 6.2z"/></svg></button><button id="dCar" title="Change vehicle (G)" aria-label="Change vehicle"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M5 11l1.5-4.2A2 2 0 0 1 8.4 5.5h7.2a2 2 0 0 1 1.9 1.3L19 11h.5A1.5 1.5 0 0 1 21 12.5V17h-2v1.5a1 1 0 0 1-2 0V17H7v1.5a1 1 0 0 1-2 0V17H3v-4.5A1.5 1.5 0 0 1 4.5 11zm2.2 0h9.6l-1.1-3.2a.5.5 0 0 0-.5-.3H8.8a.5.5 0 0 0-.5.3zM6.5 15a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6zm11 0a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6z"/></svg></button>
   <div id="dInfo"><span id="dSt"></span><span id="dNx"><i id="dArr">↑</i><b id="dNxD"></b><em id="dNxN"></em></span><span id="dGo"><i>➤</i><em></em></span></div>
   <div id="dSide"><div id="dSpdBox"><b id="dSpd">0</b><small>km/h</small></div><button id="dU" title="Turn round (U)">U-turn</button><button id="dAuto" title="Self-driving on or off">Auto</button><button id="dSkip" type="button" title="Skip the journey: the car is put down at the destination">Skip ▸▸</button></div></div>
@@ -2798,10 +2808,10 @@ function updateShadows(focus, radius) {
   const sun = U.uSunDir.value; if (U.uShOn.value < .01 || sun.y < .02) return;
   if (SH.farDirty) {
     const pts = []; for (const x of [X0, X1]) for (const z of [Z0, Z1]) for (const y of [-5, 620]) pts.push([x, y, z]);
-    fitShadowCam(SH.farCam, sun, pts, 0); renderShadow(SH.farRT, SH.farCam, U.uShFarM); SH.farDirty = false; SH.nearDirty = true; if (DRIVE.on) return;   /* (while driving the near one waits for the next frame: two drawings of the scene are not added to one frame) */
+    fitShadowCam(SH.farCam, sun, pts, 0); renderShadow(SH.farRT, SH.farCam, U.uShFarM); SH.farDirty = false; SH.nearDirty = true; if (DRIVE.on || CRUISE.on) return;   /* (while driving the near one waits for the next frame: two drawings of the scene are not added to one frame) */
   }
   const R = clamp(radius, 260, 2600);
-  if (SH.nearDirty || focus.distanceTo(SH.nc) > SH.nr * (DRIVE.on ? .3 : .22) || Math.abs(R - SH.nr) > SH.nr * .3) {
+  if (SH.nearDirty || focus.distanceTo(SH.nc) > SH.nr * (DRIVE.on || CRUISE.on ? .3 : .22) || Math.abs(R - SH.nr) > SH.nr * .3) {
     SH.nc.copy(focus); SH.nr = R; const pts = [];
     for (const x of [-R, R]) for (const z of [-R, R]) for (const y of [-10, 60]) pts.push([focus.x + x, focus.y + y, focus.z + z]);
     fitShadowCam(SH.nearCam, sun, pts, SH.nearRT.width); SH.nearCam.far = 60000; SH.nearCam.updateProjectionMatrix();
@@ -3215,6 +3225,7 @@ function makeHarbour() {
   for (let k = 0; k < 78; k++) { const x = -7500 + R() * 15500, z = 2800 + R() * 6500; if (!sea(x, z, 60)) continue; const r = 60 + R() * 160; const pts = []; for (let a = 0; a < 8; a++) pts.push([x + Math.cos(a / 8 * TAU) * r, z + Math.sin(a / 8 * TAU) * r * .6]); if (pts.every(p => sea(p[0], p[1], 20))) route('fishing', pts, .8 + R() * 1.2, { loop: true, L: 19, wake: .25 }); }
   for (const k in M) M[k].flush();
   /* wakes */
+  BOATS.push(WAKE.me = { player: true, ws: 0 });   /* (the boat of a cruise: its wake is drawn with the others', from CRUISE) */
   const wg = new THREE.InstancedBufferGeometry(), NW = BOATS.length; wg.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, -.5, 1, 0, -.5, 1, 0, .5, 0, 0, .5], 3)); wg.setIndex([0, 2, 1, 0, 3, 2]);
   WAKE.a = new Float32Array(NW * 4); WAKE.b = new Float32Array(NW * 2); WAKE.aa = new THREE.InstancedBufferAttribute(WAKE.a, 4); WAKE.ba = new THREE.InstancedBufferAttribute(WAKE.b, 2); WAKE.aa.setUsage(THREE.DynamicDrawUsage); wg.setAttribute('aW', WAKE.aa); wg.setAttribute('aX', WAKE.ba); wg.instanceCount = NW;
   const wm = new THREE.Mesh(wg, new THREE.ShaderMaterial({ uniforms: U, transparent: true, depthWrite: false, side: THREE.DoubleSide,
@@ -3233,6 +3244,8 @@ function makeHarbour() {
   hooks.push(dt => {
     const dens = .25 + .75 * ST.traffic;
     for (let k = 0; k < BOATS.length; k++) { const b = BOATS[k];
+      if (b.player) { const Cz = CRUISE, L = Cz.spec ? Cz.spec.len : 26; b.ws = lerp(b.ws, Cz.on ? 1 : 0, Math.min(1, dt * 1.5)); WAKE.a[k * 4] = Cz.x - Math.cos(Cz.h) * L * .34; WAKE.a[k * 4 + 1] = Cz.z - Math.sin(Cz.h) * L * .34; WAKE.a[k * 4 + 2] = Cz.h;
+        WAKE.a[k * 4 + 3] = Math.min(Cz.v * (Cz.spec ? Cz.spec.wake : 10), 420) + 30; WAKE.b[k * 2] = (14 + L * 1.1) * .6; WAKE.b[k * 2 + 1] = b.ws * clamp(Cz.v / 14, .18, .9); continue; }
       if (b.dwell > 0) { b.dwell -= dt; } else if (b.follow) { b.s = b.follow.s + 95 * b.follow.dir; b.dir = b.follow.dir; } else { b.s += b.v * dt * b.dir; if (b.loop) { if (b.s > b.len) b.s -= b.len; } else if (b.s > b.len) { b.s = b.len; b.dir = -1; b.dwell = 14; } else if (b.s < 0) { b.s = 0; b.dir = 1; b.dwell = 14; } }
       const g = clamp(b.s / 40, 0, b.pts.length - 1.001), i = g | 0, f = g - i, p0 = b.pts[i], p1 = b.pts[i + 1], x = lerp(p0[0], p1[0], f), z = lerp(p0[1], p1[1], f);
       let hd = Math.atan2((p1[1] - p0[1]) * b.dir, (p1[0] - p0[0]) * b.dir); if (b.type === 'star' || b.type === 'sampan') hd = Math.atan2(p1[1] - p0[1], p1[0] - p0[0]);   // double-ended: never turns round
@@ -3439,12 +3452,12 @@ function* regenNearG(fx, fz) {
 function updateNear() {
   const cx = camera.position.x, cz = camera.position.z, hg = camera.position.y - groundY(cx, cz);
   if (hg > 520 || !inDom(cx, cz)) return;
-  const drv = DRIVE.on && DRIVE.car && !DRIVE.garage;
+  const drv = (DRIVE.on && DRIVE.car && !DRIVE.garage) || CRUISE.on;
   if (NEAR.job) { NEAR.tk = performance.now(); NEAR.sync = !drv; let done = true; try { done = NEAR.job.next().done; } finally { NEAR.sync = false; if (done) NEAR.job = null; } return; }
   let fx, fz;
   /* on the road the detail is centred a little ahead of the car, along its way: centred before the camera, it was made again every time the chase
      camera swung round a bend (a turn of 30 degrees moves that point 60 m) */
-  if (drv) { const c = DRIVE.car; fx = c.x + Math.cos(c.h) * 30; fz = c.z + Math.sin(c.h) * 30; }   /* (30 m: a right-angle turn moves that point 42 m, short of the 60 m that has the detail made again) */
+  if (drv) { const c = CRUISE.on ? CRUISE : DRIVE.car; fx = c.x + Math.cos(c.h) * 30; fz = c.z + Math.sin(c.h) * 30; }   /* (30 m: a right-angle turn moves that point 42 m, short of the 60 m that has the detail made again) */
   else { camera.getWorldDirection(_v); const a = clamp(110 * (1 - Math.abs(_v.y)), 0, 110), l = Math.hypot(_v.x, _v.z) || 1; fx = cx + _v.x / l * a; fz = cz + _v.z / l * a; }
   if ((fx - NEAR.fx) ** 2 + (fz - NEAR.fz) ** 2 > 60 * 60) { if (drv && NEAR.n) { NEAR.job = regenNearG(fx, fz); NEAR.tk = performance.now(); if (NEAR.job.next().done) NEAR.job = null; } else regenNear(fx, fz); }
 }
@@ -3834,7 +3847,8 @@ const BUS6 = {"s":{"stops":[[-3310,-3748,"Central (Exchange Square)"],[-2932,-35
    (6873907, 6874785), 14 Sai Wan Ho - Stanley Fort (3383494, 3652935); stops [x, z, name] and the path, as for bus 6 */
 const BUSL = {"b15p":{"stops":[[-3320,-3761,"Central (Exchange Square)"],[-2932,-3532,"City Hall"],[-2637,-3169,"Admiralty Garden"],[-2280,-3061,"Three Pacific Place"],[-2046,-2897,"Lun Fat Street"],[-1908,-2801,"Amoy Street"],[-1671,-2714,"The Zenith"],[-1346,-2790,"St. Joseph's Primary School"],[-1174,-2286,"Shiu Fai Terrace"],[-1085,-2091,"Stubbs Road Sitting-out Area"],[-805,-2004,"Tung Shan Terrace"],[-580,-1608,"Hong Kong Adventist Hospital"],[-824,-1773,"Evergreen Villa"],[-1058,-1772,"Bradbury School"],[-1414,-2060,"Mount Nicholson Road"],[-1554,-2177,"White Jade"],[-1670,-2109,"Opus Hong Kong"],[-2079,-1986,"Wan Chai Gap Road"],[-2123,-2202,"Tai Koo House"],[-2713,-2047,"Guildford Road"],[-3100,-1830,"Craigmin Road"],[-3722,-1758,"The Peak Police Station"],[-4001,-1908,"Mount Kellett Road"],[-4149,-2217,"The Peak"]],"path":[-3323,-3762,-3328,-3752,-3312,-3734,-3314,-3716,-3310,-3706,-3214,-3634,-3102,-3580,-3020,-3546,-2812,-3491,-2789,-3482,-2713,-3436,-2697,-3410,-2701,-3387,-2711,-3366,-2776,-3289,-2790,-3263,-2789,-3250,-2732,-3204,-2696,-3182,-2680,-3186,-2654,-3175,-2645,-3169,-2632,-3152,-2574,-3136,-2440,-3113,-2340,-3101,-2322,-3081,-2048,-2890,-1995,-2848,-1822,-2741,-1792,-2728,-1711,-2707,-1658,-2703,-1530,-2705,-1488,-2740,-1447,-2757,-1305,-2791,-1268,-2788,-1245,-2781,-1264,-2719,-1350,-2661,-1358,-2648,-1360,-2631,-1347,-2610,-1332,-2604,-1305,-2602,-1297,-2598,-1291,-2586,-1292,-2564,-1320,-2525,-1322,-2513,-1317,-2501,-1294,-2483,-1216,-2441,-1204,-2426,-1204,-2411,-1221,-2359,-1223,-2331,-1218,-2311,-1187,-2291,-1178,-2277,-1177,-2264,-1185,-2223,-1185,-2204,-1178,-2171,-1163,-2137,-1148,-2119,-1128,-2105,-1073,-2077,-1047,-2069,-1020,-2069,-1004,-2076,-968,-2118,-950,-2124,-931,-2119,-904,-2097,-857,-2083,-839,-2045,-817,-2015,-810,-1997,-810,-1965,-828,-1900,-825,-1883,-815,-1860,-793,-1836,-766,-1823,-696,-1807,-614,-1804,-588,-1790,-580,-1776,-562,-1761,-531,-1687,-528,-1652,-536,-1585,-534,-1566,-515,-1537,-516,-1532,-518,-1529,-531,-1529,-546,-1543,-563,-1569,-572,-1592,-576,-1673,-585,-1686,-607,-1708,-619,-1738,-639,-1754,-659,-1759,-737,-1756,-823,-1776,-870,-1800,-973,-1814,-1005,-1809,-1051,-1782,-1095,-1776,-1115,-1780,-1153,-1797,-1215,-1842,-1229,-1864,-1228,-1922,-1234,-1939,-1299,-1995,-1341,-2036,-1411,-2071,-1439,-2109,-1445,-2130,-1433,-2165,-1433,-2181,-1442,-2207,-1460,-2222,-1487,-2219,-1525,-2203,-1563,-2181,-1622,-2190,-1667,-2164,-1680,-2143,-1681,-2126,-1673,-2090,-1679,-2068,-1695,-2047,-1737,-2013,-1818,-2006,-1901,-2010,-1961,-1992,-2009,-1985,-2053,-1968,-2065,-1968,-2072,-1977,-2074,-1990,-2050,-2027,-2049,-2049,-2060,-2085,-2069,-2104,-2078,-2145,-2086,-2159,-2117,-2196,-2123,-2243,-2147,-2283,-2166,-2332,-2225,-2366,-2254,-2374,-2308,-2358,-2332,-2341,-2350,-2309,-2360,-2254,-2361,-2217,-2372,-2203,-2402,-2190,-2429,-2171,-2476,-2167,-2494,-2160,-2526,-2135,-2527,-2120,-2533,-2109,-2555,-2096,-2679,-2064,-2773,-2031,-2865,-1959,-2921,-1942,-2985,-1896,-3079,-1841,-3102,-1835,-3137,-1835,-3189,-1823,-3212,-1822,-3245,-1830,-3283,-1853,-3314,-1857,-3346,-1850,-3387,-1825,-3404,-1806,-3411,-1762,-3421,-1744,-3440,-1728,-3499,-1701,-3510,-1691,-3515,-1679,-3514,-1663,-3506,-1650,-3448,-1598,-3444,-1580,-3451,-1565,-3523,-1487,-3543,-1471,-3557,-1465,-3600,-1460,-3631,-1449,-3648,-1449,-3685,-1464,-3705,-1476,-3720,-1496,-3722,-1512,-3710,-1536,-3656,-1557,-3641,-1569,-3633,-1581,-3629,-1608,-3635,-1653,-3635,-1694,-3640,-1708,-3655,-1721,-3738,-1775,-3760,-1775,-3799,-1751,-3823,-1744,-3851,-1747,-3875,-1762,-3890,-1786,-3895,-1834,-3908,-1855,-3931,-1880,-3983,-1900,-3997,-1917,-3998,-1938,-3973,-2044,-3978,-2071,-3988,-2098,-4007,-2116,-4135,-2180,-4141,-2191,-4153,-2263]},"b15c":{"stops":[[-4149,-2217,"The Peak"],[-3923,-1883,"Mount Kellett Road"],[-3643,-1722,"The Peak Police Station"],[-3101,-1840,"Craigmin Road"],[-2785,-2027,"Guildford Road"],[-2446,-2175,"Magazine Gap Road"],[-2157,-2328,"30 Peak Road"],[-2007,-1989,"Wan Chai Gap Road"],[-1687,-2156,"White Jade"],[-1316,-2017,"Mount Nicholson Road"],[-859,-1803,"Evergreen Villa"],[-623,-1762,"Villa Monte Rosa"],[-551,-1587,"Bowen Road"],[-836,-1902,"Craigmount"],[-835,-2024,"Tung Shan Terrace"],[-1040,-2060,"Stubbs Road Garden"],[-1194,-2237,"Shiu Fai Terrace"],[-1416,-2749,"Wah Yan College Hong Kong"],[-1794,-2718,"Wu Chung House"],[-2046,-2879,"Lun Fat Street"],[-2238,-3011,"Three Pacific Place"],[-2547,-3101,"Pacific Place"],[-2868,-3263,"Bank of China Tower"],[-3360,-3527,"Pedder Street"],[-3320,-3761,"Central (Exchange Square)"]],"path":[-4153,-2263,-4177,-2266,-4165,-2208,-4153,-2190,-4007,-2116,-3988,-2098,-3978,-2071,-3973,-2044,-3998,-1938,-3997,-1917,-3983,-1900,-3931,-1880,-3908,-1855,-3895,-1834,-3890,-1786,-3875,-1762,-3851,-1747,-3823,-1744,-3799,-1751,-3760,-1775,-3738,-1775,-3655,-1721,-3640,-1708,-3635,-1694,-3635,-1653,-3629,-1608,-3633,-1581,-3641,-1569,-3656,-1557,-3710,-1536,-3722,-1512,-3720,-1496,-3705,-1476,-3685,-1464,-3648,-1449,-3631,-1449,-3600,-1460,-3557,-1465,-3543,-1471,-3523,-1487,-3451,-1565,-3444,-1580,-3448,-1598,-3506,-1650,-3514,-1663,-3515,-1679,-3510,-1691,-3499,-1701,-3440,-1728,-3421,-1744,-3411,-1762,-3404,-1806,-3387,-1825,-3346,-1850,-3314,-1857,-3283,-1853,-3245,-1830,-3212,-1822,-3189,-1823,-3137,-1835,-3102,-1835,-3079,-1841,-2985,-1896,-2921,-1942,-2865,-1959,-2773,-2031,-2679,-2064,-2555,-2096,-2533,-2109,-2527,-2120,-2526,-2135,-2494,-2160,-2476,-2167,-2429,-2171,-2402,-2190,-2372,-2203,-2361,-2217,-2360,-2254,-2350,-2309,-2332,-2341,-2308,-2358,-2254,-2374,-2225,-2366,-2166,-2332,-2147,-2283,-2123,-2243,-2117,-2196,-2086,-2159,-2078,-2145,-2069,-2104,-2060,-2085,-2049,-2049,-2050,-2027,-2074,-1990,-2072,-1977,-2065,-1968,-2053,-1968,-2009,-1985,-1961,-1992,-1901,-2010,-1818,-2006,-1737,-2013,-1695,-2047,-1679,-2068,-1673,-2090,-1681,-2126,-1680,-2143,-1667,-2164,-1622,-2190,-1563,-2181,-1525,-2203,-1487,-2219,-1460,-2222,-1442,-2207,-1433,-2181,-1433,-2165,-1445,-2130,-1439,-2109,-1411,-2071,-1341,-2036,-1299,-1995,-1234,-1939,-1228,-1922,-1229,-1864,-1215,-1842,-1153,-1797,-1115,-1780,-1095,-1776,-1051,-1782,-1005,-1809,-973,-1814,-870,-1800,-823,-1776,-737,-1756,-630,-1761,-617,-1750,-608,-1710,-576,-1673,-568,-1581,-552,-1553,-533,-1545,-532,-1560,-540,-1573,-546,-1601,-551,-1694,-558,-1722,-580,-1776,-594,-1795,-609,-1803,-686,-1805,-753,-1819,-783,-1830,-807,-1849,-821,-1872,-828,-1896,-810,-1965,-810,-1997,-817,-2015,-839,-2045,-857,-2083,-904,-2097,-931,-2119,-950,-2124,-968,-2118,-1004,-2076,-1020,-2069,-1047,-2069,-1073,-2077,-1128,-2105,-1148,-2119,-1163,-2137,-1181,-2182,-1193,-2271,-1218,-2311,-1223,-2331,-1221,-2359,-1204,-2411,-1204,-2426,-1216,-2441,-1294,-2483,-1317,-2501,-1322,-2513,-1320,-2525,-1292,-2564,-1291,-2586,-1297,-2598,-1305,-2602,-1332,-2604,-1347,-2610,-1360,-2631,-1358,-2648,-1350,-2661,-1277,-2708,-1258,-2773,-1284,-2779,-1315,-2781,-1446,-2751,-1484,-2735,-1498,-2726,-1511,-2709,-1519,-2706,-1676,-2704,-1719,-2708,-1792,-2728,-1822,-2741,-1974,-2833,-2048,-2890,-2322,-3081,-2579,-3114,-2628,-3126,-2709,-3166,-2807,-3237,-2864,-3269,-2935,-3297,-3047,-3319,-3148,-3309,-3315,-3354,-3412,-3475,-3315,-3548,-3246,-3646,-3191,-3746,-3264,-3791,-3273,-3783,-3300,-3798,-3323,-3762]},"b9s":{"stops":[[3914,-3123,"Shau Kei Wan"],[4157,-2862,"Ming Wah Dai Ha"],[4259,-2686,"A Kung Ngam Road"],[4385,-2559,"Lei Yue Mun Park"],[4444,-2150,"Shan Tsui Court"],[4173,-1513,"Old Girl Guides Cecilia Mar Venture House"],[3657,-1443,"New Bridge"],[3913,-854,"Sai Wan Water Treatment Works"],[4152,-678,"Cape Collinson"],[4857,692,"Lin Hok Sin Koon"],[4947,1430,"Lan Nai Wan"],[5135,2566,"To Tei Wan"],[5310,2780,"Quarry"],[5830,2208,"4 Shek O Road"],[5937,1774,"1 Shek O Road"],[6055,1443,"Big Wave Bay Road"],[6073,1658,"Shek O Police Station"],[6295,2131,"Shek O"]],"path":[3946,-3130,3953,-3132,3960,-3167,3960,-3183,3951,-3189,3921,-3178,3898,-3140,3862,-3117,3836,-3073,3831,-3051,3945,-2988,3948,-2978,3963,-2964,3982,-2958,4036,-2930,4103,-2875,4120,-2866,4176,-2850,4205,-2829,4213,-2812,4233,-2728,4253,-2678,4285,-2636,4363,-2575,4387,-2545,4407,-2507,4450,-2376,4475,-2321,4449,-2309,4438,-2296,4436,-2269,4445,-2193,4434,-2145,4403,-2097,4359,-2039,4349,-2018,4343,-1951,4350,-1896,4348,-1877,4293,-1733,4261,-1671,4115,-1422,4101,-1402,4070,-1381,3952,-1339,3921,-1332,3895,-1332,3860,-1341,3831,-1359,3766,-1445,3748,-1458,3726,-1463,3677,-1458,3660,-1451,3649,-1440,3646,-1429,3648,-1413,3679,-1361,3684,-1340,3681,-1323,3667,-1291,3661,-1258,3678,-1091,3679,-963,3668,-899,3677,-884,3693,-874,3770,-874,3823,-868,3918,-845,3932,-831,3948,-795,4002,-779,4071,-730,4121,-711,4139,-695,4170,-645,4175,-629,4166,-575,4171,-521,4167,-294,4152,-172,4159,-109,4159,-50,4153,-6,4136,62,4140,87,4160,106,4215,121,4283,154,4312,163,4388,174,4424,194,4474,241,4493,287,4503,302,4546,336,4563,356,4574,383,4620,548,4634,575,4670,624,4691,687,4706,709,4717,720,4734,727,4800,728,4813,724,4849,698,4868,698,4885,711,4900,749,4945,780,4964,806,4974,847,4988,883,4988,900,4978,919,4943,940,4930,954,4910,1003,4905,1034,4916,1091,4967,1192,4973,1213,4972,1231,4946,1318,4940,1360,4941,1407,4952,1470,4963,1514,4977,1546,5039,1652,5065,1686,5102,1725,5118,1749,5176,1905,5185,1951,5187,2064,5183,2101,5164,2143,5114,2198,5101,2223,5098,2258,5107,2299,5108,2319,5089,2370,5085,2395,5089,2430,5147,2613,5210,2705,5244,2740,5288,2775,5389,2832,5424,2840,5461,2838,5500,2823,5527,2802,5692,2584,5705,2574,5762,2545,5847,2459,5861,2428,5863,2396,5857,2385,5846,2375,5817,2366,5802,2355,5795,2341,5794,2320,5833,2229,5860,2093,5896,2034,5906,2009,5905,1945,5909,1915,6009,1468,6026,1422,6039,1408,6049,1429,6074,1719,6062,1870,6070,1919,6082,1946,6108,1981,6273,2128,6285,2125,6295,2134]},"b9w":{"stops":[[6295,2131,"Shek O"],[6062,1627,"Shek O Police Station"],[6014,1465,"21 Shek O Road"],[5911,1933,"1 Shek O Road"],[5834,2236,"4 Shek O Road"],[5256,2760,"Quarry"],[5117,2536,"To Tei Wan"],[4931,1383,"Lan Nai Wan"],[4677,653,"Lin Hok Sin Koon"],[4119,-707,"Cape Collinson"],[3981,-781,"Tai Tam Road"],[4188,-1562,"Old Girl Guides Cecilia Mar Venture House"],[4402,-2106,"Shan Tsui Court"],[4393,-2487,"Shau Kei Wan Government Secondary School"],[4209,-2737,"A Kung Ngam Road"],[3914,-3123,"Shau Kei Wan"]],"path":[6295,2134,6298,2152,6108,1981,6082,1946,6070,1919,6062,1870,6074,1719,6049,1429,6039,1408,6026,1422,6009,1468,5909,1915,5905,1945,5906,2009,5896,2034,5860,2093,5833,2229,5794,2320,5795,2341,5802,2355,5817,2366,5846,2375,5857,2385,5863,2396,5861,2428,5847,2459,5762,2545,5705,2574,5692,2584,5527,2802,5500,2823,5461,2838,5424,2840,5389,2832,5288,2775,5244,2740,5210,2705,5147,2613,5089,2430,5085,2395,5089,2370,5108,2319,5107,2299,5098,2258,5101,2223,5114,2198,5164,2143,5183,2101,5187,2064,5185,1951,5176,1905,5118,1749,5102,1725,5065,1686,5039,1652,4977,1546,4963,1514,4952,1470,4941,1407,4940,1360,4946,1318,4972,1231,4973,1213,4967,1192,4916,1091,4905,1034,4910,1003,4930,954,4943,940,4978,919,4988,900,4988,883,4974,847,4964,806,4945,780,4900,749,4885,711,4868,698,4849,698,4813,724,4800,728,4734,727,4717,720,4706,709,4691,687,4670,624,4634,575,4620,548,4574,383,4563,356,4546,336,4503,302,4493,287,4474,241,4424,194,4388,174,4312,163,4283,154,4215,121,4160,106,4140,87,4136,62,4153,-6,4159,-50,4159,-109,4152,-172,4167,-294,4171,-521,4166,-575,4175,-629,4170,-645,4139,-695,4121,-711,4071,-730,3995,-783,3948,-795,3938,-791,3934,-797,3938,-815,3932,-831,3918,-845,3823,-868,3770,-874,3693,-874,3677,-884,3668,-899,3679,-963,3678,-1091,3661,-1258,3667,-1291,3681,-1323,3684,-1340,3679,-1361,3648,-1413,3646,-1429,3649,-1440,3660,-1451,3677,-1458,3726,-1463,3748,-1458,3766,-1445,3831,-1359,3860,-1341,3895,-1332,3921,-1332,3952,-1339,4070,-1381,4096,-1397,4115,-1422,4290,-1726,4348,-1877,4350,-1896,4343,-1951,4346,-2002,4351,-2023,4430,-2137,4444,-2182,4436,-2286,4445,-2315,4459,-2326,4443,-2353,4402,-2482,4385,-2525,4357,-2563,4279,-2624,4246,-2663,4220,-2723,4200,-2809,4187,-2830,4164,-2843,4130,-2852,4100,-2864,4057,-2896,3965,-2940,3941,-2957,3936,-2984,3946,-3036,3944,-3043,3909,-3066,3921,-3124]},"b14s":{"stops":[[3552,-3836,"Grand Promenade"],[3338,-3577,"Sai Wan Ho Station"],[3468,-3410,"Hoi An Street"],[3609,-3365,"Aldrich Bay Road"],[3799,-3096,"Nam On Lane"],[4157,-2862,"Ming Wah Dai Ha"],[4259,-2686,"A Kung Ngam Road"],[4385,-2559,"Lei Yue Mun Park"],[4444,-2150,"Shan Tsui Court"],[4173,-1513,"Old Girl Guides Cecilia Mar Venture House"],[3657,-1443,"New Bridge"],[3913,-854,"Sai Wan Water Treatment Works"],[3220,411,"Tai Tam Reservoir (North)"],[3239,1161,"Tai Tam Country Park"],[3402,1611,"Turtle Cove"],[2829,2485,"The American Club"],[2622,2736,"Pacific Horizon"],[2408,2887,"Stanford Villa"],[2251,3197,"Stanley Court"],[2365,3425,"Stanley Village"],[2427,3569,"Wong Ma Kok Road Public Dispensary"],[2751,4157,"St. Stephen's College Preparatory School"],[2430,4654,"Regalia Bay"],[2512,4940,"Stanley Fort"]],"path":[3569,-3824,3531,-3863,3530,-3869,3540,-3880,3587,-3832,3564,-3803,3570,-3797,3544,-3771,3536,-3770,3397,-3630,3318,-3570,3300,-3551,3314,-3529,3348,-3479,3408,-3436,3505,-3388,3538,-3377,3628,-3357,3649,-3347,3668,-3321,3810,-3071,3825,-3055,3945,-2988,3948,-2978,3963,-2964,3982,-2958,4036,-2930,4103,-2875,4120,-2866,4168,-2853,4202,-2833,4211,-2819,4233,-2728,4253,-2678,4285,-2636,4368,-2570,4398,-2527,4456,-2360,4475,-2321,4449,-2309,4438,-2296,4436,-2269,4445,-2193,4434,-2145,4403,-2097,4359,-2039,4349,-2018,4343,-1951,4350,-1896,4348,-1877,4293,-1733,4261,-1671,4115,-1422,4101,-1402,4070,-1381,3952,-1339,3921,-1332,3895,-1332,3860,-1341,3831,-1359,3766,-1445,3748,-1458,3726,-1463,3671,-1456,3655,-1448,3646,-1433,3650,-1406,3679,-1361,3684,-1340,3681,-1323,3667,-1291,3661,-1258,3678,-1091,3679,-963,3668,-912,3670,-893,3679,-881,3693,-874,3786,-873,3836,-866,3910,-848,3928,-837,3948,-797,3945,-791,3936,-792,3930,-778,3878,-615,3859,-518,3869,-458,3863,-435,3814,-404,3727,-279,3679,-224,3660,-193,3627,-115,3619,-102,3607,-95,3594,-95,3582,-100,3547,-131,3537,-132,3525,-125,3519,-99,3516,-18,3422,134,3413,158,3408,205,3396,227,3369,245,3335,249,3240,225,3222,233,3213,252,3216,424,3198,534,3198,558,3204,578,3300,776,3285,813,3282,832,3298,878,3294,943,3283,968,3258,985,3245,1008,3221,1292,3225,1306,3253,1346,3290,1455,3369,1540,3387,1571,3398,1614,3397,1647,3390,1684,3377,1721,3363,1805,3335,1914,3340,1980,3337,1994,3280,2062,3243,2128,3193,2239,3166,2266,3124,2291,3075,2307,3057,2307,3045,2301,3020,2278,3000,2226,2987,2213,2970,2205,2920,2200,2898,2207,2885,2216,2876,2229,2872,2246,2869,2334,2858,2381,2809,2515,2757,2606,2721,2649,2671,2694,2598,2743,2565,2759,2537,2767,2533,2780,2486,2808,2440,2860,2385,2891,2333,2952,2324,2974,2311,3026,2301,3043,2285,3057,2216,3081,2195,3102,2187,3118,2184,3139,2187,3156,2196,3176,2212,3192,2242,3204,2291,3201,2306,3204,2326,3216,2337,3234,2341,3248,2340,3283,2346,3333,2363,3457,2373,3480,2412,3518,2423,3541,2423,3602,2426,3616,2457,3665,2467,3693,2469,3727,2453,3788,2454,3810,2460,3826,2482,3854,2534,3893,2547,3911,2554,3934,2551,3989,2557,4009,2570,4025,2584,4035,2648,4069,2675,4074,2700,4087,2715,4105,2763,4184,2774,4209,2773,4237,2763,4259,2748,4274,2711,4292,2693,4306,2685,4322,2676,4366,2668,4386,2593,4468,2562,4483,2496,4477,2465,4483,2440,4499,2421,4528,2418,4545,2417,4619,2426,4678,2420,4739,2422,4767,2431,4792,2533,4966,2517,4974,2510,4971,2507,4963,2515,4949,2515,4936]},"b14w":{"stops":[[2512,4940,"Stanley Fort"],[2463,4857,"Che Pau Teng"],[2419,4693,"Regalia Bay"],[2745,4161,"St. Stephen's College Preparatory School"],[2452,3665,"Tang Shiu Kin Sports Field"],[2371,3488,"Stanley Police Station"],[2178,3125,"Stanley Mound Road"],[2413,2870,"Stanley Beach Road"],[2655,2692,"Faber Villa"],[2855,2366,"The Manhattan"],[3377,1599,"Turtle Cove"],[3229,1082,"Tai Tam Country Park"],[3289,794,"Tai Tam Reservoir (South)"],[3211,382,"Tai Tam Reservoir (North)"],[3926,-779,"Shek O Road"],[4188,-1562,"Old Girl Guides Cecilia Mar Venture House"],[4402,-2106,"Shan Tsui Court"],[4393,-2487,"Shau Kei Wan Government Secondary School"],[4209,-2737,"A Kung Ngam Road"],[3849,-3025,"Nam On Lane"],[3732,-3181,"Sun Sing Street"],[3455,-3397,"Hoi An Street"],[3310,-3505,"Sai Wan Ho Civic Centre"],[3279,-3698,"Tai Hong House"],[3552,-3836,"Grand Promenade"]],"path":[2515,4936,2431,4792,2422,4767,2420,4739,2426,4678,2417,4619,2418,4545,2421,4528,2440,4499,2465,4483,2496,4477,2562,4483,2593,4468,2668,4386,2676,4366,2685,4322,2693,4306,2711,4292,2748,4274,2763,4259,2773,4237,2774,4209,2763,4184,2715,4105,2700,4087,2675,4074,2648,4069,2584,4035,2570,4025,2557,4009,2551,3989,2554,3934,2547,3911,2534,3893,2482,3854,2460,3826,2454,3810,2453,3788,2469,3727,2467,3693,2457,3665,2426,3616,2423,3602,2423,3541,2412,3518,2373,3480,2363,3457,2346,3333,2340,3283,2341,3248,2337,3234,2326,3216,2306,3204,2291,3201,2242,3204,2212,3192,2196,3176,2187,3156,2184,3139,2187,3118,2195,3102,2216,3081,2285,3057,2301,3043,2311,3026,2324,2974,2333,2952,2385,2891,2440,2860,2486,2808,2533,2780,2537,2767,2565,2759,2598,2743,2671,2694,2721,2649,2757,2606,2809,2515,2858,2381,2869,2334,2872,2246,2876,2229,2885,2216,2898,2207,2920,2200,2970,2205,2987,2213,3000,2226,3020,2278,3045,2301,3057,2307,3075,2307,3124,2291,3166,2266,3193,2239,3243,2128,3280,2062,3337,1994,3340,1980,3335,1919,3363,1805,3386,1660,3387,1625,3380,1590,3365,1558,3348,1533,3309,1490,3293,1462,3253,1346,3225,1306,3221,1292,3245,1008,3258,985,3283,968,3294,943,3298,878,3282,832,3285,813,3300,776,3204,578,3198,558,3198,534,3216,424,3213,252,3222,233,3240,225,3335,249,3369,245,3396,227,3408,205,3413,158,3422,134,3516,-18,3519,-99,3525,-125,3537,-132,3547,-131,3582,-100,3594,-95,3607,-95,3619,-102,3627,-115,3660,-193,3679,-224,3727,-279,3814,-404,3863,-435,3869,-453,3859,-509,3861,-533,3881,-624,3936,-792,3938,-815,3932,-831,3918,-845,3823,-868,3770,-874,3693,-874,3679,-881,3670,-893,3668,-912,3679,-963,3678,-1091,3661,-1258,3667,-1291,3681,-1323,3684,-1340,3679,-1361,3650,-1406,3646,-1433,3655,-1448,3671,-1456,3726,-1463,3748,-1458,3766,-1445,3831,-1359,3860,-1341,3895,-1332,3921,-1332,3952,-1339,4070,-1381,4096,-1397,4115,-1422,4290,-1726,4348,-1877,4350,-1896,4343,-1951,4346,-2002,4351,-2023,4430,-2137,4444,-2182,4436,-2286,4445,-2315,4459,-2326,4441,-2358,4393,-2509,4362,-2557,4279,-2624,4246,-2663,4220,-2723,4203,-2802,4194,-2821,4172,-2840,4114,-2857,4086,-2872,4057,-2896,3956,-2945,3896,-3004,3812,-3052,3650,-3331,3632,-3344,3531,-3366,3497,-3380,3391,-3433,3368,-3448,3335,-3479,3215,-3643,3346,-3745,3507,-3905,3518,-3903,3587,-3832,3577,-3822,3569,-3824]}};
 /* ---------- Ride: a line is chosen (the tram either way, bus 6 either way), and a stop to board at ---------- */
-const RIDE = { lines: null, li: 0, si: 0 };
+const RIDE = { lines: null, li: 0, si: 0, mode: 'ride', built: '', liBy: {} };
+const cardLines = () => RIDE.mode === 'cruise' ? cruiseLines() : rideLines();
 function rideLines() {
   if (RIDE.lines) return RIDE.lines; const L = [], tk = TRAMS.tracks.find(t => t.main);
   if (tk) { const east = tk.pts[tk.pts.length - 1][0] > tk.pts[0][0] ? 1 : -1, asc = tk.stops.map((q, i) => { const p = tk.pts[Math.min(tk.pts.length - 1, Math.round(q / 8))]; return [Math.round(p[0]), Math.round(p[2]), tk.stopN[i] || 'Tram stop', q]; }), fw = [], bk = [];
@@ -3849,36 +3863,36 @@ function rideLines() {
   bus('bus15-p', 15, 'Bus 15 to The Peak', 'To The Peak', 'From Central up Stubbs Road and Peak Road', BUSL.b15p); bus('bus15-c', 15, 'Bus 15 to Central', 'To Central', 'Down from the Peak by Peak Road and Stubbs Road', BUSL.b15c);
   return (RIDE.lines = L);
 }
-function rideOpen() { if (DRIVE.on || DRIVE.entering) return; plClose(); if (TOUR.on) stopTour(); document.body.classList.remove('menu', 'tp'); document.body.classList.add('rideopen'); const L = rideLines(), box = document.getElementById('rideLines');
+function rideOpen(mode) { if (DRIVE.on || DRIVE.entering || CRUISE.on) return; RIDE.mode = mode === 'cruise' ? 'cruise' : 'ride'; plClose(); if (TOUR.on) stopTour(); document.body.classList.remove('menu', 'tp'); document.body.classList.add('rideopen'); const L = cardLines(), box = document.getElementById('rideLines');
   /* (the lines come in pairs, one for each way: a tab for each line, and under them its two directions) */
-  if (!box.children.length) { for (let k = 0; k < L.length; k += 2) { const b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'tab'); b.textContent = L[k].tag; b.onclick = () => rideSet(k); box.appendChild(b); }
+  if (RIDE.built !== RIDE.mode) { RIDE.built = RIDE.mode; box.textContent = ''; document.getElementById('rideDirs').textContent = ''; document.querySelector('#ride .rh b').textContent = RIDE.mode === 'cruise' ? 'Cruise' : 'Ride'; for (let k = 0; k < L.length; k += 2) { const b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'tab'); b.textContent = L[k].tag; b.onclick = () => rideSet(k); box.appendChild(b); }
     const dirs = document.getElementById('rideDirs'); for (let j = 0; j < 2; j++) { const b = document.createElement('button'); b.type = 'button'; b.innerHTML = '<b></b><em></em>'; b.onclick = () => rideSet((RIDE.li & ~1) + j); dirs.appendChild(b); } }
-  rideSet(RIDE.li, true); }
+  rideSet(RIDE.liBy[RIDE.mode] || 0, true); }
 function rideClose() { document.body.classList.remove('rideopen'); }
 /* a line chosen: the stop nearest what is being looked at (from far off: the first), never the last, where there is nowhere to ride to */
-function rideSet(li, keep) { const L = rideLines(); RIDE.li = (li + L.length) % L.length; const ln = L[RIDE.li]; [...document.getElementById('rideLines').children].forEach((b, i) => { b.classList.toggle('on', i === RIDE.li >> 1); b.setAttribute('aria-selected', i === RIDE.li >> 1 ? 'true' : 'false'); });
+function rideSet(li, keep) { const L = cardLines(); RIDE.li = (li + L.length) % L.length; RIDE.liBy[RIDE.mode] = RIDE.li; const ln = L[RIDE.li]; if (ln.kind === 'boat') { if (!CRUISE.mesh[ln.veh]) CRUISE.mesh[ln.veh] = cruiseBoat(ln.veh); cruiseModel(ln.veh); }   /* (the boat's model is fetched while the card is open) */ [...document.getElementById('rideLines').children].forEach((b, i) => { b.classList.toggle('on', i === RIDE.li >> 1); b.setAttribute('aria-selected', i === RIDE.li >> 1 ? 'true' : 'false'); });
   [...document.getElementById('rideDirs').children].forEach((b, j) => { const q = L[(RIDE.li & ~1) + j]; b.style.display = q ? '' : 'none'; if (!q) return; b.firstChild.textContent = q.dir || q.name; b.lastChild.textContent = q.sub; b.classList.toggle('on', (RIDE.li & 1) === j); b.setAttribute('aria-pressed', (RIDE.li & 1) === j ? 'true' : 'false'); });
   let si = 0; if (cam.dist < 2600) { let bd = 700; ln.stops.forEach((q, i) => { const d = Math.hypot(q[0] - cam.tx, q[1] - cam.tz); if (d < bd && i < ln.stops.length - 1) { bd = d; si = i; } }); } else if (ln.kind === 'tram') { const i = ln.stops.findIndex(q => /Pedder/.test(q[2])); if (i >= 0) si = i; }
   ridePick(si); }
-function ridePick(si) { const ln = rideLines()[RIDE.li], n = ln.stops.length; RIDE.si = clamp(si, 0, n - 2); const q = ln.stops[RIDE.si]; document.getElementById('rideStop').textContent = q[2] || 'Stop'; document.getElementById('rideGo0').textContent = 'From the start · ' + (ln.stops[0][2] || 'the first stop');
-  document.getElementById('rideSub').textContent = (n - 1 - RIDE.si) + (n - 1 - RIDE.si === 1 ? ' stop' : ' stops') + ' to ' + (ln.stops[n - 1][2] || 'the end of the line'); rideDraw(); }
+function ridePick(si) { const ln = cardLines()[RIDE.li], n = ln.stops.length; RIDE.si = clamp(si, 0, ln.loop ? n - 1 : n - 2); const q = ln.stops[RIDE.si]; document.getElementById('rideStop').textContent = q[2] || 'Stop'; document.getElementById('rideGo0').textContent = 'From the start · ' + (ln.stops[0][2] || 'the first stop');
+  document.getElementById('rideSub').textContent = ln.loop ? 'All the way round: ' + ln.km + ' km' : (n - 1 - RIDE.si) + (n - 1 - RIDE.si === 1 ? ' stop' : ' stops') + ' to ' + (ln.stops[n - 1][2] || 'the end of the line'); rideDraw(); }
 function rideDraw() {
   const cv = document.getElementById('rideMap'); if (!cv || !cv.clientWidth) return; const dpr = Math.min(devicePixelRatio || 1, 2), W = Math.round(cv.clientWidth * dpr), H = Math.round(cv.clientHeight * dpr); if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
-  const g = cv.getContext('2d'), T = plXf(cv), X = x => x * T.k + T.ox, Z = z => z * T.k + T.oz, ln = rideLines()[RIDE.li]; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.fillStyle = '#163a50'; g.fillRect(0, 0, T.w, T.h);
+  const g = cv.getContext('2d'), T = plXf(cv), X = x => x * T.k + T.ox, Z = z => z * T.k + T.oz, ln = cardLines()[RIDE.li]; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.fillStyle = '#163a50'; g.fillRect(0, 0, T.w, T.h);
   g.fillStyle = '#26352d'; g.strokeStyle = 'rgba(255,214,160,.35)'; g.lineWidth = 1; for (const r of G.coast) { if (r.length < 3) continue; g.beginPath(); g.moveTo(X(r[0][0]), Z(r[0][1])); for (let i = 1; i < r.length; i++) g.lineTo(X(r[i][0]), Z(r[i][1])); g.closePath(); g.fill(); g.stroke(); }
   /* the line: faint where it is behind the chosen stop, bright from there on */
   const P = ln.path, stroke = (col, w) => { g.strokeStyle = col; g.lineWidth = w; g.lineJoin = g.lineCap = 'round'; g.beginPath(); g.moveTo(X(P[0]), Z(P[1])); for (let i = 2; i < P.length; i += 2) g.lineTo(X(P[i]), Z(P[i + 1])); g.stroke(); };
-  stroke('rgba(9,20,28,.8)', 5); stroke(ln.kind === 'tram' ? '#6fd08a' : '#ffb054', 2.6);
-  ln.stops.forEach((q, i) => { g.beginPath(); g.arc(X(q[0]), Z(q[1]), i === RIDE.si ? 0 : i < RIDE.si ? 1.6 : 2.3, 0, TAU); g.fillStyle = i < RIDE.si ? 'rgba(255,244,223,.45)' : '#fff4df'; g.fill(); });
-  const q = ln.stops[RIDE.si], e = ln.stops[ln.stops.length - 1]; g.beginPath(); g.arc(X(e[0]), Z(e[1]), 4.5, 0, TAU); g.fillStyle = '#fff4df'; g.fill(); g.strokeStyle = '#2a1606'; g.lineWidth = 1.5; g.stroke();
+  stroke('rgba(9,20,28,.8)', 5); stroke(ln.kind === 'tram' ? '#6fd08a' : ln.kind === 'boat' ? '#6fd2ff' : '#ffb054', 2.6);
+  ln.stops.forEach((q, i) => { g.beginPath(); g.arc(X(q[0]), Z(q[1]), i === RIDE.si ? 0 : i < RIDE.si && !ln.loop ? 1.6 : 2.3, 0, TAU); g.fillStyle = i < RIDE.si && !ln.loop ? 'rgba(255,244,223,.45)' : '#fff4df'; g.fill(); });
+  const q = ln.stops[RIDE.si], e = ln.loop ? q : ln.stops[ln.stops.length - 1]; g.beginPath(); g.arc(X(e[0]), Z(e[1]), 4.5, 0, TAU); g.fillStyle = '#fff4df'; g.fill(); g.strokeStyle = '#2a1606'; g.lineWidth = 1.5; g.stroke();
   g.beginPath(); g.arc(X(q[0]), Z(q[1]), 7, 0, TAU); g.fillStyle = '#ffb054'; g.fill(); g.strokeStyle = '#fff4df'; g.lineWidth = 2; g.stroke();
 }
-function rideGo() { const ln = rideLines()[RIDE.li], si = RIDE.si; rideClose(); pinClear(); if (FOCUS.label) exitFocus(); busRideStart(ln, si); }
+function rideGo() { const ln = cardLines()[RIDE.li], si = RIDE.si; rideClose(); pinClear(); if (FOCUS.label) exitFocus(); if (ln.kind === 'boat') cruiseStart(ln, si); else busRideStart(ln, si); }
 function initRide() {
-  const q = id => document.getElementById(id), card = q('ride'); q('bRide').onclick = () => rideOpen(); q('rideX').onclick = () => rideClose(); q('rideGo').onclick = () => rideGo(); q('rideGo0').onclick = () => { ridePick(0); rideGo(); }; q('ridePrev').onclick = () => ridePick(RIDE.si - 1); q('rideNextS').onclick = () => ridePick(RIDE.si + 1);
+  const q = id => document.getElementById(id), card = q('ride'); q('bRide').onclick = () => rideOpen('ride'); q('bCruise').onclick = () => rideOpen('cruise'); q('rideX').onclick = () => rideClose(); q('rideGo').onclick = () => rideGo(); q('rideGo0').onclick = () => { ridePick(0); rideGo(); }; q('ridePrev').onclick = () => ridePick(RIDE.si - 1); q('rideNextS').onclick = () => ridePick(RIDE.si + 1);
   for (const t of ['pointerdown', 'pointerup', 'pointermove', 'touchstart', 'mousedown', 'wheel']) card.addEventListener(t, e => e.stopPropagation(), { passive: true });
   card.addEventListener('click', e => { if (e.target === card) rideClose(); });
-  q('rideMap').addEventListener('click', e => { const cv = e.currentTarget, r = cv.getBoundingClientRect(), T = plXf(cv), px = e.clientX - r.left, pz = e.clientY - r.top, ln = rideLines()[RIDE.li]; let best = -1, bd = 34; ln.stops.forEach((s, i) => { const d = Math.hypot(s[0] * T.k + T.ox - px, s[1] * T.k + T.oz - pz); if (d < bd) { bd = d; best = i; } }); if (best >= 0) ridePick(best); });
+  q('rideMap').addEventListener('click', e => { const cv = e.currentTarget, r = cv.getBoundingClientRect(), T = plXf(cv), px = e.clientX - r.left, pz = e.clientY - r.top, ln = cardLines()[RIDE.li]; let best = -1, bd = 34; ln.stops.forEach((s, i) => { const d = Math.hypot(s[0] * T.k + T.ox - px, s[1] * T.k + T.oz - pz); if (d < bd) { bd = d; best = i; } }); if (best >= 0) ridePick(best); });
   addEventListener('keydown', e => { if (!document.body.classList.contains('rideopen')) return; if (e.code === 'Escape') rideClose(); else if (e.code === 'ArrowLeft') ridePick(RIDE.si - 1); else if (e.code === 'ArrowRight') ridePick(RIDE.si + 1); else if (e.code === 'Enter') rideGo(); else return; e.preventDefault(); e.stopPropagation(); }, true);
   addEventListener('resize', () => { if (document.body.classList.contains('rideopen')) rideDraw(); });
 }
@@ -4232,7 +4246,7 @@ const b3dBreath = () => { const now = performance.now(); if (B3D.sl0) { const d 
 /* shadows after a sheet has come or gone. The near shadow (round the eye) is redrawn at once. The far one is of the whole island, on a sheet with a texel
    every few metres: a new sheet's buildings throw much the same shadow there as the blocks they replace, and redrawing it is most of a frame. So while
    driving it waits a moment and is done once for a run of sheets (b3dStep) */
-function b3dShade() { if (DRIVE.on) B3D.shDue = B3D.shDue || ST.t + 1.5; else SH.farDirty = SH.nearDirty = true; }   /* (while driving not even the near one at once: each is a second drawing of the whole scene, and the blocks the new models replace are in the old shadow already) */
+function b3dShade() { if (DRIVE.on || CRUISE.on) B3D.shDue = B3D.shDue || ST.t + 1.5; else SH.farDirty = SH.nearDirty = true; }   /* (while driving not even the near one at once: each is a second drawing of the whole scene, and the blocks the new models replace are in the old shadow already) */
 /* whether all that b3dStep would fetch round a place is in: its sheets, and their street level. A ride waits at its first stop for this (for a few
    seconds at most), so that the heaviest loading of the journey, which is at its start in the middle of town, is over before it moves */
 const b3dRush = () => !!(DRIVE.on && DRIVE.bus && DRIVE.bus.board);
@@ -4302,7 +4316,7 @@ async function b3dLoad(T) {
     let ylo = 1e9, yhi = -1e9; for (const b of list) { ylo = Math.min(ylo, b.y - 35); yhi = Math.max(yhi, b.y + b.top + 5); } if (!list.length) ylo = yhi = 0;
     g.boundingSphere = new THREE.Sphere(new THREE.Vector3((T.box[0] + T.box[2]) / 2, (ylo + yhi) / 2, (T.box[1] + T.box[3]) / 2), Math.hypot(T.box[2] - T.box[0], yhi - ylo, T.box[3] - T.box[1]) / 2 + 30);
     stage = 'hide'; const hp = await b3dHidePlan(hide, pace); stage = 'end';
-    const tW = performance.now(); if (DRIVE.on && !b3dRush()) { work += tW - tk; B3D.stage = 'buildings: lists'; await gpuWarm(g); tk = performance.now(); } B3D.stage = 'buildings: showing';   /* (while driving, its lists are sent to the graphics card over a few frames first) */
+    const tW = performance.now(); if ((DRIVE.on || CRUISE.on) && !b3dRush()) { work += tW - tk; B3D.stage = 'buildings: lists'; await gpuWarm(g); tk = performance.now(); } B3D.stage = 'buildings: showing';   /* (while driving, its lists are sent to the graphics card over a few frames first) */
     const tEnd = performance.now(), mesh = new THREE.Mesh(g, mat); mesh.layers.enable(1); scene.add(mesh);   /* casts shadows; left out of the water's reflection pass */
     T.mesh = mesh; if (T.st) T.stl = list.concat(hand).map(b => ({ x: b.x, z: b.z, y: b.y, top: b.top, bb: b.bb, at: b.at })); T.undo = b3dHide(hp); T.hide = hide; T.tris = i0 / 3; T.cut = cut; T.endMs = Math.round(performance.now() - tEnd); T.slow = Math.round(slow) + ' ' + slowAt; T.ms = Math.round(performance.now() - t0); T.sync = Math.round(work + performance.now() - tk);   /* (sync: the work itself, without the waits between its slices) */ B3D.tiles.set(T.id, T); b3dShade(); NEAR.fx = NEAR.fz = 1e9;
   } catch (err) { B3D.fail.add(T.id); console.warn('b3d ' + T.id + ': ' + (err && err.message)); }
@@ -4364,7 +4378,7 @@ async function b3dStreet(T) {
       g.setAttribute('aCol', new THREE.BufferAttribute(new Float32Array(nv * 3).fill(1), 3)); g.setAttribute('aF', new THREE.BufferAttribute(new Float32Array(nv), 1));
       g.setIndex(new THREE.BufferAttribute(new Uint32Array(I), 1)); g.boundingSphere = T.mesh.geometry.boundingSphere;
       /* (the picture and then each list sent to the graphics card in a frame of its own, before anything is drawn with them) */
-      if (DRIVE.on && !b3dRush()) { const off = () => gone() || T.stm !== S; await b3dBreath(); if (!off()) { const tT = performance.now(); try { renderer.initTexture(tex); } catch (e) { /* sent when first drawn */ } S.texMs = Math.round(performance.now() - tT); await b3dBreath(); } if (!off()) await gpuWarm(g, off); if (off()) { if (T.stm === S) { tex.dispose(); T.stm = null; } g.dispose(); return; } tA = performance.now(); }
+      if ((DRIVE.on || CRUISE.on) && !b3dRush()) { const off = () => gone() || T.stm !== S; await b3dBreath(); if (!off()) { const tT = performance.now(); try { renderer.initTexture(tex); } catch (e) { /* sent when first drawn */ } S.texMs = Math.round(performance.now() - tT); await b3dBreath(); } if (!off()) await gpuWarm(g, off); if (off()) { if (T.stm === S) { tex.dispose(); T.stm = null; } g.dispose(); return; } tA = performance.now(); }
       S.mat = new THREE.ShaderMaterial({ uniforms: Object.assign({}, U, { uAtlas: { value: tex }, uAtlasPx: { value: (tex.image && tex.image.width) || W } }), vertexShader: BLD_VS, fragmentShader: BLD_FS(), defines: { FOC_SINK: 1, FLATN: 1, STREET: 1, DRAWN: 1 }, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4 });
       S.mesh = new THREE.Mesh(g, S.mat); scene.add(S.mesh); S.endMs = Math.round(Math.max(worst, performance.now() - tA)); }
     if (inf) { B3D.stage = 'footbridges'; const dv = new DataView(inf.buffer, inf.byteOffset, inf.byteLength), cut = (a, n) => inf.buffer.slice(inf.byteOffset + a, inf.byteOffset + a + n); let o = 4;
@@ -4387,7 +4401,7 @@ async function b3dStreet(T) {
       if (I2.length) { const g = new THREE.BufferGeometry(), nv = P2.length / 3, F = (a, n) => new THREE.BufferAttribute(new Float32Array(a), n);
         g.setAttribute('position', F(P2, 3)); g.setAttribute('aCol', F(C2, 3)); g.setAttribute('aP', F(A2, 4)); g.setAttribute('aQ', F(Q2, 4)); g.setAttribute('normal', F(O2, 3)); g.setAttribute('aF', new THREE.BufferAttribute(new Float32Array(nv), 1));
         g.setIndex(new THREE.BufferAttribute(new Uint32Array(I2), 1)); g.boundingSphere = T.mesh.geometry.boundingSphere;
-        if (DRIVE.on && !b3dRush()) { const off = () => gone() || T.stm !== S; await gpuWarm(g, off); if (off()) { g.dispose(); return; } }   /* (3 to 7 MB of lists: not all in the frame the walkways first show) */
+        if ((DRIVE.on || CRUISE.on) && !b3dRush()) { const off = () => gone() || T.stm !== S; await gpuWarm(g, off); if (off()) { g.dispose(); return; } }   /* (3 to 7 MB of lists: not all in the frame the walkways first show) */
         S.infra = new THREE.Mesh(g, B3D.mat); S.infra.layers.enable(1); scene.add(S.infra); S.infraN = kept;
         /* the guessed footbridges of this sheet give way to the real ones */
         if (PBm && DRIVE.fbAll) { const pos = PBm.geometry.attributes.position; S.fb = []; for (const [a, b, fx, fz] of DRIVE.fbAll) { if (fx < T.box[0] || fx > T.box[2] || fz < T.box[1] || fz > T.box[3]) continue; for (let v = a; v < b; v++) { S.fb.push(v, pos.array[v * 3 + 1]); pos.array[v * 3 + 1] -= 4000; } } pos.needsUpdate = true; } } }
@@ -5639,7 +5653,7 @@ async function enterDrive() {
   if (DRIVE.on || DRIVE.entering) return; DRIVE.entering = true; try { await enterDrive0(); } finally { DRIVE.entering = false; }
 }
 async function enterDrive0() {
-  if (DRIVE.on) return; if (TOUR.on) stopTour(); if (FOCUS.label) exitFocus();
+  if (DRIVE.on || CRUISE.on) return; if (TOUR.on) stopTour(); if (FOCUS.label) exitFocus();
   document.body.classList.remove('menu');
   if (!DRIVE.ready) {
     ctlHint.show(['Loading every street…'], 30000);
@@ -5818,6 +5832,7 @@ function oneStart(p, e) {
   GS.mode = alt !== FOCUS.active ? 'orbit' : 'pan'; GS.a = GS.mode === 'pan' ? grabAt(p.x, p.y) : null;
 }
 canvas.addEventListener('pointerdown', e => {
+  if (CRUISE.on) { cruisePointer(e); return; }
   if (DRIVE.on) { dPointer(e); return; }
   try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* synthetic pointers cannot be captured */ }
   const now = performance.now(), p = { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, t: now, b: e.button, sh: e.shiftKey || e.ctrlKey || e.metaKey || e.altKey };
@@ -5830,6 +5845,7 @@ canvas.addEventListener('pointerdown', e => {
   } else GS.mode = null;
 });
 canvas.addEventListener('pointermove', e => {
+  if (CRUISE.on) return;
   if (DRIVE.on) { dPointer(e); return; }
   const p = ptrs.get(e.pointerId); if (!p) return; const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
   const now = performance.now(); moveDt = clamp((now - lastMoveT) / 1000, .008, .1); lastMoveT = now;
@@ -5854,6 +5870,7 @@ canvas.addEventListener('pointermove', e => {
   }
 });
 const pUp = e => {
+  if (CRUISE.on) { cruisePointer(e); ptrs.delete(e.pointerId); return; }
   if (DRIVE.on) { dPointer(e); ptrs.delete(e.pointerId); return; }
   const p = ptrs.get(e.pointerId); if (!p) return; ptrs.delete(e.pointerId); const now = performance.now(), still = Math.hypot(p.x - p.x0, p.y - p.y0) < 9, quick = now - p.t < 280;
   if (GS.mode === 'zoom') { if (still) zoomAbout(GS.zp, .5, .45); GS.mode = null; }
@@ -5866,7 +5883,7 @@ const pUp = e => {
 };
 canvas.addEventListener('pointerup', pUp); canvas.addEventListener('pointercancel', pUp);
 canvas.addEventListener('wheel', e => {
-  e.preventDefault(); if (DRIVE.on) { DRIVE.zoom = clamp(DRIVE.zoom + e.deltaY * .02, -7, 45); return; } userInput();
+  e.preventDefault(); if (CRUISE.on) { CRUISE.zoom = clamp(CRUISE.zoom + e.deltaY * .06, -22, 220); return; } if (DRIVE.on) { DRIVE.zoom = clamp(DRIVE.zoom + e.deltaY * .02, -7, 45); return; } userInput();
   const dz = clamp(e.deltaY * (e.deltaMode ? 30 : 1), -240, 240), f = Math.exp(dz * .0016), p = pickGround(e.clientX, e.clientY);
   const nd = clamp(cam.dist * f, 30, 42000), rf = nd / cam.dist; cam.dist = nd;
   if (p && rf < 1) { cam.tx += (p.x - cam.tx) * (1 - rf); cam.tz += (p.z - cam.tz) * (1 - rf); }
@@ -5908,11 +5925,12 @@ let gsc = 1, gro = 0;
 addEventListener('gesturestart', e => { if (e.target !== canvas || ptrs.size) return; e.preventDefault(); userInput(); gsc = e.scale; gro = e.rotation; });
 addEventListener('gesturechange', e => { if (e.target !== canvas) return; e.preventDefault(); if (ptrs.size || DRIVE.on) return; if (e.scale > 0) cam.dist = clamp(cam.dist * gsc / e.scale, 30, 42000); gsc = e.scale; cam.az += (e.rotation - gro) * RAD; gro = e.rotation; });
 const keys = {};
-addEventListener('keydown', e => { keys[e.code] = 1; if (DRIVE.on && e.code !== 'KeyL') { if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault(); return; } if (e.code.startsWith('Digit')) { const i = +e.code.slice(5) - 1; if (i >= 0 && i < 6) goPreset(i); }
+addEventListener('keydown', e => { keys[e.code] = 1; if (CRUISE.on) { if (e.code === 'Escape') cruiseExit(); if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault(); return; } if (DRIVE.on && e.code !== 'KeyL') { if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault(); return; } if (e.code.startsWith('Digit')) { const i = +e.code.slice(5) - 1; if (i >= 0 && i < 6) goPreset(i); }
   if (e.code === 'KeyR') goPreset(0); if (e.code === 'Escape' && FOCUS.label) exitFocus();
   if (e.code === 'KeyF' && FOCUS.label) FOCUS.active ? exitFocus() : enterFocus(FOCUS.label); if (e.code === 'KeyI' && FOCUS.active) setFocusMode(!FOCUS.iso); if (e.code === 'KeyC' && FOCUS.active) setFocusClay(!FOCUS.clay); if (e.code === 'KeyB' && FOCUS.active) focusBestView(); if (e.code === 'KeyL') setLight({ golden: 'noon', noon: 'dusk', dusk: 'golden' }[L.name]); if (e.code === 'KeyT') TOUR.on ? stopTour() : startTour(); });
 addEventListener('keyup', e => { keys[e.code] = 0; });
 function stepCamera(dt) {
+  if (CRUISE.on) { cruiseStep(dt); placeCamera(dt); return; }
   if (DRIVE.on) { driveStep(dt); placeCamera(dt); camGuard(dt); camSmooth(dt); return; }
   if (cam.fly) {
     const f = cam.fly; f.t = Math.min(1, f.t + dt / f.dur); const e = f.t * f.t * f.t * (f.t * (6 * f.t - 15) + 10), a = f.a, b = f.b;
@@ -5941,6 +5959,141 @@ function goPreset(i, instant) {
   let daz = (b.az - a.az) % TAU; if (daz > PI) daz -= TAU; if (daz < -PI) daz += TAU;
   const arc = flyArc(a, b);
   cam.fly = { a, b: { ...b, ty: b.ty || 0 }, daz, t: 0, dur: clamp(2.2 + arc * 1.3, 2.2, 7.5), arc, then: b.tour };
+}
+
+/* ═════════════ 9c. CRUISE: a boat round the island's shore ═════════════ */
+/* A junk or a motor yacht on a fixed course 170 m off the shore, all the way round the island. The course is traced from the map of distance to the
+   shore (the one that keeps the harbour's own boats off the land); the sights are the island's districts that lie by the water, each at the nearest point
+   of the course. Like a ride: left alone the boat keeps a gentle pace, a hold anywhere is the throttle, and nothing steers. */
+const BOATSPEC = { junk: { tag: 'Junk', name: 'Junk', len: 28, cruise: 7, top: 20, acc: 1.8, camD: 66, tgt: 10, wake: 6, lean: .5, squat: .006 }, yacht: { tag: 'Yacht', name: 'Yacht', len: 26, cruise: 13, top: 34, acc: 4.5, camD: 50, tgt: 5, wake: 7, lean: 1.6, squat: .045 } };
+const CRUISE = { on: false, x: 0, z: 0, h: 0, v: 0, s: 0, dir: 1, hold: false, path: null, lines: null, mesh: {}, ln: null, spec: null, zoom: 0, azV: 0, hudT: 0, mm: 0, turn: 0 };
+function cruisePath() {
+  if (CRUISE.path) return CRUISE.path; const D = 170;
+  const grad = (x, z) => { const gx = sdAt(x + 12, z) - sdAt(x - 12, z), gz = sdAt(x, z + 12) - sdAt(x, z - 12), l = Math.hypot(gx, gz) || 1; return [gx / l, gz / l]; };
+  /* on to the line 170 m from the shore, by the slope of the distance map */
+  const settle = (x, z, n) => { for (let k = 0; k < n; k++) { const e = sdAt(x, z) + D; if (Math.abs(e) < .5) break; const g = grad(x, z); x = clamp(x - g[0] * e * .7, X0 + 30, X1 - 30); z = clamp(z - g[1] * e * .7, Z0 + 30, Z1 - 30); } return [x, z]; };
+  /* from off the Central piers, along that line with the land to the left (west first), until it comes round to where it began */
+  const c0 = SITE('ifc2') || [-3300, -3800]; let [x, z] = settle(c0[0], c0[1] - 500, 300); const P = [[x, z]], x0 = x, z0 = z; let closed = false;
+  for (let k = 0; k < 16000; k++) { const g = grad(x, z); [x, z] = settle(x - g[1] * 12, z + g[0] * 12, 4); if (k > 400 && Math.hypot(x - x0, z - z0) < 18) { closed = true; break; } P.push([x, z]); }
+  /* its corners rounded, and points set along it every 15 m */
+  let Q = P; for (let it = 0; it < 3; it++) { const o = []; for (let i = 0; i < Q.length; i++) { const a = Q[i], b = Q[(i + 1) % Q.length]; o.push([a[0] * .75 + b[0] * .25, a[1] * .75 + b[1] * .25], [a[0] * .25 + b[0] * .75, a[1] * .25 + b[1] * .75]); } Q = o; }
+  const cum = [0]; for (let i = 0; i < Q.length; i++) { const a = Q[i], b = Q[(i + 1) % Q.length]; cum.push(cum[i] + Math.hypot(b[0] - a[0], b[1] - a[1])); }
+  const L = cum[Q.length], n = Math.round(L / 15), st = L / n, pts = new Float32Array(n * 2); for (let i = 0, j = 0; i < n; i++) { const sv = i * st; while (j < Q.length - 1 && cum[j + 1] < sv) j++; const a = Q[j], b = Q[(j + 1) % Q.length], t = (sv - cum[j]) / (cum[j + 1] - cum[j] || 1); pts[i * 2] = a[0] + (b[0] - a[0]) * t; pts[i * 2 + 1] = a[1] + (b[1] - a[1]) * t; }
+  /* where the line off one stretch of shore meets the line off another it has a corner, some of them sharp: each point is put at the mean of those
+     75 m either side of it, three times over, which makes of every corner a bend a boat can take (and cuts no nearer the land than about 130 m) */
+  for (let it = 0; it < 3; it++) { const o = new Float32Array(n * 2), w = 5; for (let i = 0; i < n; i++) { let sx = 0, sz = 0; for (let q = -w; q <= w; q++) { const j = (i + q + n) % n; sx += pts[j * 2]; sz += pts[j * 2 + 1]; } o[i * 2] = sx / (2 * w + 1); o[i * 2 + 1] = sz / (2 * w + 1); } pts.set(o); }
+  /* the sights: the districts by the water, where the course passes nearest each; the Central piers first */
+  const S = [[Math.round(pts[0]), Math.round(pts[1]), 'Central Piers', 0]];
+  for (const o of LABELS.list) { if (o.kind !== 'dist' || S.some(q => q[2] === o.name)) continue; let bd = 800 * 800, bi = -1; for (let i = 0; i < n; i += 2) { const d = (pts[i * 2] - o.x) ** 2 + (pts[i * 2 + 1] - o.z) ** 2; if (d < bd) { bd = d; bi = i; } } if (bi >= 0) S.push([Math.round(pts[bi * 2]), Math.round(pts[bi * 2 + 1]), o.name, bi * st]); }
+  /* (and a few places on the shore that are no district of their own; each is put where the course passes nearest) */
+  for (const [nm, lat, lon] of [['Cyberport', 22.2615, 114.129], ['Aberdeen Channel', 22.2455, 114.1445], ['Ocean Park', 22.2335, 114.1745], ['Tai Tam Harbour', 22.233, 114.2225], ["Cape D'Aguilar", 22.2085, 114.259], ['Chai Wan', 22.2665, 114.244]]) { if (S.some(q => q[2] === nm)) continue; const o = LL(lat, lon); let bd = 1600 * 1600, bi = -1; for (let i = 0; i < n; i += 2) { const d = (pts[i * 2] - o[0]) ** 2 + (pts[i * 2 + 1] - o[1]) ** 2; if (d < bd) { bd = d; bi = i; } } if (bi >= 0) S.push([Math.round(pts[bi * 2]), Math.round(pts[bi * 2 + 1]), nm, bi * st]); }
+  S.sort((a, b) => a[3] - b[3]); for (let i = S.length - 1; i > 0; i--) if (S[i][3] - S[i - 1][3] < 450 || L - S[i][3] < 450) S.splice(i, 1);
+  const flat = []; for (let i = 0; i < n; i += 4) flat.push(Math.round(pts[i * 2]), Math.round(pts[i * 2 + 1])); flat.push(flat[0], flat[1]);
+  return (CRUISE.path = { pts, n, st, L, sights: S, flat, closed });
+}
+function cruiseAt(s) { const P = CRUISE.path, f = (((s % P.L) + P.L) % P.L) / P.st, i = Math.floor(f) % P.n, j = (i + 1) % P.n, t = f - Math.floor(f), p = P.pts; return [p[i * 2] + (p[j * 2] - p[i * 2]) * t, p[i * 2 + 1] + (p[j * 2 + 1] - p[i * 2 + 1]) * t]; }
+function cruiseLines() {
+  if (CRUISE.lines) return CRUISE.lines; const P = cruisePath(), S = P.sights, L = [], km = Math.round(P.L / 1000);
+  const mk = (veh, sg) => { const sp = BOATSPEC[veh]; L.push({ id: veh + (sg > 0 ? '-w' : '-e'), kind: 'boat', veh, loop: true, km, cdir: sg, tag: sp.tag, name: sp.name, dir: sg > 0 ? 'West first' : 'East first', sub: sg > 0 ? 'By Kennedy Town, then the south coast' : 'By North Point, then the east coast', stops: sg > 0 ? S : [S[0]].concat(S.slice(1).reverse()), path: P.flat }); };
+  mk('junk', 1); mk('junk', -1); mk('yacht', 1); mk('yacht', -1); return (CRUISE.lines = L);
+}
+/* the two boats as they were modelled in Blender (vehicles/junk.glb, vehicles/yacht.glb; boats_blend.py), brought into the scene's own prop format like the
+   Drive vehicles: fetched when a boat is first chosen on the card. Until one has come (or if it cannot be fetched) the plain one below stands in */
+function cruiseModel(kind) {
+  const Cz = CRUISE; Cz.glb = Cz.glb || {}; if (Cz.glb[kind]) return; Cz.glb[kind] = 1;
+  gltfLoader().load(vehicleURL(kind), gl => {
+    const P = [], N = [], Cc = [], A = [], I = [], _p = new THREE.Vector3(), _n = new THREE.Vector3(), nm = new THREE.Matrix3(); gl.scene.updateMatrixWorld(true);
+    gl.scene.traverse(o => { if (!o.isMesh) return; const g = o.geometry, pos = g.attributes.position, nor = g.attributes.normal, mt = Array.isArray(o.material) ? o.material[0] : o.material, base = P.length / 3; nm.getNormalMatrix(o.matrixWorld);
+      const col = mt.color || new THREE.Color(1, 1, 1), em = mt.emissive && mt.emissive.r + mt.emissive.g + mt.emissive.b > .05 ? 1.6 : 0, shiny = (mt.roughness ?? 1) < .3 ? 1 : 0;
+      for (let k = 0; k < pos.count; k++) { _p.fromBufferAttribute(pos, k).applyMatrix4(o.matrixWorld); P.push(_p.x, _p.y, _p.z); if (nor) { _n.fromBufferAttribute(nor, k).applyMatrix3(nm).normalize(); N.push(_n.x, _n.y, _n.z); } else N.push(0, 1, 0); Cc.push(col.r, col.g, col.b); A.push(em, shiny, 0, 0); }
+      if (g.index) for (let k = 0; k < g.index.count; k++) I.push(base + g.index.getX(k)); else for (let k = 0; k < pos.count; k++) I.push(base + k); });
+    const n = P.length / 3, geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(N, 3)); geo.setAttribute('aCol', new THREE.Float32BufferAttribute(Cc, 3)); geo.setAttribute('aP', new THREE.Float32BufferAttribute(A, 4));
+    geo.setAttribute('aQ', new THREE.Float32BufferAttribute(new Float32Array(n * 4), 4)); geo.setAttribute('aF', new THREE.Float32BufferAttribute(new Float32Array(n), 1)); geo.setIndex(I);
+    const mesh = new THREE.Mesh(geo, propMat), old = Cz.mesh[kind]; mesh.frustumCulled = false; mesh.matrixAutoUpdate = false; mesh.layers.enable(1); mesh.visible = !!(old && old.visible); if (old) { mesh.matrix.copy(old.matrix); mesh.matrixWorldNeedsUpdate = true; scene.remove(old); old.geometry.dispose(); }
+    scene.add(mesh); Cz.mesh[kind] = mesh; Cz.glb[kind] = 2; gl.scene.traverse(o => { if (o.isMesh) o.geometry.dispose(); });
+  }, undefined, err => { Cz.glb[kind] = 0; console.warn('boat model ' + kind + ': ' + (err && err.message)); });
+}
+/* the two boats, in the page's own blocks: model x = forward, y = 0 at the waterline */
+function cruiseBoat(kind) {
+  const g = new GB(), prism = (pts, y0, y1) => g.prism(pts, y0, y1, { cx: 0, cz: 0 });
+  if (kind === 'junk') {   /* a three-masted junk, dark timber and red battened sails */
+    const wood = C(.26, .14, .08), wood2 = C(.36, .2, .1), deck = C(.62, .46, .28), red = C(.74, .1, .06), trim = C(.55, .1, .07), dark = C(.1, .07, .05);
+    g.M(wood); prism([[14, 0], [11.5, 2.4], [5, 3.5], [-10, 3.4], [-14, 2.6], [-14, -2.6], [-10, -3.4], [5, -3.5], [11.5, -2.4]], -1.4, 1.5);
+    g.M(trim); prism([[14.2, 0], [11.6, 2.55], [5, 3.65], [-10, 3.55], [-14.2, 2.7], [-14.2, -2.7], [-10, -3.55], [5, -3.65], [11.6, -2.55]], 1.5, 1.85);
+    g.M(deck).box(-1, 1.85, 0, 17, .08, 6.6);
+    g.M(wood); prism([[14.8, 0], [12, 2.3], [8, 3.2], [8, -3.2], [12, -2.3]], 1.5, 2.9); g.M(deck).box(10.6, 2.9, 0, 4.4, .08, 4.4);   /* the bow, raised */
+    g.M(wood); prism([[-7.5, 3.5], [-14.4, 2.8], [-14.4, -2.8], [-7.5, -3.5]], 1.5, 4.3); g.M(wood2).box(-11, 4.3, 0, 7, .1, 6.2);   /* the stern castle */
+    g.M([1, .78, .45], 1.8); for (const sz of [-1, 1]) for (let q = 0; q < 4; q++) g.box(-8.6 - q * 1.5, 2.5, sz * (3.5 - q * .16), .9, .9, .1); g.box(-14.44, 2.5, 0, .1, 1, 3.6);   /* its lit windows */
+    g.M(trim).box(-11, 4.4, 3.05, 7, .7, .1).box(-11, 4.4, -3.05, 7, .7, .1).box(-14.4, 4.4, 0, .1, .7, 5.6);
+    g.M(wood2).box(-3.2, 1.93, 0, 5, 1.5, 3.4); g.M(deck).box(-3.2, 3.43, 0, 5.4, .1, 3.8); g.M(C(.86, .8, .68)); for (const sz of [-1, 1]) g.box(3.6, 1.93, sz * 1.9, 4.4, .45, 1.9);   /* a low deckhouse, and the day beds forward of it */
+    const sail = (mx, base, H, Wd, yaw) => { g.M(dark).box(mx, base, 0, .36, H + 1.2, .36); const n = 6, ph = H * .8 / n, c = Math.cos(yaw), sn = Math.sin(yaw);
+      for (let k = 0; k < n; k++) { const Lk = Wd * (1 - .05 * k) * (k === n - 1 ? .8 : 1), off = -Lk * .18 - k * .22, y = base + H * .16 + k * ph; g.M(red, .1).box(mx + off * c, y, off * sn, Lk, ph - .14, .1, yaw); g.M(dark).box(mx + off * c, y + ph - .16, off * sn, Lk + .2, .14, .2, yaw); } };
+    sail(1.5, 1.9, 17, 11, .38); sail(9.4, 2.9, 11.5, 7.5, .46); sail(-10.6, 4.4, 10, 6.5, .3);
+    g.M([1, .6, .25], 3).box(14.2, 3, 0, .3, .45, .3).box(-14.2, 5.15, 2.4, .3, .45, .3).box(-14.2, 5.15, -2.4, .3, .45, .3).box(-.7, 3.55, 1.7, .25, .4, .25).box(-.7, 3.55, -1.7, .25, .4, .25);   /* lanterns */
+  } else {   /* a flybridge motor yacht: white, a dark band of glass, a hard top on an arch */
+    const W = C(.94, .94, .92), navy = C(.07, .1, .17), glass = C(.05, .07, .09), teak = C(.6, .43, .25), cream = C(.9, .86, .76), grey = C(.68, .7, .72);
+    g.M(navy); prism([[13, 0], [9.5, 2.1], [4, 2.95], [-12.6, 3.05], [-13, 2.7], [-13, -2.7], [-12.6, -3.05], [4, -2.95], [9.5, -2.1]], -1.1, .25);
+    g.M(W); prism([[13.4, 0], [9.7, 2.2], [4, 3.05], [-12.6, 3.1], [-13, 2.75], [-13, -2.75], [-12.6, -3.1], [4, -3.05], [9.7, -2.2]], .25, 1.95);
+    g.M(teak).box(-10.4, 1.95, 0, 4.8, .07, 5.6).box(-13.7, .35, 0, 1.5, .1, 5);   /* the cockpit aft, and the bathing platform */
+    g.M(W); prism([[7, 0], [5.2, 1.85], [-8, 2.55], [-8, -2.55], [5.2, -1.85]], 1.95, 3.95);   /* the saloon */
+    g.M(glass, 0, .8).box(-1.3, 2.55, 2.32, 11.4, .95, .1, -.053).box(-1.3, 2.55, -2.32, 11.4, .95, .1, .053).box(2.6, .95, 3.0, 9, .32, .08, -.045).box(2.6, .95, -3.0, 9, .32, .08, .045); prism([[7.3, 0], [5.7, 1.62], [5.3, 1.7], [5.3, -1.7], [5.7, -1.62]], 2.55, 3.7);
+    g.M(W); prism([[3.4, 0], [2.4, 1.75], [-7.4, 2.3], [-7.4, -2.3], [2.4, -1.75]], 3.95, 4.55);   /* the flybridge */
+    g.M(glass, 0, .8); prism([[3.7, 0], [2.7, 1.55], [2.3, 1.6], [2.3, -1.6], [2.7, -1.55]], 4.55, 5.1);
+    g.M(cream).box(-.6, 4.55, 0, 2.2, .5, 2.6).box(-4.4, 4.55, 1.3, 3.4, .45, 1.2).box(-4.4, 4.55, -1.3, 3.4, .45, 1.2).box(8.3, 1.95, 0, 4.4, .28, 3);
+    g.M(W).box(-5.2, 4.55, 2.05, .5, 2, .28).box(-5.2, 4.55, -2.05, .5, 2, .28).box(-3.6, 6.5, 0, 5.4, .16, 4.7); g.M(grey).box(-4.6, 6.66, 0, .5, .35, 1.6);   /* the arch, the hard top, the radar */
+    g.M(grey); for (const sz of [-1, 1]) g.box(8.6, 2.6, sz * 2.05, 8.2, .06, .06, -sz * .2);   /* the bow rails */
+    g.M([.6, 1, .7], 2).box(6.9, 3.2, 1.2, .12, .12, .12); g.M([1, .35, .3], 2).box(6.9, 3.2, -1.2, .12, .12, .12);
+  }
+  const m = g.mesh(propMat); m.frustumCulled = false; m.matrixAutoUpdate = false; m.visible = false; m.layers.enable(1); scene.add(m); return m;
+}
+function cruiseStart(ln, si) {
+  if (DRIVE.on || DRIVE.entering || CRUISE.on) return; if (TOUR.on) stopTour(); if (FOCUS.label) exitFocus(); pinClear(); cam.fly = null; cam.tour = null;
+  const Cz = CRUISE; cruisePath(); Cz.ln = ln; Cz.spec = BOATSPEC[ln.veh]; Cz.dir = ln.cdir; Cz.s = ln.stops[si][3]; Cz.v = 0; Cz.hold = false; Cz.zoom = 0; Cz.azV = 0; Cz.turn = 0; Cz.hudT = 9; Cz.shown = '';
+  const q = cruiseAt(Cz.s), a = cruiseAt(Cz.s + 30 * Cz.dir); Cz.x = q[0]; Cz.z = q[1]; Cz.h = Math.atan2(a[1] - q[1], a[0] - q[0]);
+  for (const k in Cz.mesh) Cz.mesh[k].visible = false; (Cz.mesh[ln.veh] || (Cz.mesh[ln.veh] = cruiseBoat(ln.veh))).visible = true; cruiseModel(ln.veh); Cz.on = true;
+  cam.az = Cz.h + PI - Cz.dir * 1.1; cam.dist = Cz.spec.camD + 60; cam.pol = 70 * RAD; cam.tx = Cz.x; cam.tz = Cz.z; cam.ty = Cz.spec.tgt; cam.vaz = cam.vpol = cam.vx = cam.vz = cam.vzoom = 0;
+  document.body.classList.remove('menu', 'tp'); document.body.classList.add('cruising'); document.getElementById('rideTag').textContent = Cz.spec.tag; document.querySelector('#rideSpd small').textContent = 'knots'; document.querySelector('#tramS span').textContent = 'From ' + ln.stops[si][2];
+  ctlHint.first = false; ctlHint.show([COARSE ? 'Hold anywhere to go faster' : 'Hold the mouse, ↑ or Space to go faster'], 8000); cruiseStep(0); placeCamera(0);
+}
+function cruiseExit() {
+  const Cz = CRUISE; if (!Cz.on) return; Cz.on = false; Cz.hold = false; for (const k in Cz.mesh) Cz.mesh[k].visible = false; document.body.classList.remove('cruising'); document.querySelector('#rideSpd small').textContent = 'km/h'; ctlHint.hide();
+  flyTo({ tx: Cz.x, tz: Cz.z, dist: 1100, pol: 58 * RAD, az: cam.az, fov: 40, ty: 0, dur: 2.4 });
+}
+function cruisePointer(e) { const Cz = CRUISE; if (e.type === 'pointerdown') { Cz.hold = true; Cz.pid = e.pointerId; ctlHint.done(); } else if (Cz.pid === undefined || e.pointerId === Cz.pid) Cz.hold = false; }
+const _cm1 = new THREE.Matrix4(), _cm2 = new THREE.Matrix4();
+function cruiseStep(dt) {
+  const Cz = CRUISE, S = Cz.spec, P = Cz.path, hold = Cz.hold || keys.ArrowUp || keys.KeyW || keys.Space, vt = hold ? S.top : S.cruise;
+  Cz.v += clamp(vt - Cz.v, -2.4 * dt, (hold ? S.acc : 1.3) * dt); Cz.s = (((Cz.s + Cz.v * dt * Cz.dir) % P.L) + P.L) % P.L;
+  /* where it is, and where it heads: read 30 m on, so the course's corners come as slow turns */
+  const q = cruiseAt(Cz.s), a = cruiseAt(Cz.s + 30 * Cz.dir), dh = wrapA(Math.atan2(a[1] - q[1], a[0] - q[0]) - Cz.h), k = dt ? 1 - Math.exp(-dt * 1.6) : 1; Cz.h += dh * k; Cz.turn = lerp(Cz.turn, dh, dt ? 1 - Math.exp(-dt * 2) : 1); Cz.x = q[0]; Cz.z = q[1];
+  /* on the water: it rises and falls a little, leans into its turns, and a yacht lifts its bow as it gathers speed */
+  const t = ST.t, u = Cz.v / S.top, bob = Math.sin(t * 1.15) * .1 + Math.sin(t * .63 + 1.3) * .07, pitch = Math.sin(t * .9 + .4) * .012 + u * S.squat, roll = Math.sin(t * .78) * .02 + clamp(Cz.turn * S.lean, -.14, .14) * (.3 + u);
+  const m = Cz.mesh[Cz.ln.veh]; m.matrix.makeRotationY(-Cz.h).multiply(_cm1.makeRotationZ(pitch)).multiply(_cm2.makeRotationX(roll)); m.matrix.setPosition(Cz.x, bob - u * .12, Cz.z); m.matrixWorldNeedsUpdate = true;
+  /* the camera follows astern and above, swinging round behind the boat's heading like a weight on a spring; it keeps a little to the seaward side,
+     so that it looks across the boat at the shore (the land is to port going west first, to starboard going east first) */
+  { const w = 1.9, err = wrapA(Cz.h + PI - Cz.dir * .4 - cam.az), sdt = Math.min(dt, .05); Cz.azV += (err * w * w - 2 * w * Cz.azV) * sdt; cam.az += Cz.azV * sdt; }
+  const e3 = dt ? 1 - Math.exp(-dt * 2.2) : 1; cam.tx = Cz.x + Math.cos(Cz.h) * S.len * .35; cam.tz = Cz.z + Math.sin(Cz.h) * S.len * .35; cam.ty = S.tgt;
+  cam.dist = lerp(cam.dist, S.camD + Cz.v * .5 + Cz.zoom, e3); cam.pol = lerp(cam.pol, 77 * RAD, e3); cam.fov = lerp(cam.fov, 50 + u * 12, e3); cam.vaz = cam.vpol = cam.vx = cam.vz = cam.vzoom = 0;
+  if ((Cz.hudT += dt) > .25) { Cz.hudT = 0; cruiseHud(); } if (dt && (Cz.mm ^= 1)) cruiseMini();
+}
+function cruiseHud() {
+  const Cz = CRUISE, P = Cz.path, S = P.sights; let best = null, bd = 1e9; for (const q of S) { const d = (((q[3] - Cz.s) * Cz.dir) % P.L + P.L) % P.L; if (d < bd) { bd = d; best = q; } }
+  const txt = best ? (bd < 120 ? 'Passing ' + best[2] : 'Next: ' + best[2] + ' · ' + (bd < 1000 ? Math.max(10, Math.round(bd / 10) * 10) + ' m' : (bd / 1000).toFixed(1) + ' km')) : ''; if (txt !== Cz.shown) { Cz.shown = txt; document.querySelector('#tramS span').textContent = txt; }
+  const kn = Math.round(Cz.v * 1.944), el = document.querySelector('#rideSpd b'); if (el.textContent !== String(kn)) el.textContent = kn;
+  let near = null, nd = 1500 * 1500; for (const q of S) { const d = (q[0] - Cz.x) ** 2 + (q[1] - Cz.z) ** 2; if (d < nd) { nd = d; near = q; } } const lb = document.getElementById('cmD'), nm = near ? near[2] : 'At sea'; if (lb.textContent !== nm) lb.textContent = nm;
+}
+/* the small chart: the shore, the course ahead and the sights, turned so that the boat always points up */
+function cruiseMini() {
+  const Cz = CRUISE, cv = document.getElementById('cmC'); if (!cv.clientWidth) return; const dpr = Math.min(devicePixelRatio || 1, 2), D = Math.round(cv.clientWidth * dpr); if (cv.width !== D) cv.width = cv.height = D;
+  if (!Cz.rings) Cz.rings = G.coast.filter(r => r.length > 2).map(r => { let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9; for (const p of r) { if (p[0] < x0) x0 = p[0]; if (p[0] > x1) x1 = p[0]; if (p[1] < z0) z0 = p[1]; if (p[1] > z1) z1 = p[1]; } return { r, x0, z0, x1, z1 }; });
+  const g = cv.getContext('2d'), R = D / 2, RANGE = 1500, k = R / RANGE, P = Cz.path; g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, D, D); g.save(); g.beginPath(); g.arc(R, R, R - 1, 0, TAU); g.clip(); g.fillStyle = '#163a50'; g.fillRect(0, 0, D, D);
+  g.translate(R, R * 1.25); g.rotate(-Cz.h - PI / 2); g.scale(k, k); g.translate(-Cz.x, -Cz.z); const reach = RANGE * 1.5;
+  g.fillStyle = '#26352d'; g.strokeStyle = 'rgba(255,214,160,.45)'; g.lineWidth = 1.2 / k * dpr;
+  for (const o of Cz.rings) { if (o.x1 < Cz.x - reach || o.x0 > Cz.x + reach || o.z1 < Cz.z - reach || o.z0 > Cz.z + reach) continue; const r = o.r; g.beginPath(); g.moveTo(r[0][0], r[0][1]); for (let i = 1; i < r.length; i++) g.lineTo(r[i][0], r[i][1]); g.closePath(); g.fill(); g.stroke(); }
+  g.strokeStyle = '#6fd2ff'; g.lineWidth = 3 / k * dpr; g.lineJoin = g.lineCap = 'round'; g.beginPath(); for (let d = 0; d <= reach; d += 45) { const q = cruiseAt(Cz.s + d * Cz.dir); d ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1]); } g.stroke();
+  g.fillStyle = '#fff4df'; for (const q of P.sights) { if (Math.abs(q[0] - Cz.x) > reach || Math.abs(q[1] - Cz.z) > reach) continue; g.beginPath(); g.arc(q[0], q[1], 3.2 / k * dpr, 0, TAU); g.fill(); }
+  g.restore(); g.save(); g.translate(R, R * 1.25); g.fillStyle = '#ffb054'; g.strokeStyle = '#2a1606'; g.lineWidth = 1.5 * dpr; g.beginPath(); g.moveTo(0, -9 * dpr); g.lineTo(6 * dpr, 7 * dpr); g.lineTo(0, 3.5 * dpr); g.lineTo(-6 * dpr, 7 * dpr); g.closePath(); g.fill(); g.stroke(); g.restore();
+  { const th = -Cz.h - PI / 2 - PI / 2, nx = R + Math.cos(th) * (R - 11 * dpr), ny = R + Math.sin(th) * (R - 11 * dpr); g.fillStyle = 'rgba(9,20,28,.85)'; g.beginPath(); g.arc(nx, ny, 8 * dpr, 0, TAU); g.fill(); g.fillStyle = '#ffc46a'; g.font = '700 ' + 9 * dpr + 'px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('N', nx, ny + .5 * dpr); }
 }
 
 /* ═════════════ 10. BOOT / LOOP ═════════════ */
@@ -6048,7 +6201,7 @@ function frame(dt) {
   selectTerrain();
   skyMesh.position.copy(camera.position);
   waterMesh.position.set(Math.round(camera.position.x / 1000) * 1000, 0, Math.round(camera.position.z / 1000) * 1000);
-  const fl = _v.set(cam.tx, cam.tyS, cam.tz).clone(); updateShadows(fl, DRIVE.on && !DRIVE.garage ? 300 : cam.dist * .9 + 120);
+  const fl = _v.set(cam.tx, cam.tyS, cam.tz).clone(); updateShadows(fl, (DRIVE.on && !DRIVE.garage) || CRUISE.on ? 300 : cam.dist * .9 + 120);
   renderReflection();
   composer.render();
   ST.frame++;
@@ -6116,7 +6269,7 @@ async function boot() {
   initClock(); initPlaces();
   document.getElementById('bTour').onclick = () => { if (TOUR.on) { stopTour(); cam.fly = null; cam.tour = null; } else { plClose(); pinClear(); if (FOCUS.label) exitFocus(); startTour(); } };
   document.getElementById('tourS').onclick = e => { e.stopPropagation(); stopTour(); cam.fly = null; cam.tour = null; };
-  initRide(); document.getElementById('tramOff').onclick = e => { e.stopPropagation(); exitDrive(); }; document.getElementById('rideStopB').onclick = e => { e.stopPropagation(); busStopBtn(); };
+  initRide(); document.getElementById('tramOff').onclick = e => { e.stopPropagation(); if (CRUISE.on) cruiseExit(); else exitDrive(); }; document.getElementById('rideStopB').onclick = e => { e.stopPropagation(); busStopBtn(); };
   for (const t of ['pointerdown', 'pointerup', 'touchstart', 'mousedown', 'click']) document.getElementById('tramS').addEventListener(t, e => e.stopPropagation(), { passive: true });
   document.getElementById('bLabels').onclick = e => { LABELS.on = !LABELS.on; e.currentTarget.classList.toggle('on', LABELS.on); };
   document.getElementById('bMore').onclick = () => document.body.classList.toggle('menu');
@@ -6128,7 +6281,7 @@ async function boot() {
   hooks.push(() => { DYN.uTraffic.value = ST.traffic * Q.traffic; DYN.uPx.value = 2 * Math.tan(camera.fov * RAD / 2) / renderer.getDrawingBufferSize(_sz).y; });
   requestAnimationFrame(t => { lastT = t; loop(t); bootDone(); }); setTimeout(bootDone, 1500);   /* (the screen lifts once the first picture is drawn; the timer is for a tab in the background) */
 }
-window.__hk = {
+window.__hk = { CRUISE, sd: (x, z) => sdAt(x, z), cruisePath: () => cruisePath(),
   THREE, TRAMS, TOD, TOUR, LABELS, HAND, GOVX, setTime, startTour, stopTour, viewHash, flyTo, scene, camera, renderer, cam, U, ST, L, ROADS, DAMS, LAKES, LL, SH, STATS, BI, FA, G, SITES, PATHS, CITY, get GEO() { return GEO; },
   get terr() { return terr; }, QUALS, resize, get composer() { return composer; }, get scenePass() { return scenePass; }, NEAR, hooks, hAt: (x, z) => hAt(x, z), pick: (x, y) => pickGround(x, y), GS, FOCUS, DRIVE, keys, HIT, PROPS, TRAFS, B3D, dPlan, navStart, navRoute, navPlaces, dPaths, get TRAF() { return TRAF; }, trafAt, goPreset, setLight, setQuality,
   pose(o) { userInput(); Object.assign(cam, o); cam.vaz = cam.vpol = cam.vx = cam.vz = cam.vzoom = 0; placeCamera(0); },
