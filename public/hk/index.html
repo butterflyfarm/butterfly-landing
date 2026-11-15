@@ -500,6 +500,7 @@
   <div id="more">
     <div class="mr"><button id="bLabels" class="on" title="Place names on or off">Place names</button><button id="bQ" title="How much detail is drawn">High</button></div>
     <label class="mr">Traffic<input id="sTraf" type="range" min="0" max="100" value="70"></label>
+    <div class="mr"><button id="bMusic" type="button" class="on" aria-pressed="true" title="Background music, on or off">Music on</button></div>
     <div class="mr"><button id="bHelp" type="button" title="What each touch does">Controls</button><button id="bInfo" type="button" title="Who made this, and where its data comes from">Information</button></div>
     <div class="mr"><button id="tpSh" type="button" class="on" aria-pressed="true" title="Shadows cast by the sun, on or off">Shadows on</button><button id="bLink" title="Copy a link to this view">Copy link</button></div>
   </div>
@@ -6482,6 +6483,113 @@ function cruiseMini() {
   { const th = -Cz.h - PI / 2 - PI / 2, nx = R + Math.cos(th) * (R - 11 * dpr), ny = R + Math.sin(th) * (R - 11 * dpr); g.fillStyle = 'rgba(9,20,28,.85)'; g.beginPath(); g.arc(nx, ny, 8 * dpr, 0, TAU); g.fill(); g.fillStyle = '#ffc46a'; g.font = '700 ' + 9 * dpr + 'px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('N', nx, ny + .5 * dpr); }
 }
 
+/* ═════════════ 9d. MUSIC: made as it plays ═════════════ */
+/* No recording: the page makes the music itself (Web Audio), so there is nothing to fetch. A bright pop song without words, 124 beats a minute, in D: a verse
+   (eight bars), four bars that climb, and a chorus played twice, round and round after four bars of introduction. The plucked instruments (a guitar that
+   strums the chords, a bass, and the one that carries the tune, an octave doubled) are not plain electronic tones but modelled strings: a burst of noise
+   going round a delay as long as one wave of the note, losing its brightness each time round, as a plucked string does (`mKS`; each note is worked out once
+   and kept). Under them strings, a small bell on the tune in the chorus, and drums with handclaps. (The tune is this page's own: no song is quoted, and
+   nothing is sung.) The beat is there in every mode, lighter over the map and at sea, full when driving or riding. It begins with the first touch (a
+   browser lets no page make a sound before one; with a phone's silent switch on there is none at all) and can be put off in More (kept in `hk-music`); it
+   stops while the page is hidden. `musicBar` writes one bar ahead of where the music has got to */
+const MUSIC = { on: true, ctx: null, n: null, ks: {}, t: 0, bar: 0, tm: 0, pulse: 0, seed: 20261116, pat: 0, vol: .6 };
+const mR = M => { M.seed = (M.seed * 16807) % 2147483647; return M.seed / 2147483647; };   /* (its own dice: the scene's are not disturbed, and a test hears the same piece twice) */
+const M_TR = 2, M_BPM = 124, mHz = n => 440 * Math.pow(2, (n + M_TR - 69) / 12);   /* (written in C, played a tone higher) */
+/* the chords: the bass note, and the four strings the guitar plays, low to high */
+const M_CH = { C: { b: 36, p: [48, 55, 60, 64] }, Em7: { b: 40, p: [52, 59, 62, 67] }, F: { b: 41, p: [53, 57, 60, 64] }, G: { b: 43, p: [55, 59, 62, 67] }, Am7: { b: 45, p: [57, 60, 64, 67] }, Dm7: { b: 38, p: [50, 57, 60, 65] } };
+/* verse, climb and chorus: a chord to each bar, and the tune as [eighth note it begins on, how many it lasts, the note]; `alt`: what the second chorus ends on, to lead back to the verse */
+const M_SEC = [
+  { ch: ['C', 'Em7', 'F', 'G', 'C', 'Em7', 'F', 'G'], mel: [[0, 1, 67], [1, 1, 69], [2, 2, 72], [4, 1, 72], [5, 1, 74], [6, 2, 76], [8, 3, 74], [11, 1, 71], [12, 3, 67], [16, 1, 69], [17, 1, 72], [18, 2, 74], [20, 1, 72], [21, 1, 74], [22, 2, 76], [24, 3, 74], [27, 1, 76], [28, 3, 74],
+    [32, 1, 67], [33, 1, 69], [34, 2, 72], [36, 1, 72], [37, 1, 74], [38, 2, 76], [40, 3, 79], [43, 1, 76], [44, 3, 74], [48, 1, 69], [49, 1, 72], [50, 2, 74], [52, 1, 76], [53, 1, 79], [54, 2, 81], [56, 4, 79], [60, 2, 74]] },
+  { ch: ['Am7', 'F', 'Dm7', 'G'], mel: [[0, 1, 76], [1, 1, 76], [2, 1, 79], [3, 2, 76], [5, 1, 74], [6, 2, 72], [8, 1, 76], [9, 1, 76], [10, 1, 81], [11, 2, 79], [13, 1, 76], [14, 2, 72], [16, 1, 77], [17, 1, 77], [18, 1, 81], [19, 2, 77], [21, 1, 74], [22, 2, 77], [24, 2, 79], [26, 2, 81], [28, 2, 83], [30, 2, 86]] },
+  { ch: ['F', 'G', 'Em7', 'Am7', 'F', 'G', 'C', 'C'], alt: { 58: 74 }, mel: [[0, 1, 76], [1, 1, 79], [2, 2, 81], [4, 1, 79], [5, 3, 76], [8, 1, 74], [9, 1, 76], [10, 2, 79], [12, 1, 76], [13, 3, 74], [16, 1, 76], [17, 1, 79], [18, 2, 83], [20, 1, 79], [21, 3, 76], [24, 1, 72], [25, 1, 74], [26, 2, 76], [28, 2, 79], [30, 2, 81],
+    [32, 2, 84], [34, 1, 81], [35, 1, 79], [36, 2, 81], [38, 2, 79], [40, 1, 74], [41, 1, 76], [42, 2, 79], [44, 2, 83], [46, 2, 86], [48, 3, 84], [51, 1, 81], [52, 2, 79], [54, 2, 76], [56, 1, 74], [57, 1, 76], [58, 4, 72]] }];
+const M_INTRO = ['F', 'G', 'C', 'G'];
+/* the plucked strings: how long the note is kept, how bright the pluck (1: bare noise), where along the string it is plucked, how fast the brightness goes (.5: fastest), and the seconds it rings */
+const M_KS = { gtr: { dur: 1.5, br: .6, pick: .2, s: .5, t60: 2 }, mute: { dur: .22, br: .45, pick: .2, s: .5, t60: .16 }, lead: { dur: 1.7, br: .9, pick: .13, s: .4, t60: 2.4 }, bass: { dur: .9, br: .3, pick: .3, s: .5, t60: 1.1 } };
+/* what the voices play into: a dry path and a room (noise dying away over 1.8 s, as an impulse), an echo a dotted eighth note long, a path for each instrument (its place
+   from left to right, how much of the room and of the echo it has), and the master, which starts silent */
+function musicBuild(M, ctx) {
+  const out = ctx.createGain(); out.gain.value = 0; const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 4; comp.attack.value = .006; comp.release.value = .2; out.connect(comp); comp.connect(ctx.destination);
+  const len = Math.floor(ctx.sampleRate * 1.8), ir = ctx.createBuffer(2, len, ctx.sampleRate); for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (mR(M) * 2 - 1) * Math.pow(1 - i / len, 2.2); }
+  const rev = ctx.createConvolver(); rev.buffer = ir; const wet = ctx.createGain(); wet.gain.value = .6; rev.connect(wet); wet.connect(out); const dry = ctx.createGain(); dry.connect(out); const send = ctx.createGain(); send.connect(rev);
+  const dl = ctx.createDelay(1), fb = ctx.createGain(), dlp = ctx.createBiquadFilter(); dl.delayTime.value = 45 / M_BPM; fb.gain.value = .25; dlp.type = 'lowpass'; dlp.frequency.value = 2600; dl.connect(dlp); dlp.connect(fb); fb.connect(dl); dlp.connect(dry); dlp.connect(send);
+  const nz = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 1.5), ctx.sampleRate), nd = nz.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = mR(M) * 2 - 1;
+  const bus = (pan, room, echo) => { const g = ctx.createGain(); let o = g; if (pan && ctx.createStereoPanner) { o = ctx.createStereoPanner(); o.pan.value = pan; g.connect(o); } o.connect(dry); for (const [amt, to] of [[room, send], [echo, dl]]) if (amt) { const w = ctx.createGain(); w.gain.value = amt; o.connect(w); w.connect(to); } return g; };
+  M.ctx = ctx; M.ks = {}; M.n = { out, nz, gtr: bus(-.4, .2), lead: bus(0, .3, .28), bell: bus(.4, .4, .25), bass: bus(0, 0), pad: bus(0, .5), drum: bus(0, .06), clap: bus(.12, .35), hat: bus(-.15, .05) };
+}
+/* a plucked string at note n, worked out once: noise (dulled for a softer pluck, and with the notch that plucking part-way along the string makes) fills one wave's length, and then goes
+   round and round, each sample the weighted mean of the two a wave back. The loop is a whole number of samples long, so the note comes out a shade flat or sharp: `rate` plays it back in tune */
+function mKS(M, n, kind) { const key = kind + n; if (M.ks[key]) return M.ks[key];
+  const ctx = M.ctx, sr = ctx.sampleRate, f = mHz(n), K = M_KS[kind], N = Math.max(4, Math.floor(sr / f)), len = Math.floor(sr * K.dur), d = new Float32Array(len), ex = new Float32Array(N); let lp = 0, mean = 0, pk = 0;
+  for (let i = 0; i < N; i++) { lp += K.br * (mR(M) * 2 - 1 - lp); ex[i] = lp; } const pp = Math.max(1, Math.round(N * K.pick)); for (let i = 0; i < N; i++) { d[i] = ex[i] - .8 * ex[(i + N - pp) % N]; mean += d[i] / N; } for (let i = 0; i < N; i++) d[i] -= mean;
+  const g = Math.pow(10, -3 * N / (sr * K.t60)); for (let i = N; i < len; i++) d[i] = g * ((1 - K.s) * d[i - N] + K.s * d[Math.max(0, i - N - 1)]);
+  for (let i = 0; i < len; i++) if (Math.abs(d[i]) > pk) pk = Math.abs(d[i]); const fade = Math.floor(sr * .03); for (let i = 0; i < len; i++) d[i] = Math.tanh(d[i] / (pk || 1) * 2.5) * (i > len - fade ? (len - i) / fade : 1);   /* (the pluck's first spike is rounded off, so that the ringing after it is not small beside it) */
+  const buf = ctx.createBuffer(1, len, sr); buf.getChannelData(0).set(d); return M.ks[key] = { buf, rate: f * (N + K.s) / sr }; }
+/* (play one: `dur` stops it early, as a finger does) */
+function mPl(M, t, n, kind, vel, bus, dur) { const ctx = M.ctx, k = mKS(M, n, kind), s = ctx.createBufferSource(), g = ctx.createGain(); s.buffer = k.buf; s.playbackRate.value = k.rate; g.gain.setValueAtTime(vel, t); if (dur) { g.gain.setValueAtTime(vel, t + dur); g.gain.linearRampToValueAtTime(0, t + dur + .05); } s.connect(g); g.connect(bus); s.start(t); if (dur) s.stop(t + dur + .06); }
+/* (a strum: the strings one after another, 11 ms apart; downwards all four from the lowest, upwards the top three from the highest) */
+function mStrum(M, t, notes, vel, up, kind, dur) { const ns = up ? notes.slice(1).reverse() : notes; ns.forEach((n, i) => mPl(M, t + i * .011, n, kind, vel * (1 - i * .08), M.n.gtr, dur)); }
+const mOsc = (ctx, type, f, det) => { const o = ctx.createOscillator(); o.type = type; o.frequency.value = f; if (det) o.detune.value = det; return o; };
+/* the strings under it all: two slightly mistuned saw waves to a note behind a filter that opens through the bar; brighter in the chorus, with the top two notes doubled an octave up */
+function mPad(M, t, notes, dur, bright) { const ctx = M.ctx, voices = []; for (const n of notes.slice(1)) voices.push([n, -7, 1], [n, 6, 1]); if (bright) voices.push([notes[2] + 12, 4, .6], [notes[3] + 12, -3, .6]);
+  for (const [n, det, lv] of voices) { const o = mOsc(ctx, 'sawtooth', mHz(n), det), f = ctx.createBiquadFilter(), g = ctx.createGain(), lo = bright ? 900 : 600, hi = bright ? 2600 : 1500; f.type = 'lowpass'; f.Q.value = .4;
+    f.frequency.setValueAtTime(lo, t); f.frequency.linearRampToValueAtTime(hi, t + dur * .6); f.frequency.linearRampToValueAtTime(lo, t + dur + .5);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.02 * lv, t + .25); g.gain.setValueAtTime(.02 * lv, t + dur - .1); g.gain.linearRampToValueAtTime(0, t + dur + .5); o.connect(f); f.connect(g); g.connect(M.n.pad); o.start(t); o.stop(t + dur + .55); } }
+/* (a small bell: a pure tone with the two overtones a struck metal bar has, the higher ones gone sooner) */
+function mBell(M, t, n, vel) { const ctx = M.ctx, f = mHz(n); for (const [r, lv, d] of [[1, 1, 1.1], [2.76, .28, .5], [5.4, .1, .25]]) { const o = mOsc(ctx, 'sine', f * r), g = ctx.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vel * lv, t + .003); g.gain.exponentialRampToValueAtTime(.0004, t + d); o.connect(g); g.connect(M.n.bell); o.start(t); o.stop(t + d + .02); } }
+/* the drums, all of noise and falling tones: `type`/`f` the filter the noise goes through, `d` the seconds it lasts */
+function mNoise(M, t, dur, type, f, q) { const ctx = M.ctx, b = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), g = ctx.createGain(); b.buffer = M.n.nz; b.loop = true; fl.type = type; fl.frequency.value = f; fl.Q.value = q || .7; b.connect(fl); fl.connect(g); b.start(t, mR(M) * 1.2); b.stop(t + dur + .02); return [g, fl]; }
+function mHat(M, t, vel, open) { const d = open ? .2 : .045, [g] = mNoise(M, t, d, 'highpass', 7200); g.gain.setValueAtTime(.06 * vel, t); g.gain.exponentialRampToValueAtTime(.0004, t + d); g.connect(M.n.hat); }
+function mShk(M, t, vel) { const [g] = mNoise(M, t, .07, 'bandpass', 8500, 1.2); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.035 * vel, t + .012); g.gain.exponentialRampToValueAtTime(.0004, t + .065); g.connect(M.n.hat); }
+function mKick(M, t, vel) { const ctx = M.ctx, o = mOsc(ctx, 'sine', 160), g = ctx.createGain(); o.frequency.setValueAtTime(165, t); o.frequency.exponentialRampToValueAtTime(48, t + .11); g.gain.setValueAtTime(.5 * vel, t); g.gain.exponentialRampToValueAtTime(.001, t + .28); o.connect(g); g.connect(M.n.drum); o.start(t); o.stop(t + .3);
+  const [c] = mNoise(M, t, .012, 'lowpass', 3500); c.gain.setValueAtTime(.12 * vel, t); c.gain.exponentialRampToValueAtTime(.001, t + .012); c.connect(M.n.drum); }
+/* (a handclap: three quick bursts and a tail, as several hands not quite together) */
+function mClap(M, t, vel) { const [g] = mNoise(M, t, .2, 'bandpass', 1350, 1.1), v = .22 * vel; for (const o of [0, .011, .023]) { g.gain.setValueAtTime(v, t + o); g.gain.exponentialRampToValueAtTime(v * .25, t + o + .009); } g.gain.setValueAtTime(v, t + .033); g.gain.exponentialRampToValueAtTime(.0005, t + .19); g.connect(M.n.clap); }
+function mSnare(M, t, vel) { const ctx = M.ctx, [g] = mNoise(M, t, .16, 'highpass', 1400), o = mOsc(ctx, 'sine', 200), og = ctx.createGain(); g.gain.setValueAtTime(.16 * vel, t); g.gain.exponentialRampToValueAtTime(.0005, t + .15); o.frequency.setValueAtTime(205, t); o.frequency.exponentialRampToValueAtTime(150, t + .08); og.gain.setValueAtTime(.14 * vel, t); og.gain.exponentialRampToValueAtTime(.001, t + .1);
+  g.connect(M.n.clap); o.connect(og); og.connect(M.n.clap); o.start(t); o.stop(t + .12); }
+function mCrash(M, t, vel) { const [g] = mNoise(M, t, 1.4, 'highpass', 5200); g.gain.setValueAtTime(.07 * vel, t); g.gain.exponentialRampToValueAtTime(.0004, t + 1.4); g.connect(M.n.clap); }
+/* (a hiss that rises, in pitch and loudness, through the bar before the chorus) */
+function mRise(M, t, dur) { const [g, f] = mNoise(M, t, dur, 'bandpass', 900, 1.5); f.frequency.setValueAtTime(900, t); f.frequency.exponentialRampToValueAtTime(7000, t + dur); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.05, t + dur); g.gain.linearRampToValueAtTime(0, t + dur + .02); g.connect(M.n.clap); }
+/* one bar, beginning at t: four bars of introduction (the guitar alone, then the drums), then round and round: verse (8 bars), climb (4), chorus (8), chorus (8). `only` (a test's) lets one instrument be heard by itself */
+function musicBar(M, t) {
+  const p = M.pulse, b = 60 / M_BPM, e = b / 2, k = M.bar - 4, intro = k < 0, r = intro ? 0 : k % 28, si = intro ? 2 : r < 8 ? 0 : r < 12 ? 1 : 2, bi = intro ? k + 4 : !si ? r : si === 1 ? r - 8 : (r - 12) & 7, rep = r >= 20, S = M_SEC[si];
+  if (!bi) M.pat = Math.floor(mR(M) * 2);
+  const name = intro ? M_INTRO[bi] : rep && bi === 7 ? 'G' : S.ch[bi], ch = M_CH[name], dv = .4 + .3 * p, on = v => !M.only || M.only === v, T = s => t + s * e, last = !intro && bi === S.ch.length - 1;
+  if (on('pad') && !intro) mPad(M, t, ch.p, 4 * b, si === 2);
+  if (on('gtr')) {
+    if (!si) { mStrum(M, t, ch.p, .17, false, 'gtr', 3 * e); const O = M.pat ? [0, 1, 2, 3, 2, 1, 2, 3] : [0, 2, 1, 2, 3, 2, 1, 2]; for (let s = 1; s < 8; s++) mPl(M, T(s), ch.p[O[s]], 'mute', s & 1 ? .3 : .38, M.n.gtr); }   /* (verse: the chord once, then single damped notes) */
+    else if (si === 1) for (let s = 0; s < 8; s++) mStrum(M, T(s), ch.p, (.11 + .028 * bi) * (s & 1 ? .8 : 1), false, 'gtr', 1.4 * e);   /* (climb: every eighth note, louder bar by bar) */
+    else for (const [s, kind, v] of M.pat ? [[0, 'd', 1], [1, 'x', .5], [2, 'u', .7], [3, 'x', .5], [4, 'd', .85], [5, 'u', .7], [6, 'x', .5], [7, 'u', .75]] : [[0, 'd', 1], [1, 'x', .5], [2, 'd', .75], [3, 'u', .7], [4, 'x', .5], [5, 'u', .75], [6, 'd', .85], [7, 'u', .7]])
+      kind === 'x' ? mStrum(M, T(s), ch.p, .24 * v, true, 'mute') : mStrum(M, T(s), ch.p, .19 * v, kind === 'u', 'gtr', (kind === 'u' ? 1.3 : 2) * e); }
+  if (on('bass') && !(intro && bi < 2)) { const bv = .18 * (.8 + .2 * p);
+    if (!si) for (const [s, d, up] of [[0, 2.6, 0], [3, .9, 0], [4, 1.8, 0], [6, .9, 7], [7, .9, 12]]) mPl(M, T(s), ch.b + up, 'bass', bv * (s ? .85 : 1), M.n.bass, d * e);
+    else for (let s = 0; s < 8; s++) mPl(M, T(s), ch.b + (si === 2 && (s & 1) ? 12 : 0), 'bass', bv * (s & 1 ? .8 : 1), M.n.bass, .9 * e); }
+  if (on('lead') && !intro) for (const [s, n, note] of S.mel) if (s >> 3 === bi) { const nn = (rep && S.alt && S.alt[s]) || note, d = n >= 3 ? 0 : n * e * 1.05, v = .85 + .15 * mR(M); mPl(M, T(s & 7), nn, 'lead', .42 * v, M.n.lead, d); mPl(M, T(s & 7), nn - 12, 'lead', .2 * v, M.n.lead, d); if (si === 2) mBell(M, T(s & 7), nn, .09 * v); }
+  if (on('drum')) {
+    if (intro && bi < 2) for (let s = 0; s < 8; s++) mHat(M, T(s), dv * (s & 1 ? 1 : .6));
+    else { for (const s of !si ? (bi & 1 ? [0, 3, 4, 5] : [0, 4, 5]) : [0, 2, 4, 6]) mKick(M, T(s), dv * (s === 3 || s === 5 ? .7 : 1)); for (const s of [2, 6]) { mClap(M, T(s), dv); if (si) mSnare(M, T(s), dv * .7); }
+      for (let s = 0; s < 8; s++) mHat(M, T(s), dv * (s & 1 ? 1 : .6), si === 2 && (s & 1) > 0); if (si === 2 || p > .5) for (let s = 0; s < 16; s++) mShk(M, t + s * e / 2, dv * (s & 3 ? .6 : 1));
+      if (si === 2 && !bi && !intro) mCrash(M, t, dv);
+      if (si === 1 && bi === 3 || intro && bi === 3) { for (const [s, v] of [[0, .3], [1, .35], [2, .4], [3, .45], [4, .5], [4.5, .5], [5, .6], [5.5, .6], [6, .7], [6.5, .75], [7, .85], [7.5, 1]]) mSnare(M, T(s), dv * v); mRise(M, t, 4 * b); }
+      else if (last) { mSnare(M, T(7), dv * .5); mSnare(M, T(7.5), dv * .7); } } }
+  M.t = t + 4 * b; M.bar++;
+}
+function musicTick() { const M = MUSIC, c = M.ctx; if (!c || c.state !== 'running') return; M.pulse = lerp(M.pulse, DRIVE.on && !DRIVE.garage ? 1 : 0, .5); if (M.t < c.currentTime) M.t = c.currentTime + .1; while (M.t < c.currentTime + 1.2) musicBar(M, M.t); }
+function musicStart() { const M = MUSIC; if (!M.on) return; try { if (!M.ctx) { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return; musicBuild(M, new AC()); M.t = M.ctx.currentTime + .15; M.tm = setInterval(musicTick, 250); }
+    const c = M.ctx; if (c.state !== 'running') c.resume(); const g = M.n.out.gain; g.cancelScheduledValues(c.currentTime); g.setValueAtTime(g.value, c.currentTime); g.linearRampToValueAtTime(M.vol, c.currentTime + 3); } catch (e) { /* no sound on this device */ } }
+function musicStop() { const M = MUSIC, c = M.ctx; if (!c) return; try { const g = M.n.out.gain; g.cancelScheduledValues(c.currentTime); g.setValueAtTime(g.value, c.currentTime); g.linearRampToValueAtTime(0, c.currentTime + .6); setTimeout(() => { if (!M.on || document.hidden) c.suspend(); }, 750); } catch (e) { /* no sound */ } }
+function initMusic() {
+  const M = MUSIC, b = document.getElementById('bMusic'); try { M.on = localStorage.getItem('hk-music') !== '0'; } catch (e) { /* storage blocked */ }
+  const show = () => { b.classList.toggle('on', M.on); b.setAttribute('aria-pressed', M.on ? 'true' : 'false'); b.textContent = M.on ? 'Music on' : 'Music off'; }; show();
+  b.onclick = () => { M.on = !M.on; try { localStorage.setItem('hk-music', M.on ? '1' : '0'); } catch (e) { /* storage blocked */ } show(); M.on ? musicStart() : musicStop(); };
+  /* (a phone's Safari lets sound begin when a finger is lifted, on a click or a key, not when the finger goes down; the same touches start it again after a call has stopped it) */
+  const touch = () => { if (M.on && !document.hidden && (!M.ctx || M.ctx.state !== 'running')) musicStart(); }; for (const ev of ['pointerup', 'touchend', 'click', 'keydown']) addEventListener(ev, touch, true);
+  document.addEventListener('visibilitychange', () => { if (!M.ctx) return; if (document.hidden) musicStop(); else if (M.on) musicStart(); });
+}
+/* (for a check from outside: the piece written into a buffer from bar `bar0` on, not played, all of it or `only` one instrument (`nbars`: that many bars and no more, at full loudness from the start, so that a long stretch can be made in pieces and joined), and what it measures: how loud each second is, and the loudest sample) */
+async function musicTest(sec, pulse, bar0, only, nbars) { const OC = window.OfflineAudioContext || window.webkitOfflineAudioContext, c = new OC(2, Math.floor(44100 * sec), 44100), M = { seed: 20261116, ks: {}, pat: 0, only, bar: bar0 || 0, t: .1, pulse: pulse || 0 }; musicBuild(M, c); if (nbars) M.n.out.gain.value = MUSIC.vol; else { M.n.out.gain.setValueAtTime(0, 0); M.n.out.gain.linearRampToValueAtTime(MUSIC.vol, 3); } while (M.t < sec && (!nbars || M.bar < (bar0 || 0) + nbars)) musicBar(M, M.t);
+  const buf = await c.startRendering(); musicTest.buf = buf; const L = buf.getChannelData(0), R = buf.getChannelData(1), rms = []; let peak = 0, bad = 0; for (let s = 0; s < sec; s++) { let q = 0; for (let i = s * 44100; i < (s + 1) * 44100; i++) { const v = (L[i] + R[i]) / 2; q += v * v; if (Math.abs(L[i]) > peak) peak = Math.abs(L[i]); if (L[i] !== L[i]) bad++; } rms.push(+Math.sqrt(q / 44100).toFixed(4)); } return { bars: M.bar, peak: +peak.toFixed(3), bad, rms }; }
 /* ═════════════ 10. BOOT / LOOP ═════════════ */
 /* ---------- planar reflection of the island in the sea (reduced resolution; quality setting turns it down or off) ---------- */
 const REFL = { rt: null, cam: new THREE.PerspectiveCamera(), k: 0 };
@@ -6655,7 +6763,7 @@ async function boot() {
   initClock(); initPlaces();
   document.getElementById('bTour').onclick = () => { if (TOUR.on) { stopTour(); cam.fly = null; cam.tour = null; } else { plClose(); pinClear(); if (FOCUS.label) exitFocus(); startTour(); } };
   document.getElementById('tourS').onclick = e => { e.stopPropagation(); stopTour(); cam.fly = null; cam.tour = null; };
-  initRide(); initHelp(); document.getElementById('cBoost').onclick = e => { e.stopPropagation(); if (CRUISE.on) cruiseBoost(); else if (DRIVE.bus) busBoost(); }; document.getElementById('tramOff').onclick = e => { e.stopPropagation(); if (CRUISE.on) cruiseExit(); else exitDrive(); }; document.getElementById('rideStopB').onclick = e => { e.stopPropagation(); busStopBtn(); };
+  initRide(); initHelp(); initMusic(); document.getElementById('cBoost').onclick = e => { e.stopPropagation(); if (CRUISE.on) cruiseBoost(); else if (DRIVE.bus) busBoost(); }; document.getElementById('tramOff').onclick = e => { e.stopPropagation(); if (CRUISE.on) cruiseExit(); else exitDrive(); }; document.getElementById('rideStopB').onclick = e => { e.stopPropagation(); busStopBtn(); };
   for (const t of ['pointerdown', 'pointerup', 'touchstart', 'mousedown', 'click']) document.getElementById('tramS').addEventListener(t, e => e.stopPropagation(), { passive: true });
   document.getElementById('bLabels').onclick = e => { LABELS.on = !LABELS.on; e.currentTarget.classList.toggle('on', LABELS.on); };
   document.getElementById('bMore').onclick = () => document.body.classList.toggle('menu');
@@ -6669,7 +6777,7 @@ async function boot() {
   hooks.push(() => { DYN.uTraffic.value = ST.traffic * Q.traffic; DYN.uPx.value = 2 * Math.tan(camera.fov * RAD / 2) / renderer.getDrawingBufferSize(_sz).y; });
   requestAnimationFrame(t => { lastT = t; loop(t); bootDone(); }); setTimeout(bootDone, 1500);   /* (the screen lifts once the first picture is drawn; the timer is for a tab in the background) */
 }
-window.__hk = { CRUISE, RIDE, busPlanTest: async (ln, from) => { if (!DRIVE.on || !DRIVE.ready || !DRIVE.car) return null; const keep = DRIVE.bus, B = DRIVE.bus = { ln, from, li: 0, legs: null, wait: 0, at: from, hudT: 0, shown: '' }, s0 = ln.stops[from]; let ok = false; try { DRIVE.hereXZ = [s0[0], s0[1]]; dStart('here'); ok = await busPlan(B); } catch (e) { B.err = String(e && e.message || e); } railOff(); DRIVE.bus = keep; return { ok, legs: B.legs ? B.legs.map(l => l.stop) : null, brk: B.brk || null, err: B.err || null }; }, sd: (x, z) => sdAt(x, z), cruisePath: () => cruisePath(),
+window.__hk = { CRUISE, MUSIC, musicTest, RIDE, busPlanTest: async (ln, from) => { if (!DRIVE.on || !DRIVE.ready || !DRIVE.car) return null; const keep = DRIVE.bus, B = DRIVE.bus = { ln, from, li: 0, legs: null, wait: 0, at: from, hudT: 0, shown: '' }, s0 = ln.stops[from]; let ok = false; try { DRIVE.hereXZ = [s0[0], s0[1]]; dStart('here'); ok = await busPlan(B); } catch (e) { B.err = String(e && e.message || e); } railOff(); DRIVE.bus = keep; return { ok, legs: B.legs ? B.legs.map(l => l.stop) : null, brk: B.brk || null, err: B.err || null }; }, sd: (x, z) => sdAt(x, z), cruisePath: () => cruisePath(),
   THREE, TRAMS, TOD, TOUR, LABELS, HAND, GOVX, setTime, startTour, stopTour, viewHash, flyTo, scene, camera, renderer, cam, U, ST, L, ROADS, DAMS, LAKES, LL, SH, STATS, BI, FA, G, SITES, PATHS, CITY, get GEO() { return GEO; },
   get terr() { return terr; }, QUALS, resize, get composer() { return composer; }, get scenePass() { return scenePass; }, NEAR, hooks, hAt: (x, z) => hAt(x, z), pick: (x, y) => pickGround(x, y), GS, FOCUS, DRIVE, keys, HIT, PROPS, TRAFS, B3D, dPlan, navStart, navRoute, navPlaces, dPaths, get TRAF() { return TRAF; }, trafAt, goPreset, setLight, setQuality,
   pose(o) { userInput(); Object.assign(cam, o); cam.vaz = cam.vpol = cam.vx = cam.vz = cam.vzoom = 0; placeCamera(0); },
