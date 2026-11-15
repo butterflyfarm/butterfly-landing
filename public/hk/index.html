@@ -3278,7 +3278,7 @@ function makeHarbour() {
   for (let k = 0; k < Math.min(6, SITES.beaches.length); k++) { const b = SITES.beaches[k], l = bayLoop([b[0], b[1]], 180 + k * 40); if (l) route('yacht', l, 6 + R() * 5, { loop: true, L: 14, wake: .6 }); }
   /* typhoon shelters: moored craft packed behind the surveyed breakwaters and along the Aberdeen channel */
   const moor = (cx, cz, rad, n, yf, far = 220) => { let put = 0; for (let t = 0; t < n * 6 && put < n; t++) { const a = R() * TAU, rr = Math.sqrt(R()) * rad, x = cx + Math.cos(a) * rr, z = cz + Math.sin(a) * rr; if (!inDom(x, z)) continue; const sd = sdAt(x, z); if (sd > -9 || sd < -far) continue;
-    const ty = R() < yf ? 'yacht' : R() < .25 ? 'fishing' : 'sampan'; if (M[ty].n >= M[ty].cap) continue; const gx = sdAt(x + 8, z) - sdAt(x - 8, z), gz = sdAt(x, z + 8) - sdAt(x, z - 8); yawSet(M[ty], M[ty].add(), x, 0, z, Math.atan2(gz, gx) + PI / 2 + (R() - .5) * .3 + (R() < .5 ? PI : 0)); put++; } };
+    const ty = R() < yf ? 'yacht' : R() < .25 ? 'fishing' : 'sampan'; if (M[ty].n >= M[ty].cap) continue; const gx = sdAt(x + 8, z) - sdAt(x - 8, z), gz = sdAt(x, z + 8) - sdAt(x, z - 8); yawSet(M[ty], M[ty].add(), x, 0, z, Math.atan2(gz, gx) + PI / 2 + (R() - .5) * .3 + (R() < .5 ? PI : 0)); (BOATS.moored || (BOATS.moored = [])).push(x, z, ty === 'sampan' ? 4.5 : 7); put++; } };
   for (const b of PATHS.bw) moor(b[0], b[1], 330, 80, .2);
   { const cb = SITE('cbts'); moor(cb[0], cb[1], Math.max(cb[3], cb[4]) * .5, 240, .45, 400); }
   { let ax = 1e9, bx = -1e9, az = 1e9; const alc = G.coast.reduce((a, b) => { const c = polyCen(b), d = Math.hypot(c[0] - SITE('leitung')[0], c[1] - SITE('leitung')[1]); return d < a[0] ? [d, b] : a; }, [1e9, null])[1]; for (const p of alc) { ax = Math.min(ax, p[0]); bx = Math.max(bx, p[0]); az = Math.min(az, p[1]); }
@@ -3973,9 +3973,11 @@ function rideSet(li, keep) { const L = cardLines(); RIDE.li = (li + L.length) % 
   ridePick(si); }
 function ridePick(si) { const ln = cardLines()[RIDE.li], n = ln.stops.length; RIDE.si = ln.loop ? ((si % n) + n) % n : clamp(si, 0, n - 2);   /* (a course that goes round has no first or last: past the last comes the first again) */ const q = ln.stops[RIDE.si]; document.getElementById('rideStop').textContent = q[2] || 'Stop'; document.getElementById('rideGo0').textContent = 'From the start · ' + (ln.stops[0][2] || 'the first stop');
   document.getElementById('rideSub').textContent = ln.loop ? 'All the way round: ' + ln.km + ' km' : (n - 1 - RIDE.si) + (n - 1 - RIDE.si === 1 ? ' stop' : ' stops') + ' to ' + (ln.stops[n - 1][2] || 'the end of the line'); rideDraw(); }
+/* the card's map: the island; for a boat, room round it for the course as well, which lies out beyond the island's own box */
+function rideXf(cv) { const ln = cardLines()[RIDE.li]; if (!ln || ln.kind !== 'boat') return plXf(cv); const B = plBox(), m = 560, x0 = B[0] - m, z0 = B[1] - m, x1 = B[2] + m, z1 = B[3] + m, w = cv.clientWidth, h = cv.clientHeight, k = Math.min(w / (x1 - x0), h / (z1 - z0)); return { k, ox: (w - (x1 - x0) * k) / 2 - x0 * k, oz: (h - (z1 - z0) * k) / 2 - z0 * k, w, h }; }
 function rideDraw() {
   const cv = document.getElementById('rideMap'); if (!cv || !cv.clientWidth) return; const dpr = Math.min(devicePixelRatio || 1, 2), W = Math.round(cv.clientWidth * dpr), H = Math.round(cv.clientHeight * dpr); if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
-  const g = cv.getContext('2d'), T = plXf(cv), X = x => x * T.k + T.ox, Z = z => z * T.k + T.oz, ln = cardLines()[RIDE.li]; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.fillStyle = '#163a50'; g.fillRect(0, 0, T.w, T.h);
+  const g = cv.getContext('2d'), T = rideXf(cv), X = x => x * T.k + T.ox, Z = z => z * T.k + T.oz, ln = cardLines()[RIDE.li]; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.fillStyle = '#163a50'; g.fillRect(0, 0, T.w, T.h);
   g.fillStyle = '#26352d'; g.strokeStyle = 'rgba(255,214,160,.35)'; g.lineWidth = 1; for (const r of G.coast) { if (r.length < 3) continue; g.beginPath(); g.moveTo(X(r[0][0]), Z(r[0][1])); for (let i = 1; i < r.length; i++) g.lineTo(X(r[i][0]), Z(r[i][1])); g.closePath(); g.fill(); g.stroke(); }
   /* the line: faint where it is behind the chosen stop, bright from there on */
   const P = ln.path, stroke = (col, w) => { g.strokeStyle = col; g.lineWidth = w; g.lineJoin = g.lineCap = 'round'; g.beginPath(); g.moveTo(X(P[0]), Z(P[1])); for (let i = 2; i < P.length; i += 2) g.lineTo(X(P[i]), Z(P[i + 1])); g.stroke(); };
@@ -3989,7 +3991,7 @@ function initRide() {
   const q = id => document.getElementById(id), card = q('ride'); q('bRide').onclick = () => rideOpen('ride'); q('bCruise').onclick = () => rideOpen('cruise'); q('rideX').onclick = () => rideClose(); q('rideGo').onclick = () => rideGo(); q('rideGo0').onclick = () => { ridePick(0); rideGo(); }; q('ridePrev').onclick = () => ridePick(RIDE.si - 1); q('rideNextS').onclick = () => ridePick(RIDE.si + 1); q('rideBack').onclick = () => rideView('list'); q('rideQ').addEventListener('input', rideRows);
   for (const t of ['pointerdown', 'pointerup', 'pointermove', 'touchstart', 'mousedown', 'wheel']) card.addEventListener(t, e => e.stopPropagation(), { passive: true });
   card.addEventListener('click', e => { if (e.target === card) rideClose(); });
-  q('rideMap').addEventListener('click', e => { const cv = e.currentTarget, r = cv.getBoundingClientRect(), T = plXf(cv), px = e.clientX - r.left, pz = e.clientY - r.top, ln = cardLines()[RIDE.li]; let best = -1, bd = 34; ln.stops.forEach((s, i) => { const d = Math.hypot(s[0] * T.k + T.ox - px, s[1] * T.k + T.oz - pz); if (d < bd) { bd = d; best = i; } }); if (best >= 0) ridePick(best); });
+  q('rideMap').addEventListener('click', e => { const cv = e.currentTarget, r = cv.getBoundingClientRect(), T = rideXf(cv), px = e.clientX - r.left, pz = e.clientY - r.top, ln = cardLines()[RIDE.li]; let best = -1, bd = 34; ln.stops.forEach((s, i) => { const d = Math.hypot(s[0] * T.k + T.ox - px, s[1] * T.k + T.oz - pz); if (d < bd) { bd = d; best = i; } }); if (best >= 0) ridePick(best); });
   addEventListener('keydown', e => { if (!document.body.classList.contains('rideopen')) return; if (e.target && e.target.id === 'rideQ') { e.stopPropagation(); if (e.code === 'Escape') { e.preventDefault(); if (e.target.value) { e.target.value = ''; rideRows(); } else rideClose(); } return; }   /* (typing: none of the page's own keys) */
     if (RIDE.view === 'list' && RIDE.mode === 'ride') { if (e.code === 'Escape') { rideClose(); e.preventDefault(); } e.stopPropagation(); return; } if (e.code === 'Escape') { if (RIDE.mode === 'ride') rideView('list'); else rideClose(); } else if (e.code === 'ArrowLeft') ridePick(RIDE.si - 1); else if (e.code === 'ArrowRight') ridePick(RIDE.si + 1); else if (e.code === 'Enter') rideGo(); else return; e.preventDefault(); e.stopPropagation(); }, true);
   addEventListener('resize', () => { if (document.body.classList.contains('rideopen')) rideDraw(); });
@@ -6239,42 +6241,100 @@ function goPreset(i, instant) {
 }
 
 /* ═════════════ 9c. CRUISE: a boat round the island's shore ═════════════ */
-/* A junk or a motor yacht, of one speed, on a fixed course 170 m off the shore, all the way round the island. The course is traced from the map of distance
-   to the shore (the one that keeps the harbour's own boats off the land); the sights are piers and named places on the water's edge, each at the nearest
-   point of the course. Nothing steers: left alone the boat keeps a good pace, Boost (a button, or Space) is full speed on or off, and the screen is the
+/* A junk or a motor yacht, of one speed, on a fixed course all the way round the island: well out (430 m from the shore, across the mouths of the bays),
+   in long bends, clear of the piers, the breakwaters and what is moored, and close in at three places only: Central Pier 9, the mouth of Aberdeen's harbour
+   and Blake Pier at Stanley. The course is traced from the map of distance to the shore (the one that keeps the harbour's own boats off the land); the sights
+   are piers and named places on the water's edge, each at the nearest point of the course (those more than 1.5 km from it are not on the list). Nothing steers: left alone the boat keeps a good pace, Boost (a button, or Space) is full speed on or off, and the screen is the
    view's: it begins to seaward of the boat, looking across it at the shore, and a drag turns it about the boat. */
 const BOATSPEC = { junk: { tag: 'Junk', name: 'Junk', len: 28, cruise: 18, top: 42, acc: 5, camD: 66, tgt: 10, wake: 6, lean: .5, squat: .006 }, yacht: { tag: 'Yacht', name: 'Yacht', len: 26, cruise: 18, top: 42, acc: 5, camD: 50, tgt: 5, wake: 7, lean: 1.6, squat: .045 } };
 const CRUISE = { on: false, x: 0, z: 0, h: 0, v: 0, s: 0, dir: 1, boost: false, path: null, lines: null, mesh: {}, ln: null, spec: null, azV: 0, hudT: 0, mm: 0, turn: 0, caz: 0, cpol: 1.38, zf: 1, hc: 0, ptr: new Map(), tap: null, pd: 0 };
 function cruisePath() {
-  if (CRUISE.path) return CRUISE.path; const D = 170;
-  const grad = (x, z) => { const gx = sdAt(x + 12, z) - sdAt(x - 12, z), gz = sdAt(x, z + 12) - sdAt(x, z - 12), l = Math.hypot(gx, gz) || 1; return [gx / l, gz / l]; };
-  /* on to the line 170 m from the shore, by the slope of the distance map */
-  const settle = (x, z, n) => { for (let k = 0; k < n; k++) { const e = sdAt(x, z) + D; if (Math.abs(e) < .5) break; const g = grad(x, z); x = clamp(x - g[0] * e * .7, X0 + 30, X1 - 30); z = clamp(z - g[1] * e * .7, Z0 + 30, Z1 - 30); } return [x, z]; };
-  /* from off the Central piers, along that line with the land to the left (west first), until it comes round to where it began */
-  const c0 = SITE('ifc2') || [-3300, -3800]; let [x, z] = settle(c0[0], c0[1] - 500, 300); const P = [[x, z]], x0 = x, z0 = z; let closed = false;
-  for (let k = 0; k < 16000; k++) { const g = grad(x, z); [x, z] = settle(x - g[1] * 12, z + g[0] * 12, 4); if (k > 400 && Math.hypot(x - x0, z - z0) < 18) { closed = true; break; } P.push([x, z]); }
-  /* its corners rounded, and points set along it every 15 m */
-  let Q = P; for (let it = 0; it < 3; it++) { const o = []; for (let i = 0; i < Q.length; i++) { const a = Q[i], b = Q[(i + 1) % Q.length]; o.push([a[0] * .75 + b[0] * .25, a[1] * .75 + b[1] * .25], [a[0] * .25 + b[0] * .75, a[1] * .25 + b[1] * .75]); } Q = o; }
-  const cum = [0]; for (let i = 0; i < Q.length; i++) { const a = Q[i], b = Q[(i + 1) % Q.length]; cum.push(cum[i] + Math.hypot(b[0] - a[0], b[1] - a[1])); }
-  const L = cum[Q.length], n = Math.round(L / 15), st = L / n, pts = new Float32Array(n * 2); for (let i = 0, j = 0; i < n; i++) { const sv = i * st; while (j < Q.length - 1 && cum[j + 1] < sv) j++; const a = Q[j], b = Q[(j + 1) % Q.length], t = (sv - cum[j]) / (cum[j + 1] - cum[j] || 1); pts[i * 2] = a[0] + (b[0] - a[0]) * t; pts[i * 2 + 1] = a[1] + (b[1] - a[1]) * t; }
-  /* where the line off one stretch of shore meets the line off another it has a corner, some of them sharp: each point is put at the mean of those
-     75 m either side of it, three times over, which makes of every corner a bend a boat can take (and cuts no nearer the land than about 130 m) */
-  for (let it = 0; it < 3; it++) { const o = new Float32Array(n * 2), w = 5; for (let i = 0; i < n; i++) { let sx = 0, sz = 0; for (let q = -w; q <= w; q++) { const j = (i + q + n) % n; sx += pts[j * 2]; sz += pts[j * 2 + 1]; } o[i * 2] = sx / (2 * w + 1); o[i * 2 + 1] = sz / (2 * w + 1); } pts.set(o); }
+  if (CRUISE.path) return CRUISE.path; const DF = 430, DMIN = 150, DSTOP = 85;   /* (DMIN is also the tightest the course turns round a headland: a line kept that far off a point of land goes round it on a circle of that radius) */
+  /* the line to follow: DF metres from the shore; or, where the map ends nearer the shore than twice that (off Green Island, and south of Stanley's point),
+     about midway between the shore and the map's edge. `F` is nought on it, less than nought to seaward. (Not `the shore's line or the edge's, whichever is
+     farther in`: that makes one line of the north and east coasts and the map's edge, and another of the west and south coasts) */
+  /* (and round the three places the boat calls close in, the line is nearer the shore: least at the place, and back to DF over a kilometre or so. Off Aberdeen
+     170 m and no less: nearer than that the line would turn in at the harbour's mouth, between the island and Ap Lei Chau, where there is no room to turn) */
+  const bell = u => u < 1 ? .5 * (1 + Math.cos(PI * u)) : 0, SO = [];   /* (each [x, z, how near the shore, how far the drawing-in reaches]: found below, from the plain line) */
+  const near = (x, z, k = 1) => { let w = 0; for (const q of SO) w = Math.max(w, bell(Math.hypot(x - q[0], z - q[1]) / (q[3] * k))); return w; };
+  const F = (x, z) => { let d = DF; for (const q of SO) { const b = bell(Math.hypot(x - q[0], z - q[1]) / q[3]); if (b > 0) d = Math.min(d, DF - (DF - q[2]) * b); } return sdAt(x, z) + Math.min(d, Math.min(x - X0, X1 - x, z - Z0, Z1 - z) - 40); };
+  const grad = (x, z) => { const gx = F(x + 12, z) - F(x - 12, z), gz = F(x, z + 12) - F(x, z - 12), l = Math.hypot(gx, gz) || 1; return [gx / l, gz / l]; };
+  /* on to that line, by the slope of F */
+  const settle = (x, z, n) => { for (let k = 0; k < n; k++) { const e = F(x, z); if (Math.abs(e) < .5) break; const g = grad(x, z); x = clamp(x - g[0] * e * .7, X0 + 20, X1 - 20); z = clamp(z - g[1] * e * .7, Z0 + 20, Z1 - 20); } return [x, z]; };
+  /* what stands in the water beyond the shore's own line: the piers (an outline, or a walkway 5 m wide) and the breakwaters (9 m wide), and what is moored.
+     `clr(x, z, nd)` is how far a point is from the nearest of the shore and those, when nd is the room wanted; a moored boat counts as far enough at 30 m
+     whatever the room wanted (they lie in clusters, and a line kept 150 m off each one of them is full of dents) */
+  const WL = [], addW = (q, closed, r) => { if (q.length < 2) return; let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9; for (const v of q) { if (v[0] < x0) x0 = v[0]; if (v[0] > x1) x1 = v[0]; if (v[1] < z0) z0 = v[1]; if (v[1] > z1) z1 = v[1]; } WL.push({ q, closed, r, x0, z0, x1, z1 }); };
+  for (const q of G.piers) addW(q, !!q.flag && q.length > 2, q.flag ? 0 : 2.5); for (const q of G.breakwaters) addW(q, false, 4.5);
+  const wallD = (px, pz) => { let best = 500; for (const w of WL) { if (px < w.x0 - best || px > w.x1 + best || pz < w.z0 - best || pz > w.z1 + best) continue; const q = w.q, m = q.length; let bd = 1e18;
+      for (let i = 0, e = w.closed ? m : m - 1; i < e; i++) { const u = q[i], v = q[(i + 1) % m], ux = v[0] - u[0], uz = v[1] - u[1], t = clamp(((px - u[0]) * ux + (pz - u[1]) * uz) / (ux * ux + uz * uz || 1), 0, 1), d = (px - u[0] - ux * t) ** 2 + (pz - u[1] - uz * t) ** 2; if (d < bd) bd = d; }
+      let d = Math.sqrt(bd) - w.r; if (w.closed && inPoly(px, pz, q)) d = -d; if (d < best) best = d; } return best; };
+  const MG = new Map(), Mo = BOATS.moored || []; for (let i = 0; i < Mo.length; i += 3) { const k = Math.floor(Mo[i] / 200) * 4096 + Math.floor(Mo[i + 1] / 200); let c = MG.get(k); if (!c) MG.set(k, c = []); c.push(i); }
+  const moorD = (px, pz) => { let best = 200; const cx = Math.floor(px / 200), cz = Math.floor(pz / 200); for (let dx = -1; dx <= 1; dx++) for (let dz = -1; dz <= 1; dz++) { const c = MG.get((cx + dx) * 4096 + cz + dz); if (!c) continue; for (const i of c) { const d = Math.hypot(px - Mo[i], pz - Mo[i + 1]) - Mo[i + 2]; if (d < best) best = d; } } return best; };
+  const clr = (x, z, nd = DMIN) => Math.min(-sdAt(x, z), wallD(x, z), moorD(x, z) + nd - 30);
+  const cgrad = (x, z, nd) => { const gx = clr(x + 12, z, nd) - clr(x - 12, z, nd), gz = clr(x, z + 12, nd) - clr(x, z - 12, nd), l = Math.hypot(gx, gz) || 1; return [gx / l, gz / l]; };   /* (the way to more room) */
+  /* a closed line of points [x, z, x, z, ...] set anew at even steps of about 15 m; and each point put at the mean of those w either side of it, `times` over */
+  const even = A => { const m = A.length / 2, cum = [0]; for (let i = 0; i < m; i++) { const j = (i + 1) % m; cum.push(cum[i] + Math.hypot(A[j * 2] - A[i * 2], A[j * 2 + 1] - A[i * 2 + 1])); } const L = cum[m], n = Math.round(L / 15), st = L / n, o = new Float32Array(n * 2);
+    for (let i = 0, j = 0; i < n; i++) { const sv = i * st; while (j < m - 1 && cum[j + 1] < sv) j++; const k = (j + 1) % m, t = (sv - cum[j]) / (cum[j + 1] - cum[j] || 1); o[i * 2] = A[j * 2] + (A[k * 2] - A[j * 2]) * t; o[i * 2 + 1] = A[j * 2 + 1] + (A[k * 2 + 1] - A[j * 2 + 1]) * t; } return { pts: o, n, st, L }; };
+  const smooth = (A, w, times) => { const m = A.length / 2; for (let it = 0; it < times; it++) { const o = new Float32Array(m * 2); let sx = 0, sz = 0; for (let q = -w; q <= w; q++) { const j = (q + m) % m; sx += A[j * 2]; sz += A[j * 2 + 1]; }
+      for (let i = 0; i < m; i++) { o[i * 2] = sx / (2 * w + 1); o[i * 2 + 1] = sz / (2 * w + 1); const out = (i - w + m) % m, inn = (i + w + 1) % m; sx += A[inn * 2] - A[out * 2]; sz += A[inn * 2 + 1] - A[out * 2 + 1]; } A.set(o); } };
+  /* 1. the line DF from the shore, from off the Central piers with the land to the left (west first) until it comes round to where it began. It is well out: it
+        cuts across the mouths of the bays and goes outside Ap Lei Chau, Middle Island and the breakwaters */
+  const c0 = SITE('ifc2') || [-3300, -3800]; let closed = false;
+  const trace = () => { let [x, z] = settle(c0[0], c0[1] - 800, 300); const P = [x, z], x0 = x, z0 = z; closed = false; for (let k = 0; k < 16000; k++) { const g = grad(x, z); [x, z] = settle(x - g[1] * 12, z + g[0] * 12, 4); if (k > 400 && Math.hypot(x - x0, z - z0) < 18) { closed = true; break; } P.push(x, z); } return P; };
+  let P = trace();
+  /* 1b. the three places the boat calls close in: Central Pier 9, Aberdeen, Blake Pier at Stanley. From each towards the plain line's nearest point, the first
+         spot with room enough (the piers stand out from the shore, and Aberdeen's shelter lies up a channel too narrow to turn in: its spot is off the
+         channel's western mouth). The line is drawn in round that spot, over 1.6 times the way out to the plain line, so that the way in is open water */
+  for (const [lat, lon, ds] of [[22.28606, 114.16261, 110], [22.2464, 114.152, 170], [22.21741, 114.21016, 110]]) { const o = LL(lat, lon); let bd = 1e18, bi = 0; for (let i = 0; i < P.length; i += 2) { const d = (P[i] - o[0]) ** 2 + (P[i + 1] - o[1]) ** 2; if (d < bd) { bd = d; bi = i; } }
+    const len = Math.sqrt(bd), ux = (P[bi] - o[0]) / len, uz = (P[bi + 1] - o[1]) / len; let t = 0; while (t < len - 20 && !(sdAt(o[0] + ux * t, o[1] + uz * t) <= -(ds + 15) && clr(o[0] + ux * t, o[1] + uz * t, DSTOP + 12) >= DSTOP + 12)) t += 10;
+    SO.push([o[0] + ux * t, o[1] + uz * t, ds, Math.max(900, (len - t) * 1.6)]); }
+  P = trace();
+  /* 2. made smooth: where the line off one stretch of shore meets the line off another it has a corner. Each point is put at the mean of those 450 m either
+        side of it, four times over: no corner is left, only long bends, and it no longer turns in at every small bay. By the three places, where the line is close in and such a mean would carry it over a
+        headland, the mean is of 90 m either side, twice; and between the two it is a mix of both */
+  let E = even(P), pts = E.pts, n = E.n; { const A1 = pts.slice(), A2 = pts.slice(); smooth(A1, 30, 4); smooth(A2, 6, 2); for (let i = 0; i < n; i++) { const w = near(pts[i * 2], pts[i * 2 + 1], 1.2); pts[i * 2] = A1[i * 2] * (1 - w) + A2[i * 2] * w; pts[i * 2 + 1] = A1[i * 2 + 1] * (1 - w) + A2[i * 2 + 1] * w; } }
+  /* 3. room: no point nearer than DMIN to the shore, a pier or a breakwater (DSTOP by the three places), moved out the way that gives more room, and the line
+        smoothed a little after each round so that what was moved leaves no kink */
+  const need = new Float32Array(n); for (let i = 0; i < n; i++) need[i] = near(pts[i * 2], pts[i * 2 + 1], .8) > .15 ? DSTOP : DMIN;
+  for (let it = 0; it < 12; it++) { let moved = 0; for (let i = 0; i < n; i++) { const px = pts[i * 2], pz = pts[i * 2 + 1], nd = need[i] + 8, c = clr(px, pz, nd); if (c >= nd) continue; const g = cgrad(px, pz, nd), m = Math.min(nd - c, 45); pts[i * 2] = clamp(px + g[0] * m, X0 + 40, X1 - 40); pts[i * 2 + 1] = clamp(pz + g[1] * m, Z0 + 40, Z1 - 40); moved++; } if (!moved) break; smooth(pts, 4, 1); }
+  /* 4. hooks: an arm of the line that goes into a small bay and straight out again (the two ends of a stretch of 300 m to 1.5 km lie less than a third of its
+        length apart) is cut off, the line going straight across its foot, if there is room along that. Not by the three places, where going in is the point */
+  for (let i = 0; i < n; i++) { if (need[i] === DSTOP) continue; let bj = -1, gain = 0; for (let j = i + 20; j <= i + 100; j++) { const k = j % n; if (need[k] === DSTOP) break; const d = Math.hypot(pts[k * 2] - pts[i * 2], pts[k * 2 + 1] - pts[i * 2 + 1]), al = (j - i) * 15; if (d < al * .33 && al - d > gain) { gain = al - d; bj = j; } }
+    if (bj < 0) continue; const k = bj % n, ax = pts[i * 2], az = pts[i * 2 + 1], bx = pts[k * 2], bz = pts[k * 2 + 1]; let ok = true; for (let t = 0; t <= 1 && ok; t += .1) if (clr(ax + (bx - ax) * t, az + (bz - az) * t, DMIN) < DMIN) ok = false; if (!ok) continue;
+    for (let j = i + 1; j < bj; j++) { const t = (j - i) / (bj - i), q = j % n; pts[q * 2] = ax + (bx - ax) * t; pts[q * 2 + 1] = az + (bz - az) * t; } i = bj; }
+  /* 5. bends: where the line still turns in less than 200 m (measured over 60 m either way), that stretch (600 m either side of it: its two arms must give as
+        well, or it stays as sharp between them) is smoothed again, and given its room back */
+  for (let it = 0; it < 14; it++) { const mark = new Uint8Array(n); let any = 0; for (let i = 0; i < n; i++) { const a = ((i - 4) % n + n) % n, c = (i + 4) % n, px = pts[i * 2], pz = pts[i * 2 + 1], ax = pts[a * 2] - px, az = pts[a * 2 + 1] - pz, cx = pts[c * 2] - px, cz = pts[c * 2 + 1] - pz, cr = Math.abs(ax * cz - az * cx), r = cr < 1e-6 ? 1e9 : Math.hypot(ax, az) * Math.hypot(cx, cz) * Math.hypot(ax - cx, az - cz) / (2 * cr);
+      if (r < 200) { any++; for (let j = -40; j <= 40; j++) mark[((i + j) % n + n) % n] = 1; } } if (!any) break;
+    const o = pts.slice(), w = 12; for (let i = 0; i < n; i++) { if (!mark[i]) continue; let sx = 0, sz = 0; for (let j = -w; j <= w; j++) { const k = ((i + j) % n + n) % n; sx += pts[k * 2]; sz += pts[k * 2 + 1]; } o[i * 2] = sx / (2 * w + 1); o[i * 2 + 1] = sz / (2 * w + 1); } pts.set(o);
+    for (let i = 0; i < n; i++) { if (!mark[i]) continue; const px = pts[i * 2], pz = pts[i * 2 + 1], nd = need[i], c = clr(px, pz, nd); if (c >= nd) continue; const g = cgrad(px, pz, nd), m = Math.min(nd - c, 30); pts[i * 2] = px + g[0] * m; pts[i * 2 + 1] = pz + g[1] * m; } }
+  const stops = SO.map(q => { let bd = 1e18; for (let i = 0; i < n; i++) bd = Math.min(bd, (pts[i * 2] - q[0]) ** 2 + (pts[i * 2 + 1] - q[1]) ** 2); return [0, 0, Math.round(Math.sqrt(bd))]; });
+  /* 6. points at even steps again (drawing it in and moving it out stretched some of them apart) */
+  E = even(pts); pts = E.pts; n = E.n; const st = E.st, L = E.L;
+  const vmax = new Float32Array(n); { const rad = new Float32Array(n); for (let i = 0; i < n; i++) { const a = ((i - 4) % n + n) % n, c = (i + 4) % n, px = pts[i * 2], pz = pts[i * 2 + 1], ax = pts[a * 2] - px, az = pts[a * 2 + 1] - pz, cx = pts[c * 2] - px, cz = pts[c * 2 + 1] - pz, cr = Math.abs(ax * cz - az * cx); rad[i] = cr < 1e-6 ? 1e9 : Math.hypot(ax, az) * Math.hypot(cx, cz) * Math.hypot(ax - cx, az - cz) / (2 * cr); }
+    /* (3 m/s2 sideways at the most: 42 m/s round 590 m, 18 m/s round 108 m; the least radius within 180 m either way, so that the boat has slowed by the time it is there) */
+    for (let i = 0; i < n; i++) { let r = 1e9; for (let j = -12; j <= 12; j++) r = Math.min(r, rad[((i + j) % n + n) % n]); vmax[i] = Math.sqrt(3 * r); } }
+  /* what it comes to, for whoever checks it: the least room anywhere, and the tightest bend (the radius of the circle through points 60 m apart) */
+  const stat = { room: 1e9, wall: 1e9, moor: 1e9, bend: 1e9, stops: stops.map(q => q[2]) };
+  for (let i = 0; i < n; i++) { const px = pts[i * 2], pz = pts[i * 2 + 1]; stat.room = Math.min(stat.room, -sdAt(px, pz)); stat.wall = Math.min(stat.wall, wallD(px, pz)); stat.moor = Math.min(stat.moor, moorD(px, pz));
+    const a = ((i - 4) % n + n) % n, c = (i + 4) % n, ax = pts[a * 2] - px, az = pts[a * 2 + 1] - pz, cx = pts[c * 2] - px, cz = pts[c * 2 + 1] - pz, cr = Math.abs(ax * cz - az * cx), r = cr < 1e-6 ? 1e9 : Math.hypot(ax, az) * Math.hypot(cx, cz) * Math.hypot(ax - cx, az - cz) / (2 * cr); if (r < stat.bend) stat.bend = r; }
   /* the boarding points: the piers and landings on the shore, and where a stretch of shore has none, a named place on the water's edge (a beach, a
      wharf, a promenade, a typhoon shelter). Names and positions are OpenStreetMap's; each is put where the course passes nearest it, and the list
      begins at Central Pier 9 and goes on westward */
   const S = [];
   for (const [nm, lat, lon] of [['Central Pier 9', 22.2861, 114.1626], ['Macau Ferry Terminal', 22.2887, 114.1521], ['Western District Cargo Working Area', 22.2876, 114.1319], ["China Merchants Wharf", 22.2829, 114.1222],
-    ['Sai Wan Swimming Shed', 22.28, 114.1174], ['Sandy Bay Swimming Shed', 22.2711, 114.1212], ['Cyberport Waterfront Park', 22.2574, 114.1309], ['Kellett Bay Waterfront', 22.2489, 114.1387], ['Aberdeen West Typhoon Shelter', 22.2464, 114.152],
+    ['Sai Wan Swimming Shed', 22.28, 114.1174], ['Sandy Bay Swimming Shed', 22.2711, 114.1212], ['Cyberport Waterfront Park', 22.2574, 114.1309], ['Kellett Bay Waterfront', 22.2489, 114.1387], ['Aberdeen', 0, 0],
     ['Ocean Park Tai Shue Wan Pier', 22.2347, 114.1673], ['Deep Water Bay Beach', 22.24447, 114.18728], ['Middle Island Ferry Pontoon', 22.236, 114.185], ['Repulse Bay Beach', 22.23665, 114.19594], ['South Bay Beach', 22.22495, 114.19759],
     ['Chung Hom Kok Beach', 22.2177, 114.20208], ['Blake Pier at Stanley', 22.2174, 114.2102], ["St. Stephen's Beach", 22.21262, 114.21487], ['Turtle Cove Beach', 22.23308, 114.22335], ['Tai Tam Bay Pier', 22.2388, 114.2258],
     ["Cape D'Aguilar", 22.2085, 114.259], ['Shek O Beach', 22.22889, 114.25115], ['Big Wave Bay Beach', 22.24643, 114.24729], ['Siu Sai Wan Promenade', 22.2665, 114.2509], ['Chai Wan Cargo Working Area', 22.2696, 114.2436],
     ['Sai Wan Ho Ferry Pier', 22.2864, 114.2241], ['Quarry Bay Promenade', 22.2907, 114.214], ['North Point Ferry Pier', 22.2941, 114.2018], ['Causeway Bay Typhoon Shelter', 22.2851, 114.1862], ['Wan Chai Pier', 22.2834, 114.1762]]) {
-    const o = LL(lat, lon); let bd = 1500 * 1500, bi = -1; for (let i = 0; i < n; i++) { const d = (pts[i * 2] - o[0]) ** 2 + (pts[i * 2 + 1] - o[1]) ** 2; if (d < bd) { bd = d; bi = i; } } if (bi >= 0) S.push([Math.round(pts[bi * 2]), Math.round(pts[bi * 2 + 1]), nm, bi * st, Math.round(Math.sqrt(bd))]); }
-  S.sort((a, b) => a[3] - b[3]); for (let i = S.length - 1; i > 0; i--) if (S[i][3] - S[i - 1][3] < 300) S.splice(i, 1);
+    const o = nm === 'Aberdeen' ? [SO[1][0], SO[1][1]] : LL(lat, lon); let bd = 1500 * 1500, bi = -1; for (let i = 0; i < n; i++) { const d = (pts[i * 2] - o[0]) ** 2 + (pts[i * 2 + 1] - o[1]) ** 2; if (d < bd) { bd = d; bi = i; } } if (bi >= 0) S.push([Math.round(pts[bi * 2]), Math.round(pts[bi * 2 + 1]), nm, bi * st, Math.round(Math.sqrt(bd))]); }
+  /* (of two that fall within 300 m of each other along the course one goes: never one of the three places the boat calls close in at, else the one farther from its place) */
+  { const keep = q => /^(Central Pier 9|Aberdeen|Blake Pier at Stanley)$/.test(q[2]); S.sort((a, b) => a[3] - b[3]); for (let i = S.length - 1; i > 0; i--) if (S[i][3] - S[i - 1][3] < 300) S.splice(keep(S[i]) || (!keep(S[i - 1]) && S[i][4] < S[i - 1][4]) ? i - 1 : i, 1); }
   { const k = S.findIndex(q => q[2] === 'Central Pier 9'); if (k > 0) S.push(...S.splice(0, k)); }
   const flat = []; for (let i = 0; i < n; i += 4) flat.push(Math.round(pts[i * 2]), Math.round(pts[i * 2 + 1])); flat.push(flat[0], flat[1]);
-  return (CRUISE.path = { pts, n, st, L, sights: S, flat, closed });
+  return (CRUISE.path = { pts, n, st, L, sights: S, flat, closed, stat, vmax });
 }
 function cruiseAt(s) { const P = CRUISE.path, f = (((s % P.L) + P.L) % P.L) / P.st, i = Math.floor(f) % P.n, j = (i + 1) % P.n, t = f - Math.floor(f), p = P.pts; return [p[i * 2] + (p[j * 2] - p[i * 2]) * t, p[i * 2 + 1] + (p[j * 2 + 1] - p[i * 2 + 1]) * t]; }
 function cruiseLines() {
@@ -6362,7 +6422,7 @@ function cruisePointer(e) {
 }
 const _cm1 = new THREE.Matrix4(), _cm2 = new THREE.Matrix4();
 function cruiseStep(dt) {
-  const Cz = CRUISE, S = Cz.spec, P = Cz.path, fast = Cz.boost || keys.ArrowUp || keys.KeyW, vt = fast ? S.top : S.cruise;
+  const Cz = CRUISE, S = Cz.spec, P = Cz.path, fast = Cz.boost || keys.ArrowUp || keys.KeyW, vt = Math.min(fast ? S.top : S.cruise, Math.max(8, P.vmax[Math.floor(Cz.s / P.st) % P.n]));   /* (it slows for the course's closer turns) */
   Cz.v += clamp(vt - Cz.v, -4 * dt, (fast ? S.acc : 2) * dt); Cz.s = (((Cz.s + Cz.v * dt * Cz.dir) % P.L) + P.L) % P.L;
   /* where it is, and where it heads: read a little way on (more the faster it goes), so the course's corners come as slow turns */
   const q = cruiseAt(Cz.s), a = cruiseAt(Cz.s + Math.max(30, Cz.v * 1.1) * Cz.dir), dh = wrapA(Math.atan2(a[1] - q[1], a[0] - q[0]) - Cz.h), k = dt ? 1 - Math.exp(-dt * 1.6) : 1; Cz.h += dh * k; Cz.turn = lerp(Cz.turn, dh, dt ? 1 - Math.exp(-dt * 2) : 1); Cz.x = q[0]; Cz.z = q[1];
