@@ -15,7 +15,7 @@
     background:rgba(9,20,28,.58);border:1px solid rgba(255,196,128,.28);border-radius:9px;
     -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
     color:#f3d9b4;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;opacity:.62;transition:opacity .5s;
-    max-width:calc(100vw - 16px);box-sizing:border-box}
+    max-width:calc(100vw - 16px);box-sizing:border-box;z-index:6}
   #ui:hover,#ui:focus-within{opacity:1}
   body.photo #ui,body.photo #cr{opacity:0;pointer-events:none}
   #cr{position:fixed;right:8px;bottom:6px;font-size:9px;letter-spacing:.04em;color:rgba(255,236,208,.5);text-shadow:0 0 3px rgba(0,0,0,.6);transition:opacity .5s}
@@ -219,13 +219,15 @@
   #hint span{display:inline-block;white-space:nowrap;margin:0 .75em}
   /* the two big buttons, side by side at the foot of the view: Drive, and Places */
   #bigs{position:fixed;z-index:5;left:max(16px,env(safe-area-inset-left));bottom:calc(max(14px,env(safe-area-inset-bottom)) + 2px);display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;max-width:calc(100vw - 32px);transition:opacity .6s}
-  /* (two rows: Drive, Cruise and Ride; under them Tour, Island and Places, small, on the level of More) */
-  #bigs::after{content:"";order:4;flex-basis:100%;height:0} #bigDrive{order:1} #bCruise{order:2} #bRide{order:3} #bTour{order:5} #bReset{order:6} #bPlaces{order:7}
+  /* (two rows: Drive, Ride and Cruise; under them Tour, Island and Places, small, on the level of More) */
+  /* (the box the buttons stand in is as wide as the window and lies over More and over the map beside the buttons: it takes no touches itself, only its buttons do) */
+  #bigs{pointer-events:none} #bigs .big{pointer-events:auto}
+  #bigs::after{content:"";order:4;flex-basis:100%;height:0} #bigDrive{order:1} #bRide{order:2} #bCruise{order:3} #bTour{order:5} #bReset{order:6} #bPlaces{order:7}
   .big{display:flex;align-items:center;gap:12px;padding:8px 18px 8px 8px;
     border-radius:44px;border:1px solid rgba(255,214,160,.85);background:rgba(9,20,28,.86);color:#fff4df;font-family:inherit;cursor:pointer;
     box-shadow:0 6px 22px rgba(0,0,0,.45);transition:transform .2s,opacity .6s;touch-action:manipulation;text-align:left}
-  #bigDrive{opacity:0;pointer-events:none}
-  #bigDrive.ready{opacity:1;pointer-events:auto}
+  #bigDrive{opacity:0} #bigDrive.ready{opacity:1}
+  #bigDrive:not(.ready){pointer-events:none}   /* (as strong as the rule above that lets the buttons be touched, and after it) */
   .big:hover{transform:translateY(-2px)}
   .big i{position:relative;flex:none;width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#ffb054;color:#2a1606}
   #bCruise i{background:#7fd9c6;color:#06302b} #bCruise{border-color:rgba(150,230,212,.8)}
@@ -236,7 +238,7 @@
   .big span{display:flex;flex-direction:column;line-height:1.15}
   .big b{font-size:20px;font-weight:600;letter-spacing:.22em;text-transform:uppercase}
   .big em{font-style:normal;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;opacity:.75}
-  body.driving #bigs,body.photo #bigs,body.places #bigs,body.cruising #bigs{opacity:0;pointer-events:none}
+  body.driving #bigs,body.photo #bigs,body.places #bigs,body.cruising #bigs{opacity:0;pointer-events:none} body.driving #bigs .big,body.photo #bigs .big,body.places #bigs .big,body.cruising #bigs .big,body.rideopen #bigs .big{pointer-events:none}
   @media (max-width:1180px) and (min-width:561px){.big em{display:none} .big{padding:6px 14px 6px 6px;gap:9px} .big i{width:46px;height:46px} .big b{font-size:17px}}   /* (a narrow window) */
   /* a cruise: the ride's strip (no Stop: a boat calls nowhere), a small chart of its own, and nothing else of the page's controls */
   body.cruising #ui,body.cruising #nav,body.cruising #fc,body.cruising #pm,body.cruising #pin,body.cruising #tourS{display:none !important} body.cruising #brand{opacity:0} body.cruising #labels *{pointer-events:none !important}
