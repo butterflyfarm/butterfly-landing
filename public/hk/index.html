@@ -6306,19 +6306,34 @@ function cruisePath() {
         side of it, four times over: no corner is left, only long bends, and it no longer turns in at every small bay. By the three places, where the line is close in and such a mean would carry it over a
         headland, the mean is of 90 m either side, twice; and between the two it is a mix of both */
   let E = even(P), pts = E.pts, n = E.n; { const A1 = pts.slice(), A2 = pts.slice(); smooth(A1, 30, 4); smooth(A2, 6, 2); for (let i = 0; i < n; i++) { const w = near(pts[i * 2], pts[i * 2 + 1], 1.2); pts[i * 2] = A1[i * 2] * (1 - w) + A2[i * 2] * w; pts[i * 2 + 1] = A1[i * 2 + 1] * (1 - w) + A2[i * 2 + 1] * w; } }
+  /* 2b. the Sulphur Channel, between the island (Kennedy Town) and the two islets off it, Green Island and Little Green Island: the line DF from the shore
+         goes round the islets, outside them; the course goes through, between them and the island. The channel is some 430 m wide at its least, too narrow
+         for a line DF from both its shores, so its middle is given, a point every 80 m or so from its north-east mouth to where it opens to the south-west,
+         each then moved to where there is most room; the course is led to the first of them from 450 m before it would have turned out round the islets,
+         and from the last of them back to itself 450 m beyond. `chan` is where those points lie in the line. (Not the gap between the two islets, 130 m
+         wide, which is what "between the island and the small island" was first taken for) */
+  let chan = [0, -1];
+  { const CH = [[-7100, -4176], [-7136, -4050], [-7172, -3980], [-7208, -3906], [-7244, -3834], [-7298, -3765], [-7352, -3708], [-7424, -3672], [-7496, -3636], [-7550, -3582], [-7620, -3528], [-7676, -3492], [-7748, -3420], [-7820, -3366], [-7892, -3312], [-7964, -3240], [-8000, -3204]]
+      .map(q => { let x = q[0], z = q[1]; for (let k = 0; k < 10; k++) { const g = cgrad(x, z, 400); x += g[0] * 4; z += g[1] * 4; } return [x, z]; });
+    const nearest = q => { let bd = 1e18, bi = 0; for (let i = 0; i < n; i++) { const d = (pts[i * 2] - q[0]) ** 2 + (pts[i * 2 + 1] - q[1]) ** 2; if (d < bd) { bd = d; bi = i; } } return bi; }, iN = nearest(CH[0]) - 30, iS = nearest(CH[CH.length - 1]) + 30;
+    if (iN > 0 && iS > iN && iS < n) { const o = Array.from(pts.subarray(0, (iN + 1) * 2)), line = [[pts[iN * 2], pts[iN * 2 + 1]]].concat(CH, [[pts[iS * 2], pts[iS * 2 + 1]]]); const a = o.length / 2;
+      for (let k = 1; k < line.length; k++) { const p = line[k - 1], q = line[k], m = Math.max(1, Math.round(Math.hypot(q[0] - p[0], q[1] - p[1]) / 15)); for (let j = 1; j <= m; j++) o.push(p[0] + (q[0] - p[0]) * j / m, p[1] + (q[1] - p[1]) * j / m); }
+      const b = o.length / 2 - 1; for (let i = (iS + 1) * 2; i < n * 2; i++) o.push(pts[i]); pts = new Float32Array(o); n = pts.length / 2; chan = [a, b];
+      /* (the joins and the channel's own turns eased a little: the mean of 75 m either side, twice, over that stretch only) */
+      for (let it = 0; it < 2; it++) { const c = pts.slice(), w = 5; for (let i = a - 25; i <= b + 25; i++) { let sx = 0, sz = 0; for (let j = -w; j <= w; j++) { sx += c[(i + j) * 2]; sz += c[(i + j) * 2 + 1]; } pts[i * 2] = sx / (2 * w + 1); pts[i * 2 + 1] = sz / (2 * w + 1); } } } }
   /* 3. room: no point nearer than DMIN to the shore, a pier or a breakwater (DSTOP by the three places), moved out the way that gives more room, and the line
         smoothed a little after each round so that what was moved leaves no kink */
   const need = new Float32Array(n); for (let i = 0; i < n; i++) need[i] = near(pts[i * 2], pts[i * 2 + 1], .8) > .15 ? DSTOP : DMIN;
   for (let it = 0; it < 12; it++) { let moved = 0; for (let i = 0; i < n; i++) { const px = pts[i * 2], pz = pts[i * 2 + 1], nd = need[i] + 8, c = clr(px, pz, nd); if (c >= nd) continue; const g = cgrad(px, pz, nd), m = Math.min(nd - c, 45); pts[i * 2] = clamp(px + g[0] * m, X0 + 40, X1 - 40); pts[i * 2 + 1] = clamp(pz + g[1] * m, Z0 + 40, Z1 - 40); moved++; } if (!moved) break; smooth(pts, 4, 1); }
   /* 4. hooks: an arm of the line that goes into a small bay and straight out again (the two ends of a stretch of 300 m to 1.5 km lie less than a third of its
         length apart) is cut off, the line going straight across its foot, if there is room along that. Not by the three places, where going in is the point */
-  for (let i = 0; i < n; i++) { if (need[i] === DSTOP) continue; let bj = -1, gain = 0; for (let j = i + 20; j <= i + 100; j++) { const k = j % n; if (need[k] === DSTOP) break; const d = Math.hypot(pts[k * 2] - pts[i * 2], pts[k * 2 + 1] - pts[i * 2 + 1]), al = (j - i) * 15; if (d < al * .33 && al - d > gain) { gain = al - d; bj = j; } }
+  for (let i = 0; i < n; i++) { if (need[i] < DMIN) continue; let bj = -1, gain = 0; for (let j = i + 20; j <= i + 100; j++) { const k = j % n; if (need[k] < DMIN) break; const d = Math.hypot(pts[k * 2] - pts[i * 2], pts[k * 2 + 1] - pts[i * 2 + 1]), al = (j - i) * 15; if (d < al * .33 && al - d > gain) { gain = al - d; bj = j; } }
     if (bj < 0) continue; const k = bj % n, ax = pts[i * 2], az = pts[i * 2 + 1], bx = pts[k * 2], bz = pts[k * 2 + 1]; let ok = true; for (let t = 0; t <= 1 && ok; t += .1) if (clr(ax + (bx - ax) * t, az + (bz - az) * t, DMIN) < DMIN) ok = false; if (!ok) continue;
     for (let j = i + 1; j < bj; j++) { const t = (j - i) / (bj - i), q = j % n; pts[q * 2] = ax + (bx - ax) * t; pts[q * 2 + 1] = az + (bz - az) * t; } i = bj; }
   /* 5. bends: where the line still turns in less than 200 m (measured over 60 m either way), that stretch (600 m either side of it: its two arms must give as
         well, or it stays as sharp between them) is smoothed again, and given its room back */
   for (let it = 0; it < 14; it++) { const mark = new Uint8Array(n); let any = 0; for (let i = 0; i < n; i++) { const a = ((i - 4) % n + n) % n, c = (i + 4) % n, px = pts[i * 2], pz = pts[i * 2 + 1], ax = pts[a * 2] - px, az = pts[a * 2 + 1] - pz, cx = pts[c * 2] - px, cz = pts[c * 2 + 1] - pz, cr = Math.abs(ax * cz - az * cx), r = cr < 1e-6 ? 1e9 : Math.hypot(ax, az) * Math.hypot(cx, cz) * Math.hypot(ax - cx, az - cz) / (2 * cr);
-      if (r < 200) { any++; for (let j = -40; j <= 40; j++) mark[((i + j) % n + n) % n] = 1; } } if (!any) break;
+      if (r < (need[i] < DSTOP ? 70 : 200)) { any++; for (let j = -40; j <= 40; j++) mark[((i + j) % n + n) % n] = 1; } } if (!any) break;
     const o = pts.slice(), w = 12; for (let i = 0; i < n; i++) { if (!mark[i]) continue; let sx = 0, sz = 0; for (let j = -w; j <= w; j++) { const k = ((i + j) % n + n) % n; sx += pts[k * 2]; sz += pts[k * 2 + 1]; } o[i * 2] = sx / (2 * w + 1); o[i * 2 + 1] = sz / (2 * w + 1); } pts.set(o);
     for (let i = 0; i < n; i++) { if (!mark[i]) continue; const px = pts[i * 2], pz = pts[i * 2 + 1], nd = need[i], c = clr(px, pz, nd); if (c >= nd) continue; const g = cgrad(px, pz, nd), m = Math.min(nd - c, 30); pts[i * 2] = px + g[0] * m; pts[i * 2 + 1] = pz + g[1] * m; } }
   const stops = SO.map(q => { let bd = 1e18; for (let i = 0; i < n; i++) bd = Math.min(bd, (pts[i * 2] - q[0]) ** 2 + (pts[i * 2 + 1] - q[1]) ** 2); return [0, 0, Math.round(Math.sqrt(bd))]; });
