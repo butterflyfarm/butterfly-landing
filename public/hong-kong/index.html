@@ -60,6 +60,13 @@
     border:1px solid rgba(255,196,128,.45);background:rgba(9,20,28,.86);color:#fff4df;font:inherit;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .35s,transform .35s;touch-action:manipulation}
   #tourS.on{opacity:1;pointer-events:auto;transform:translate(-50%,0)} #tourS span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis} #tourS i{font-style:normal;opacity:.7}
   body.photo #tourS,body.driving #tourS{display:none}
+  /* aboard the tram: the next stop, and the two things one can do */
+  #tramS{position:fixed;z-index:7;left:50%;top:max(12px,env(safe-area-inset-top));transform:translateX(-50%);box-sizing:border-box;max-width:calc(100vw - 24px);display:none;align-items:center;gap:8px;padding:7px 8px 7px 16px;border-radius:22px;
+    background:rgba(9,20,28,.88);border:1px solid rgba(255,196,128,.45);color:#fff4df;font-size:13px;letter-spacing:.06em;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+  body.tram #tramS{display:flex} #tramS b{color:#ffc46a;font-size:11px;letter-spacing:.2em;text-transform:uppercase} #tramS span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #tramS button{font:inherit;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:8px 11px;border-radius:16px;border:1px solid rgba(255,196,128,.45);background:rgba(255,190,110,.12);color:#fff4df;cursor:pointer;white-space:nowrap;touch-action:manipulation}
+  body.tram #bigs,body.tram #ui,body.tram #nav,body.tram #brand,body.tram #cr,body.tram #labels{opacity:0;pointer-events:none} body.tram #tClock{top:calc(max(12px,env(safe-area-inset-top)) + 64px)} body.tram #tPanel{top:calc(max(12px,env(safe-area-inset-top)) + 52px)}
+  @media (max-width:560px){#tramS{flex-wrap:wrap;justify-content:center;width:calc(100vw - 24px);border-radius:18px;padding:8px 10px} #tramS span{flex-basis:calc(100% - 60px);text-align:left} body.tram #tClock{top:calc(max(12px,env(safe-area-inset-top)) + 104px)} body.tram #tPanel{top:calc(max(12px,env(safe-area-inset-top)) + 92px)}}
   /* on a touch screen nothing blurs what is behind it: a blur over the moving picture has to be redone every frame for every button, which slows
      a phone and, in its browser, can flicker. The panels are made a little more solid instead */
   @media (pointer:coarse){*{-webkit-backdrop-filter:none !important;backdrop-filter:none !important} #ui{background:rgba(9,20,28,.84)} #zm{background:rgba(9,20,28,.82)} .lb b{background:rgba(9,20,28,.8)} #hint{background:rgba(9,20,28,.82)}}
@@ -370,10 +377,10 @@
     #mmC{height:118px}
     #mini{top:calc(max(10px,env(safe-area-inset-top)) + 62px)}
     #brand b{font-size:14px;letter-spacing:.16em}
-    #bigs{bottom:calc(max(10px,env(safe-area-inset-bottom)) + 80px);display:grid;grid-template-columns:auto auto;justify-content:start;align-items:center;gap:8px}   /* (a phone: two rows of two; Drive and Places below, as Tour and Island are placed first) */
-    #bTour{grid-row:1;grid-column:1} #bReset{grid-row:1;grid-column:2} #bigDrive{grid-row:2;grid-column:1} #bPlaces{grid-row:2;grid-column:2}
+    #bigs{bottom:calc(max(10px,env(safe-area-inset-bottom)) + 80px);display:grid;grid-template-columns:auto auto auto;justify-content:start;align-items:center;gap:8px}   /* (a phone: two rows of two; Drive and Places below, as Tour and Island are placed first) */
+    #bTour{grid-row:1;grid-column:1} #bTram{grid-row:1;grid-column:2} #bReset{grid-row:1;grid-column:3} #bigDrive{grid-row:2;grid-column:1} #bPlaces{grid-row:2;grid-column:2 / span 2;justify-self:start}
     #places .pl3{flex-wrap:nowrap;gap:7px} #places .pgo{padding:13px 13px;font-size:12.5px;letter-spacing:.12em}
-    .big em{display:none} .big.sm{padding:5px 13px 5px 5px} .big.sm i{width:38px;height:38px} .big.sm b{font-size:13px}
+    .big em{display:none} .big.sm{padding:5px 11px 5px 5px;gap:7px} .big.sm i{width:32px;height:32px} .big.sm i svg{width:19px;height:19px} .big.sm b{font-size:12.5px;letter-spacing:.12em}   /* (three in a row on a phone: Tour, Tram, Island) */
     .big{padding:6px 14px 6px 6px;gap:9px}
     .big i{width:50px;height:50px}
     .big b{font-size:17px}
@@ -444,9 +451,10 @@
   <button id="tpSh" type="button" class="on" aria-pressed="true" title="Shadows cast by the sun, on or off">Shadows on</button>
 </div>
 <button id="tourS" type="button" title="End the tour" aria-live="polite"><span></span><i>✕</i></button>
+<div id="tramS" aria-live="polite"><b>Tram</b><span></span><button id="tramNext" type="button" title="Jump to just short of the next stop">Next stop ▸▸</button><button id="tramOff" type="button" title="Get off the tram (Esc)">Get off ✕</button></div>
 <div id="pin"><div class="pb"><div class="pt"><b></b><em></em></div><button type="button" aria-label="Remove this label">✕</button></div><i></i><u></u></div>
 <div id="hint" aria-live="polite"></div>
-<div id="bigs"><button id="bigDrive" class="big" type="button" aria-label="Drive around Hong Kong Island"><i><svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="24" cy="24" r="4.5" fill="currentColor"/><path d="M8 21.5c5-2.6 10.4-3.6 16-3.6s11 1 16 3.6M24 28.5v11.5M20 26l-9.5 9M28 26l9.5 9" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg></i><span><b>Drive</b><em>Every street on the island</em></span></button><button id="bPlaces" class="big" type="button" aria-label="Places: search, fly or ride anywhere on the island"><i><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 4.2a2.8 2.8 0 1 1 0 5.6 2.8 2.8 0 0 1 0-5.6Z"/></svg></i><span><b>Places</b><em>Search, fly or ride there</em></span></button><button id="bTour" class="big sm" type="button" aria-label="Tour: a flight round the island, golden afternoon into dusk"><i><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l11-6.5-11-6.5Z"/></svg></i><span><b>Tour</b><em>Sit back and watch</em></span></button><button id="bReset" class="big sm" type="button" aria-label="Whole island: back to the full view"><i><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></i><span><b>Island</b><em>The whole view</em></span></button></div>
+<div id="bigs"><button id="bigDrive" class="big" type="button" aria-label="Drive around Hong Kong Island"><i><svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="24" cy="24" r="4.5" fill="currentColor"/><path d="M8 21.5c5-2.6 10.4-3.6 16-3.6s11 1 16 3.6M24 28.5v11.5M20 26l-9.5 9M28 26l9.5 9" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg></i><span><b>Drive</b><em>Every street on the island</em></span></button><button id="bPlaces" class="big" type="button" aria-label="Places: search, fly or ride anywhere on the island"><i><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 4.2a2.8 2.8 0 1 1 0 5.6 2.8 2.8 0 0 1 0-5.6Z"/></svg></i><span><b>Places</b><em>Search, fly or ride there</em></span></button><button id="bTour" class="big sm" type="button" aria-label="Tour: a flight round the island, golden afternoon into dusk"><i><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l11-6.5-11-6.5Z"/></svg></i><span><b>Tour</b><em>Sit back and watch</em></span></button><button id="bTram" class="big sm" type="button" aria-label="Tram: ride the tram along its line, in the front seat upstairs"><i><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" d="M7 6.5h10a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 17 18.500H7A1.5 1.5 0 0 1 5.500 17V8A1.5 1.5 0 0 1 7 6.500ZM5.500 12.500h13M9 6.500 12 3l3 3.500M8.500 21l1.500-2.500M15.500 21 14 18.500M9 15.500h.010M15 15.500h.010"/></svg></i><span><b>Tram</b><em>Ride the line</em></span></button><button id="bReset" class="big sm" type="button" aria-label="Whole island: back to the full view"><i><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></i><span><b>Island</b><em>The whole view</em></span></button></div>
 <div id="drv"><div id="dTop"><button id="dExit" title="Stop driving (Esc)" aria-label="Stop driving">✕</button><button id="dNavB" title="Go somewhere" aria-label="Navigate"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 1 7 7c0 4.9-5.6 11.2-6.3 12a1 1 0 0 1-1.4 0C10.6 20.2 5 13.9 5 9a7 7 0 0 1 7-7zm0 4.2A2.8 2.8 0 1 0 12 11.8 2.8 2.8 0 0 0 12 6.2z"/></svg></button><button id="dCar" title="Change vehicle (G)" aria-label="Change vehicle"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M5 11l1.5-4.2A2 2 0 0 1 8.4 5.5h7.2a2 2 0 0 1 1.9 1.3L19 11h.5A1.5 1.5 0 0 1 21 12.5V17h-2v1.5a1 1 0 0 1-2 0V17H7v1.5a1 1 0 0 1-2 0V17H3v-4.5A1.5 1.5 0 0 1 4.5 11zm2.2 0h9.6l-1.1-3.2a.5.5 0 0 0-.5-.3H8.8a.5.5 0 0 0-.5.3zM6.5 15a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6zm11 0a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6z"/></svg></button>
   <div id="dInfo"><span id="dSt"></span><span id="dNx"><i id="dArr">↑</i><b id="dNxD"></b><em id="dNxN"></em></span><span id="dGo"><i>➤</i><em></em></span></div>
   <div id="dSide"><div id="dSpdBox"><b id="dSpd">0</b><small>km/h</small></div><button id="dU" title="Turn round (U)">U-turn</button><button id="dAuto" title="Self-driving on or off">Auto</button><button id="dSkip" type="button" title="Skip the journey: the car is put down at the destination">Skip ▸▸</button></div></div>
@@ -2971,6 +2979,8 @@ function pathAt(pts, s, out) {  // pts [[x,y,z]], uniform spacing assumed; s in 
 }
 /* ---------- trams on the mapped track, stopping at every mapped tram stop; elevated MTR sections with their trains ---------- */
 const TRAMS = { list: [], tracks: [], stops: 0 };
+/* the tram stops' names (OpenStreetMap, name:en), each at its place: metres east and south of the origin */
+const TRAM_STOPS = [[-6572,-3651,"Kennedy Town Terminus"],[-6497,-3661,"Davis Street"],[-6412,-3676,"Smithfield"],[-6310,-3698,"North Street"],[-6248,-3712,"Sands Street"],[-6145,-3810,"Holland Street"],[-6143,-3807,"Kennedy Town Praya"],[-5954,-4039,"Queen's Road West"],[-5951,-4037,"Queen's Road West"],[-5733,-4110,"Hill Road"],[-5733,-4107,"Hill Road"],[-5670,-4159,"Whitty Street Depot"],[-5662,-4111,"Shek Tong Tsui Terminus"],[-5518,-4075,"Whitty Street"],[-5481,-4084,"Whitty Street"],[-5290,-4143,"Water Street"],[-5248,-4152,"Water Street"],[-5106,-4196,"Western Street"],[-5040,-4203,"Western Street"],[-4790,-4197,"Eastern Street"],[-4736,-4192,"Eastern Street"],[-4519,-4179,"Sutherland Street"],[-4441,-4174,"Queen Street"],[-4249,-4213,"Connaught Road West"],[-4135,-4186,"Macau Ferry Terminal"],[-4118,-4178,"Macau Ferry Terminal"],[-4042,-4082,"Western Market"],[-4041,-4086,"Western Market Terminus"],[-3926,-4054,"Hillier Street"],[-3821,-4024,"Man Wa Lane"],[-3644,-3929,"Gilman Street"],[-3621,-3911,"Gilman Street"],[-3540,-3842,"Jubilee Street"],[-3438,-3704,"Pottinger Street"],[-3338,-3569,"Pedder Street"],[-3293,-3509,"Pedder Street"],[-3238,-3440,"Ice House Street"],[-3104,-3387,"Bank Street"],[-3078,-3382,"Bank Street"],[-2913,-3298,"Murray Road"],[-2765,-3215,"Cotton Tree Drive"],[-2645,-3145,"Admiralty MTR Station"],[-2614,-3132,"Admiralty MTR Station"],[-2246,-3083,"Arsenal Street"],[-2221,-3078,"Arsenal Street"],[-2055,-3018,"Fenwick Street"],[-2041,-3005,"Gresson Street"],[-1857,-2928,"Luard Road"],[-1844,-2927,"Swatow Street"],[-1737,-2942,"O'Brien Road"],[-1699,-2944,"O'Brien Road"],[-1509,-2989,"Fleming Road"],[-1444,-3027,"Burrows Street"],[-1300,-3113,"Tonnochy Road"],[-1254,-3130,"Tonnochy Road"],[-1087,-2702,"Queen's Road East"],[-1066,-3157,"Tin Lok Lane"],[-1041,-2479,"Hong Kong Cemetery"],[-974,-2863,"Morrison Hill Road"],[-950,-3237,"Canal Road West"],[-895,-3256,"Canal Road West"],[-789,-2990,"Leighton Road"],[-729,-3325,"Percival Street"],[-716,-3222,"Foo Ming Street"],[-653,-2645,"Broadwood Road"],[-592,-2203,"Happy Valley Terminus"],[-590,-2197,"Happy Valley Terminus"],[-571,-2463,"Wong Nai Chung Road"],[-451,-3303,"Paterson Street"],[-398,-3288,"Paterson Street"],[-354,-3270,"Pennington Street"],[-303,-3241,"Causeway Bay Terminus"],[-212,-3280,"Shelter Street"],[-196,-3287,"Shelter Street"],[-78,-3376,"Victoria Park"],[-40,-3399,"Victoria Park"],[114,-3515,"Hing Fat Street"],[228,-3628,"Lau Sin Street"],[283,-3821,"Lau Li Street"],[292,-3877,"Wing Hing Street"],[298,-4033,"Jupiter Street"],[300,-4054,"Jupiter Street"],[439,-4335,"Fortress Hill"],[440,-4333,"Fortress Hill"],[699,-4552,"Chun Yeung Street"],[734,-4491,"North Point Road"],[734,-4488,"North Point Road"],[904,-4548,"North Point Terminus"],[1081,-4565,"Shu Kuk Street"],[1114,-4575,"Shu Kuk Street"],[1394,-4637,"Tin Chiu Street"],[1395,-4634,"Tin Chiu Street"],[1561,-4661,"Healthy Street West"],[1566,-4664,"Healthy Street West"],[1805,-4623,"Healthy Street East"],[1805,-4620,"Healthy Street East"],[1967,-4518,"Java Road"],[1968,-4512,"Java Road"],[2044,-4276,"Finnie Street"],[2046,-4276,"Finnie Street"],[2184,-3943,"Mount Parker Road"],[2286,-3853,"Mount Parker Road"],[2456,-3841,"Shipyard Lane"],[2457,-3839,"Shipyard Lane"],[2686,-3837,"Kornhill"],[2689,-3835,"Kornhill"],[3127,-3774,"Tai Koo Shing Road"],[3131,-3774,"Tai Koo Shing Road"],[3200,-3674,"Tai Hong Street"],[3205,-3671,"Tai Hong Street"],[3270,-3581,"Tai On Street"],[3364,-3458,"Holy Cross Path"],[3546,-3367,"Hoi Foo Street"],[3547,-3370,"Hoi Foo Street"],[3692,-3269,"Sun Sing Street"],[3697,-3346,"Sai Wan Ho Depot"],[3744,-3183,"Nam Hong Street"],[4014,-2964,"Chai Wan Road"],[4031,-2963,"Chai Wan Road"],[4138,-3089,"Shau Kei Wan Terminus"]];
 function instGeo(build) { const g = new GB(); build(g); const m = g.mesh(propMat).geometry, geo = new THREE.InstancedBufferGeometry(); for (const k of ['position', 'normal', 'aCol', 'aP', 'aQ']) geo.setAttribute(k, m.getAttribute(k)); geo.setIndex(m.index); return geo; }
 function makeTrams() {
   /* a Hong Kong double-decker tram: about 12 m long, 2 m wide, 4.6 m tall; model x = forward */
@@ -2980,24 +2990,39 @@ function makeTrams() {
     .M([1, .9, .7], 2.6).box(5.86, 1.25, 0, .04, .7, 1.5).box(-5.86, 1.25, 0, .04, .7, 1.5).box(0, 1.25, 1.03, 11, .62, .02).box(0, 1.25, -1.03, 11, .62, .02).box(0, 3.15, 1.03, 11, .6, .02).box(0, 3.15, -1.03, 11, .6, .02); });
   const movers = LIV.map(c => new Movers(80, model(c), propMat));
   const tracks = ROADS.filter(r => r.tram && r.n > 12);
-  const SP = new GB(); SP.at(0, 0, 0, 0);
+  const SP = new GB(); SP.at(0, 0, 0, 0); const PW = new GB(); PW.at(0, 0, 0, 0); let WIRE_MAT = null;
   for (const tr of tracks) {
     const pts = []; for (let i = 0; i < tr.n; i++) pts.push([tr.pts[i * 3], tr.pts[i * 3 + 1], tr.pts[i * 3 + 2]]);
-    const L = (pts.length - 1) * 8, stops = [];
+    const L = (pts.length - 1) * 8, stops = [], named = [];
     /* each mapped stop node snaps to the nearest point of this track if it lies beside it */
     for (const [sx, sz] of G.tramStops) { let bd = 1e9, bi = -1; for (let i = 0; i < pts.length; i++) { const d = (pts[i][0] - sx) ** 2 + (pts[i][2] - sz) ** 2; if (d < bd) { bd = d; bi = i; } }
       if (bd > 22 * 22) continue; const s = bi * 8; if (stops.some(q => Math.abs(q - s) < 30)) continue; stops.push(s);
+      { let nd = 60, nm = ''; for (const q of TRAM_STOPS) { const d = Math.hypot(q[0] - sx, q[1] - sz); if (d < nd) { nd = d; nm = q[2]; } } named.push([s, nm]); }
       /* the stop itself: a narrow island platform with a canopy, beside the rails */
       const a = pts[Math.max(bi - 1, 0)], b = pts[Math.min(bi + 1, pts.length - 1)], yaw = Math.atan2(b[2] - a[2], b[0] - a[0]), side = ((sx - pts[bi][0]) * Math.sin(yaw) - (sz - pts[bi][2]) * Math.cos(yaw)) > 0 ? -1 : 1;
       const ox = -Math.sin(yaw) * 3.9 * side, oz = Math.cos(yaw) * 3.9 * side; SP.at(pts[bi][0] + ox, pts[bi][2] + oz, yaw, pts[bi][1]);
       SP.M(C(.62, .62, .60)).box(0, 0, 0, 16, .28, 1.5).M(C(.10, .32, .18)).box(0, 2.6, 0, 9, .16, 1.9).M(C(.35, .35, .35)).box(-4, .28, 0, .12, 2.35, .12).box(4, .28, 0, .12, 2.35, .12).M([1, .95, .8], 1.6).box(0, 2.48, 0, 7, .06, .3); }
     stops.sort((p, q) => p - q); TRAMS.stops += stops.length;
-    const tk = { pts, L, stops, main: tr.name === 'tram' }; TRAMS.tracks.push(tk);
+    const tk = { pts, L, stops, stopN: stops.map(q => (named.find(v => v[0] === q) || [0, ''])[1]), main: tr.name === 'tram' }; TRAMS.tracks.push(tk);
+    /* over the line: a pair of poles with a span between them every 40 m, and the two running wires. The poles are solid enough to be drawn like any
+       other thing; the wires are a few centimetres thick and would shimmer in the distance, so only the 150 m of them round the eye are drawn (tramWires) */
+    for (let i = 2; i < pts.length - 2; i += 5) { const a = pts[i - 1], b = pts[i + 1], yaw = Math.atan2(b[2] - a[2], b[0] - a[0]); PW.at(pts[i][0], pts[i][2], yaw, pts[i][1]);
+      PW.M(C(.20, .22, .21)).box(0, 0, 5.1, .2, 6.3, .2).box(0, 0, -5.1, .2, 6.3, .2).box(0, 5.95, 0, .12, .12, 10.2); }   /* (5 m out: nearer, the pole on the inside of a bend passes right before the front seat) */
+    { const P = [], I = []; for (let i = 0; i < pts.length - 1; i++) { const a = pts[i], b = pts[i + 1], dx = b[0] - a[0], dz = b[2] - a[2], l = Math.hypot(dx, dz) || 1, nx = -dz / l, nz = dx / l;
+        for (const o of [1.6, -1.6]) { const ax = a[0] + nx * o, az = a[2] + nz * o, bx2 = b[0] + nx * o, bz2 = b[2] + nz * o, ya = a[1] + 5.6, yb = b[1] + 5.6, v = P.length / 3, w = .045;
+          P.push(ax, ya - w, az, bx2, yb - w, bz2, bx2, yb + w, bz2, ax, ya + w, az, ax - nx * w, ya, az - nz * w, bx2 - nx * w, yb, bz2 - nz * w, bx2 + nx * w, yb, bz2 + nz * w, ax + nx * w, ya, az + nz * w); I.push(v, v + 1, v + 2, v, v + 2, v + 3, v + 4, v + 5, v + 6, v + 4, v + 6, v + 7); } }
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setIndex(I); g.setDrawRange(0, 0);
+      const m = new THREE.Mesh(g, WIRE_MAT || (WIRE_MAT = new THREE.MeshBasicMaterial({ color: 0x15171a, side: THREE.DoubleSide }))); m.frustumCulled = false; scene.add(m); tk.wire = m; }
     const n = tk.main ? Math.round(L / 330) : Math.max(1, Math.round(L / 700)), R = mulberry(tr.n * 7 + 3);
     for (let k = 0; k < n; k++) for (const dir of [1, -1]) { const lv = (R() * LIV.length) | 0, mv = movers[lv];
       TRAMS.list.push({ tk, s: ((k + .5 + (R() - .5) * .4) / n) * L, dir, v: 0, dwell: R() * 8, last: -1, mv, i: mv.add() }); }
   }
   if (SP.i.length) { const m = SP.mesh(propMat); m.layers.enable(1); scene.add(m); }
+  if (PW.i.length) { const m = PW.mesh(propMat); scene.add(m); TRAMS.poles = m; }
+  /* the wires near the eye, and the poles only from low down (from high up they are specks that flicker) */
+  let wT = 0; hooks.push(dt => { if ((wT -= dt) > 0) return; wT = .3; const e = camera.position, low = TR.on || DRIVE.on || e.y - groundY(e.x, e.z) < 260; if (TRAMS.poles) TRAMS.poles.visible = low;
+    for (const tk of TRAMS.tracks) { const m = tk.wire; if (!m) continue; if (!low) { m.visible = false; continue; } let bi = -1, bd = 220 * 220; for (let i = 0; i < tk.pts.length; i += 2) { const p = tk.pts[i], d = (p[0] - e.x) ** 2 + (p[2] - e.z) ** 2; if (d < bd) { bd = d; bi = i; } }
+      m.visible = bi >= 0; if (bi >= 0) { const i0 = Math.max(0, bi - 19), i1 = Math.min(tk.pts.length - 1, bi + 19); m.geometry.setDrawRange(i0 * 24, (i1 - i0) * 24); } } });
   const t6 = [0, 0, 0, 0, 0, 0], A = 1.1, VMAX = 6.5;
   TRAMS.movers = movers;
   hooks.push(dt => {
@@ -3011,7 +3036,7 @@ function makeTrams() {
         let gap = 1e9; for (const o of TRAMS.list) { if (o === t || o.tk !== tk || o.dir !== t.dir) continue; const d = (o.s - t.s) * t.dir; if (d > 0 && d < gap) gap = d; }
         const vt = Math.min(VMAX, Math.sqrt(2 * A * Math.max(ds - .4, 0)), Math.sqrt(2 * A * Math.max(gap - 22, 0)));
         t.v = vt > t.v ? Math.min(vt, t.v + A * dt) : vt; t.s += t.v * dt * t.dir;
-        if (ds < .6 && t.v < .25) { if (ds === endD) { t.dir = -t.dir; t.dwell = 20 + (t.i % 7) * 3; t.last = -1; } else { t.dwell = 9 + (t.i % 5) * 3; for (const q of tk.stops) if (Math.abs(q - t.s) < 2) t.last = q; } }
+        if (ds < .6 && t.v < .75) {   /* (was v < .25, which the braking curve never reaches before the stop is passed: the trams slowed at their stops and rolled on) */ if (ds === endD) { t.dir = -t.dir; t.dwell = 20 + (t.i % 7) * 3; t.last = -1; } else { t.dwell = 9 + (t.i % 5) * 3; for (const q of tk.stops) if (Math.abs(q - t.s) < 2) t.last = q; } }
       }
       t.s = clamp(t.s, 0, tk.L);
       const q = pathAt(tk.pts, t.s / tk.L, t6), l = Math.hypot(q[3], q[5]) || 1, fx = q[3] / l * t.dir, fz = q[5] / l * t.dir;
@@ -3737,6 +3762,34 @@ function initFocus() {
    from one street to another some kilometres off first draws back until both are in the picture, crosses, and comes down; it does not skim the roofs
    all the way. A short hop, or a change of height over the same spot, rises not at all. (The measure: how many times e the eye must draw back beyond
    the even change from the first distance to the last.) */
+/* ---------- the tram ride: aboard one of the trams that run the line, in the front seat upstairs. The tram goes on as it always does, stopping at
+   every stop (it waits less with you aboard); the strip at the top names the next stop. Drag to look about. Next stop jumps to just short of it;
+   Get off (or Esc) puts you down beside the tram ---------- */
+const TR = { on: false, t: null, az0: 0, pol0: 0, shown: '', hudT: 0, t6: [0, 0, 0, 0, 0, 0] };
+function tramAt(t, ahead) { const tk = t.tk, q = pathAt(tk.pts, clamp(t.s + ahead * t.dir, 0, tk.L) / tk.L, TR.t6), l = Math.hypot(q[3], q[5]) || 1, fx = q[3] / l * t.dir, fz = q[5] / l * t.dir; return [q[0] + fz * 1.6, q[1] + .12, q[2] - fx * 1.6, fx, fz]; }
+function tramNext(t) { const tk = t.tk; let ds = 1e9, nm = ''; tk.stops.forEach((q, i) => { const d = (q - t.s) * t.dir; if (d > -1 && d < ds && q !== t.last) { ds = Math.max(d, 0); nm = tk.stopN[i]; } });
+  const endD = t.dir > 0 ? tk.L - 6 - t.s : t.s - 6; return endD < ds ? [endD, 'the end of the line'] : [ds, nm || 'a tram stop']; }
+function tramHud() { const t = TR.t, el = document.getElementById('tramS'); if (!t || !el) return; const [ds, nm] = tramNext(t), at = t.dwell > 0 && t.v < .2 ? t.tk.stopN[t.tk.stops.indexOf(t.last)] : '';
+  const txt = at ? 'At ' + at : 'Next: ' + nm + (ds < 1e8 ? ' · ' + (ds < 1000 ? Math.max(10, Math.round(ds / 10) * 10) + ' m' : (ds / 1000).toFixed(1) + ' km') : ''); if (txt !== TR.shown) { TR.shown = txt; el.querySelector('span').textContent = txt; } }
+function tramRideStart() {
+  if (TR.on || DRIVE.on || DRIVE.entering || !TRAMS.list.length) return; plClose(); pinClear(); if (TOUR.on) stopTour(); if (FOCUS.label) exitFocus(); userInput(); document.body.classList.remove('menu', 'tp');
+  /* the tram nearest what is being looked at (from the whole-island view: one in Central), on the main line for preference */
+  const c = cam.dist > 2600 ? SITE('hsbc') : [cam.tx, cam.tz]; let best = null, bd = 1e9; for (const t of TRAMS.list) { const p = tramAt(t, 0), d = Math.hypot(p[0] - c[0], p[2] - c[1]) + (t.tk.main ? 0 : 500); if (d < bd) { bd = d; best = t; } }
+  TR.t = best; TR.on = true; TR.az0 = cam.az; TR.pol0 = cam.pol; TR.yaw = TR.pit = undefined; TR.shown = ''; best.dwell = Math.min(best.dwell, 2); document.body.classList.add('tram'); tramHud();
+}
+function tramRideStop() { if (!TR.on) return; const p = tramAt(TR.t, 0); TR.on = false; TR.t = null; document.body.classList.remove('tram');
+  Object.assign(cam, { tx: p[0], tz: p[2], dist: 60, az: Math.atan2(p[4], p[3]) + PI, pol: 78 * RAD, fov: 40, ty: 2 }); cam.fly = null; cam.tour = null; placeCamera(0); flyTo({ tx: p[0], tz: p[2], dist: 320, pol: 60 * RAD, fov: 40, ty: 0, dur: 2.4 }); }
+function tramSkip() { const t = TR.t; if (!TR.on || !t) return; if (t.dwell > 0) { t.dwell = 0; return; } const ds = tramNext(t)[0]; if (ds > 26 && ds < 1e8) { t.s += (ds - 16) * t.dir; t.v = Math.min(t.v, 4.5); } }
+function tramRideCam(dt) {
+  const t = TR.t; if (t.dwell > 6) t.dwell = 6; const p = tramAt(t, 0), fx = p[3], fz = p[4], ex = p[0] + fx * 5.95, ey = p[1] + 3.25, ez = p[2] + fz * 5.95, a = tramAt(t, 34);
+  /* it looks where the line goes, 34 m on (so into the bend before the tram turns), eased; the drag turns the head from there */
+  const hx = a[0] - ex, hz = a[2] - ez, yaw = Math.hypot(hx, hz) > 4 ? Math.atan2(hz, hx) : Math.atan2(fz, fx), pit = Math.atan2(a[1] + 2.6 - ey, Math.max(Math.hypot(hx, hz), 12)), k = 1 - Math.exp(-dt * 3);
+  if (TR.yaw === undefined || !dt) { TR.yaw = yaw; TR.pit = pit; } else { TR.yaw += wrapA(yaw - TR.yaw) * k; TR.pit += (pit - TR.pit) * k; }
+  const Y = TR.yaw + clamp(wrapA(cam.az - TR.az0), -2.6, 2.6), Pp = clamp(TR.pit + clamp(TR.pol0 - cam.pol, -.6, .5), -1, 1.1), cp = Math.cos(Pp);
+  camera.position.set(ex, ey, ez); camera.fov = 62; camera.near = .35; camera.far = 190000; camera.lookAt(ex + Math.cos(Y) * cp * 50, ey + Math.sin(Pp) * 50, ez + Math.sin(Y) * cp * 50); camera.updateProjectionMatrix(); camera.updateMatrixWorld(true);
+  cam.tx = p[0]; cam.tz = p[2]; cam.dist = 60; cam.ty = 3; cam.fly = null; cam.tour = null; cam.vaz = cam.vpol = cam.vx = cam.vz = cam.vzoom = 0;
+  if ((TR.hudT += dt) > .25) { TR.hudT = 0; tramHud(); }
+}
 function flyArc(a, b) { const move = Math.hypot(b.tx - a.tx, b.tz - a.tz); return clamp(Math.log(Math.max(move * .85, 1) / Math.max(Math.sqrt(a.dist * b.dist), 1)), 0, 5); }
 function flyTo(b, then) {
   const a = { tx: cam.tx, tz: cam.tz, dist: cam.dist, az: cam.az, pol: cam.pol, fov: cam.fov, ty: cam.ty };
@@ -5616,6 +5669,7 @@ addEventListener('keydown', e => { keys[e.code] = 1; if (DRIVE.on && e.code !== 
 addEventListener('keyup', e => { keys[e.code] = 0; });
 function stepCamera(dt) {
   if (DRIVE.on) { driveStep(dt); placeCamera(dt); camGuard(dt); camSmooth(dt); return; }
+  if (TR.on) { tramRideCam(dt); return; }
   if (cam.fly) {
     const f = cam.fly; f.t = Math.min(1, f.t + dt / f.dur); const e = f.t * f.t * f.t * (f.t * (6 * f.t - 15) + 10), a = f.a, b = f.b;
     const arc = Math.sin(e * PI) * f.arc;
@@ -5791,6 +5845,9 @@ async function boot() {
   initClock(); initPlaces();
   document.getElementById('bTour').onclick = () => { if (TOUR.on) { stopTour(); cam.fly = null; cam.tour = null; } else { plClose(); pinClear(); if (FOCUS.label) exitFocus(); startTour(); } };
   document.getElementById('tourS').onclick = e => { e.stopPropagation(); stopTour(); cam.fly = null; cam.tour = null; };
+  document.getElementById('bTram').onclick = () => tramRideStart(); document.getElementById('tramOff').onclick = e => { e.stopPropagation(); tramRideStop(); }; document.getElementById('tramNext').onclick = e => { e.stopPropagation(); tramSkip(); };
+  for (const t of ['pointerdown', 'pointerup', 'touchstart', 'mousedown', 'click']) document.getElementById('tramS').addEventListener(t, e => e.stopPropagation(), { passive: true });
+  addEventListener('keydown', e => { if (e.code === 'Escape' && TR.on) tramRideStop(); });
   document.getElementById('bLabels').onclick = e => { LABELS.on = !LABELS.on; e.currentTarget.classList.toggle('on', LABELS.on); };
   document.getElementById('bMore').onclick = () => document.body.classList.toggle('menu');
   addEventListener('pointerdown', e => { if (document.body.classList.contains('menu') && !e.target.closest('#ui')) document.body.classList.remove('menu'); }, true);   /* a tap anywhere else puts More away */
