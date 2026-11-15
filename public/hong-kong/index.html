@@ -78,10 +78,11 @@
   /* aboard the bus: the driving controls put away (it drives itself along its route), the same strip as the tram's */
   body.busride #dTop,body.busride #dBoost,body.busride #dHorn,body.busride #dJoy,body.busride #dCombo,body.busride #dFx,body.busride #hint{display:none !important} body.busride #tramS{display:flex}
   body.busride #tClock{top:calc(max(12px,env(safe-area-inset-top)) + 64px)} body.busride #tPanel{top:calc(max(12px,env(safe-area-inset-top)) + 52px)}
-  @media (max-width:560px){body.busride #tClock{top:calc(max(12px,env(safe-area-inset-top)) + 104px)} body.busride #tPanel{top:calc(max(12px,env(safe-area-inset-top)) + 92px)}}
+  @media (max-width:560px){body.busride #tClock{top:calc(max(12px,env(safe-area-inset-top)) + 104px)} body.busride #tPanel{top:calc(max(12px,env(safe-area-inset-top)) + 92px)} body.busride #mini{transform:translateY(34px)}}   /* (the little map clear of the strip, which takes two lines on a phone) */
   /* aboard the tram: the next stop, and the two things one can do */
   #tramS{position:fixed;z-index:7;left:50%;top:max(12px,env(safe-area-inset-top));transform:translateX(-50%);box-sizing:border-box;max-width:calc(100vw - 24px);display:none;align-items:center;gap:8px;padding:7px 8px 7px 16px;border-radius:22px;
     background:rgba(9,20,28,.88);border:1px solid rgba(255,196,128,.45);color:#fff4df;font-size:13px;letter-spacing:.06em;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+  #rideStopB.on{background:rgba(255,176,84,.38);border-color:rgba(255,206,140,.85)} #rideStopB.held{background:#ffb054;color:#2a1606;border-color:#ffd9a0} #rideFast{touch-action:none;-webkit-touch-callout:none} #rideFast.on{background:rgba(64,170,220,.6);border-color:rgba(160,225,255,.95)}
   body.tram #tramS{display:flex} #tramS b{color:#ffc46a;font-size:11px;letter-spacing:.2em;text-transform:uppercase} #tramS span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #tramS button{font:inherit;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:8px 11px;border-radius:16px;border:1px solid rgba(255,196,128,.45);background:rgba(255,190,110,.12);color:#fff4df;cursor:pointer;white-space:nowrap;touch-action:manipulation}
   body.tram #bigs,body.tram #ui,body.tram #nav,body.tram #brand,body.tram #cr,body.tram #labels{opacity:0;pointer-events:none} body.tram #tClock{top:calc(max(12px,env(safe-area-inset-top)) + 64px)} body.tram #tPanel{top:calc(max(12px,env(safe-area-inset-top)) + 52px)}
@@ -477,7 +478,7 @@
   <button id="tpSh" type="button" class="on" aria-pressed="true" title="Shadows cast by the sun, on or off">Shadows on</button>
 </div>
 <button id="tourS" type="button" title="End the tour" aria-live="polite"><span></span><i>✕</i></button>
-<div id="tramS" aria-live="polite"><b id="rideTag">Tram</b><span></span><button id="tramNext" type="button" title="Jump to just short of the next stop">Next stop ▸▸</button><button id="tramOff" type="button" title="Get off (Esc)">Get off ✕</button></div>
+<div id="tramS" aria-live="polite"><b id="rideTag">Tram</b><span></span><button id="rideStopB" type="button" title="Stop at the next stop (it does not stop unless asked)">Stop</button><button id="rideFast" type="button" title="Hold to go faster">Hold ▸▸</button><button id="tramOff" type="button" title="Get off (Esc)">Get off ✕</button></div>
 <div id="pin"><div class="pb"><div class="pt"><b></b><em></em></div><button type="button" aria-label="Remove this label">✕</button></div><i></i><u></u></div>
 <div id="hint" aria-live="polite"></div>
 <div id="bigs"><button id="bigDrive" class="big" type="button" aria-label="Drive around Hong Kong Island"><i><svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="24" cy="24" r="4.5" fill="currentColor"/><path d="M8 21.5c5-2.6 10.4-3.6 16-3.6s11 1 16 3.6M24 28.5v11.5M20 26l-9.5 9M28 26l9.5 9" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg></i><span><b>Drive</b><em>Every street on the island</em></span></button><button id="bPlaces" class="big" type="button" aria-label="Places: search, fly or ride anywhere on the island"><i><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 4.2a2.8 2.8 0 1 1 0 5.6 2.8 2.8 0 0 1 0-5.6Z"/></svg></i><span><b>Places</b><em>Search, fly or ride there</em></span></button><button id="bRide" class="big" type="button" aria-label="Ride: the tram, or bus 6 between Central and Stanley, from the front seat upstairs"><i><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" d="M6.5 4.5h11a2 2 0 0 1 2 2v9.5a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2V6.500a2 2 0 0 1 2-2ZM4.500 11.500h15M4.500 8h15M8 18l-1 2.500M16 18l1 2.500M8 15h.010M16 15h.010"/></svg></i><span><b>Ride</b><em>Tram, or bus 6 to Stanley</em></span></button><button id="bTour" class="big sm" type="button" aria-label="Tour: a flight round the island, golden afternoon into dusk"><i><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l11-6.5-11-6.5Z"/></svg></i><span><b>Tour</b><em>Sit back and watch</em></span></button><button id="bReset" class="big sm" type="button" aria-label="Whole island: back to the full view"><i><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></i><span><b>Island</b><em>The whole view</em></span></button></div>
@@ -2796,7 +2797,7 @@ function updateShadows(focus, radius) {
 }
 
 /* ═════════════ 7. LIFE: roads, traffic, trams, harbour, air ═════════════ */
-const DYN = { uHitT: { value: null }, uNoNear: { value: 0 }, uTraffic: { value: .7 }, uPx: { value: .001 }, uRoad: { value: null }, uNearFade: { value: new THREE.Vector2(250, 380) } };
+const DYN = { uHitT: { value: null }, uNoNear: { value: 0 }, uClear: { value: 0 }, uTraffic: { value: .7 }, uPx: { value: .001 }, uRoad: { value: null }, uNearFade: { value: new THREE.Vector2(250, 380) } };
 /* ---------- road ribbons: lane markings, tram rails, crossings; cross-faded in near the camera ---------- */
 function makeRibbons() {
   const p = [], a = [], idx = [];
@@ -2849,7 +2850,7 @@ function vehGeo(wheels) {
   box(0, true); box(1, true); if (wheels) { box(2, false); box(3, false); }
   const g = new THREE.InstancedBufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(n, 3)); g.setAttribute('aPt', new THREE.Float32BufferAttribute(pt, 1)); g.setIndex(idx); return g;
 }
-const TRAF_VS = `uniform sampler2D uRoad;uniform float uTraffic,uPx,uTime,uNight,uNoNear;attribute vec4 aA,aB;varying vec3 vWp,vN,vL,vNl;varying vec4 vK;varying float vTw,vPt;
+const TRAF_VS = `uniform sampler2D uRoad;uniform float uTraffic,uPx,uTime,uNight,uNoNear,uClear;attribute vec4 aA,aB;varying vec3 vWp,vN,vL,vNl;varying vec4 vK;varying float vTw,vPt;
       #ifdef VEH
       uniform sampler2D uHitT;attribute float aH,aPt;
       #endif
@@ -2875,6 +2876,7 @@ const TRAF_VS = `uniform sampler2D uRoad;uniform float uTraffic,uPx,uTime,uNight
         float vis=type<5?step(seed,uTraffic)*grow:1.;
         if(type>=5&&type!=7)vis*=smoothstep(0.,.006,t)*smoothstep(1.,.994,t);
         if(type>=6)vis*=smoothstep(uNoNear,uNoNear*1.5+1.,dist);   /* people step clear of the driven car */
+        if(uClear>0.&&type<6)vis*=smoothstep(uClear,uClear*1.35+2.,dist);   /* riding the tram or the bus: no vehicle is drawn right before the passenger's eye */
         float k=1.;
         if(type<6){k=uNoNear>0.?1.:clamp(dist*uPx*1.25/sz.x,1.,mix(2.2,7.,uNight));}   /* seen from afar vehicles are drawn larger; not while driving among them */
         else{vis*=1.-smoothstep(380.,620.,dist);sz*=vec3(.9+.3*h1(seed*7.),.86+.2*h1(seed*3.),1.);}
@@ -3054,15 +3056,18 @@ function makeTrams() {
   hooks.push(dt => {
     dt = Math.min(dt, .1);
     for (const t of TRAMS.list) {
-      const tk = t.tk; if (t.dwell > 0) { t.dwell -= dt; t.v = 0; }
+      const tk = t.tk, mine = TR.on && TR.t === t, flow = TR.on && TR.t && TR.t.tk === tk && TR.t.dir === t.dir, fast = flow && TR.fast ? 3.2 : 1;
+      /* with a passenger aboard, the trams going that way on that line do not call at the stops (the one ridden would otherwise queue behind the one
+         ahead at every stop); the ridden one stops at the next stop when asked, and waits there until told to go on */
+      if (t.dwell > 0) { t.dwell -= dt; t.v = 0; }
       else {
         /* next stop ahead, and the tram ahead on the same track and direction */
-        let ds = 1e9; for (const q of tk.stops) { const d = (q - t.s) * t.dir; if (d > .5 && d < ds && q !== t.last) ds = d; }
+        let ds = 1e9; if (!flow || (mine && TR.stopReq)) for (const q of tk.stops) { const d = (q - t.s) * t.dir; if (d > .5 && d < ds && q !== t.last) ds = d; }
         const endD = t.dir > 0 ? tk.L - 6 - t.s : t.s - 6; ds = Math.min(ds, endD);
         let gap = 1e9; for (const o of TRAMS.list) { if (o === t || o.tk !== tk || o.dir !== t.dir) continue; const d = (o.s - t.s) * t.dir; if (d > 0 && d < gap) gap = d; }
-        const vt = Math.min(VMAX, Math.sqrt(2 * A * Math.max(ds - .4, 0)), Math.sqrt(2 * A * Math.max(gap - 22, 0)));
-        t.v = vt > t.v ? Math.min(vt, t.v + A * dt) : vt; t.s += t.v * dt * t.dir;
-        if (ds < .6 && t.v < .75) {   /* (was v < .25, which the braking curve never reaches before the stop is passed: the trams slowed at their stops and rolled on) */ if (ds === endD) { t.dir = -t.dir; t.dwell = 20 + (t.i % 7) * 3; t.last = -1; } else { t.dwell = 9 + (t.i % 5) * 3; for (const q of tk.stops) if (Math.abs(q - t.s) < 2) t.last = q; } }
+        const vt = Math.min(VMAX * fast, Math.sqrt(2 * A * Math.max(ds - .4, 0)), Math.sqrt(2 * A * fast * Math.max(gap - 22, 0)));
+        t.v = vt > t.v ? Math.min(vt, t.v + A * fast * dt) : vt; t.s += t.v * dt * t.dir;
+        if (ds < .6 && t.v < .75) {   /* (was v < .25, which the braking curve never reaches before the stop is passed: the trams slowed at their stops and rolled on) */ if (ds === endD) { t.dir = -t.dir; t.dwell = mine ? 3 : 20 + (t.i % 7) * 3; t.last = -1; } else { t.dwell = mine ? 1e9 : 9 + (t.i % 5) * 3; for (const q of tk.stops) if (Math.abs(q - t.s) < 2) t.last = q; if (mine) { TR.held = true; TR.stopReq = false; } } }
       }
       t.s = clamp(t.s, 0, tk.L);
       const q = pathAt(tk.pts, t.s / tk.L, t6), l = Math.hypot(q[3], q[5]) || 1, fx = q[3] / l * t.dir, fz = q[5] / l * t.dir;
@@ -3880,18 +3885,31 @@ async function busPlan(B) {
   const car = DRIVE.car, e = E[first.c]; car.e = first.c; car.d = first.d; car.u = first.d > 0 ? Math.min(2, e.L / 2) : Math.max(e.L - 2, e.L / 2); car.v = 0; car.yaw = dTan(e, car.u) + (car.d < 0 ? PI : 0); car.yC = undefined; DRIVE.camY = DRIVE.camG = undefined; DRIVE.queue = []; DRIVE.lock = null; DRIVE.req = null;
   legs[0].steps = legs[0].steps.slice(1); B.legs = legs; B.km = (total - sN) / 1000; return true;
 }
-function busLeg(B) { const L = B.legs[B.li]; if (!L) return; let nx = B.li; while (nx < B.legs.length - 1 && B.legs[nx].stop < 0) nx++; if (B.turn) { const car = DRIVE.car; car.d = -car.d; car.v = 0; B.turn = false; B.yaw = undefined; DRIVE.azV = 0; DRIVE.queue = []; DRIVE.lock = null; }   /* (at a terminus on a spur: turned round where it stands) */ const q = L.stop >= 0 ? B.ln.stops[L.stop] : [L.x, L.z, '']; DRIVE.nav = { dest: { name: (B.ln.stops[Math.max(0, B.legs[nx].stop)] || [])[2] || 'the next stop', x: q[0], z: q[1], kind: 'Stop' }, steps: L.steps, goal: L.goal, k: 0, t: ST.t, turn: false }; DRIVE.lock = null; DRIVE.queue = []; DRIVE.run = null; navMesh(); dHudNav(); }
-function busArrive() { const B = DRIVE.bus, L = B.legs[B.li]; if (L.stop >= 0) B.at = L.stop; B.turning = L.stop < 0; B.turn = !!L.turn; B.li++; navStop(); DRIVE.autoStop = true; }
-function busSkip() { const B = DRIVE.bus; if (!B || !B.legs) return; if (DRIVE.nav) navSkip(); else if (B.li < B.legs.length) B.wait = ST.t; }
-function busHud() { const B = DRIVE.bus, car = DRIVE.car, R = DRIVE.nav; let txt; if (!B.legs) txt = 'At ' + B.ln.stops[B.from][2]; else if (R) { const d = Math.hypot(R.dest.x - car.x, R.dest.z - car.z); txt = 'Next: ' + R.dest.name + ' · ' + (d < 1000 ? Math.max(10, Math.round(d / 10) * 10) + ' m' : (d / 1000).toFixed(1) + ' km'); }
+/* the bus does not call at its stops unless asked. From where it stands, all the stretches up to the next place it must stop anyway (a turning place,
+   the end of the line) are one journey (busRun). Stop asks for the next stop: the journey is cut short there (busAim), the bus pulls up and waits until
+   told to go on */
+function busRun(B) {
+  if (B.turn) { const car = DRIVE.car; car.d = -car.d; car.v = 0; B.turn = false; B.yaw = undefined; DRIVE.azV = 0; }   /* (at a turning place: turned round where it stands) */
+  const steps = [], ends = []; let j = B.li; for (; j < B.legs.length; j++) { for (const st of B.legs[j].steps) steps.push(st); ends.push(steps.length); if (B.legs[j].stop < 0 || j === B.legs.length - 1) break; }
+  if (!ends.length) return; B.run = { i0: B.li, steps, ends }; B.req = B.held = false; busAim(B, B.li + ends.length - 1);
+}
+function busAim(B, j) { const L = B.legs[j], n = B.run.ends[j - B.run.i0], q = L.stop >= 0 ? B.ln.stops[L.stop] : [L.x, L.z, ''], R = DRIVE.nav, k = R && R.bus === B.run ? Math.min(R.k, n) : 0;
+  DRIVE.nav = { dest: { name: q[2] || '', x: q[0], z: q[1], kind: 'Stop' }, steps: B.run.steps.slice(0, n), goal: L.goal, k, t: ST.t, turn: false, bus: B.run }; B.aim = j; DRIVE.lock = null; DRIVE.queue = []; DRIVE.run = null; navMesh(); dHudNav(); }
+/* the next stop ahead: the first stop of the journey not yet passed (its stretch not yet driven through, and the stop itself not already behind the bus) */
+function busAhead(B) { const R = DRIVE.nav, car = DRIVE.car; if (!B.run || !R) return -1; const fx = Math.cos(car.yaw), fz = Math.sin(car.yaw);
+  for (let i = 0; i < B.run.ends.length; i++) { const j = B.run.i0 + i, L = B.legs[j]; if (L.stop < 0 || B.run.ends[i] < R.k) continue; const q = B.ln.stops[L.stop], dx = q[0] - car.x, dz = q[1] - car.z; if (Math.hypot(dx, dz) < 90 && dx * fx + dz * fz < -6) { B.at = L.stop; continue; } return j; } return -1; }
+function busStopBtn() { const B = DRIVE.bus; if (!B || !B.legs) return; if (B.held) { B.held = false; B.wait = ST.t; busHud(); return; } if (!B.run || !DRIVE.nav) return;
+  if (B.req) { B.req = false; busAim(B, B.run.i0 + B.run.ends.length - 1); } else { const j = busAhead(B); if (j >= 0) { B.req = true; busAim(B, j); } } busHud(); }
+function busArrive() { const B = DRIVE.bus, L = B.legs[B.aim]; if (L.stop >= 0) B.at = L.stop; B.turning = L.stop < 0; B.turn = !!L.turn; B.li = B.aim + 1; B.held = !!B.req && B.li < B.legs.length; B.req = false; B.run = null; navStop(); DRIVE.autoStop = true; }
+function busHud() { const B = DRIVE.bus, car = DRIVE.car, R = DRIVE.nav; let txt; rideBtn(B.req, B.held); if (!B.legs) txt = 'At ' + B.ln.stops[B.from][2]; else if (R) { const j = busAhead(B), q = j >= 0 ? B.ln.stops[B.legs[j].stop] : null, d = q ? Math.hypot(q[0] - car.x, q[1] - car.z) : 0; txt = q ? (B.req ? 'Stopping at ' : 'Next: ') + (q[2] || 'the next stop') + ' · ' + (d < 1000 ? Math.max(10, Math.round(d / 10) * 10) + ' m' : (d / 1000).toFixed(1) + ' km') : 'Turning round ahead'; }
   else txt = B.turning && B.li < B.legs.length ? 'Turning round' : (B.li >= B.legs.length ? 'End of the line: ' : 'At ') + (B.ln.stops[B.at][2] || 'the stop'); if (txt !== B.shown) { B.shown = txt; document.querySelector('#tramS span').textContent = txt; } }
 /* the seat: at the front upstairs. Its height and the tilt of its gaze follow the road through a slow ease, so that the steps left in some steep
    roads' height profiles (Stubbs Road, Wong Nai Chung Gap Road) do not jolt it */
 function busCam(dt) {
-  const B = DRIVE.bus, car = DRIVE.car, V = DRIVE.V, e = DRIVE.E[car.e], k = 1 - Math.exp(-dt * 2.2), y = (car.yD ?? car.y) + .32 + V.h * .78;
+  const B = DRIVE.bus, car = DRIVE.car, V = DRIVE.V, e = DRIVE.E[car.e], k = 1 - Math.exp(-dt * 2.2), y = (car.yD ?? car.y) + .32 + V.h + .1;   /* (at the height of the roof: see tramRideCam) */
   const p0 = dPos(e, clamp(car.u - 6 * car.d, 0, e.L)), p1 = dPos(e, clamp(car.u + 16 * car.d, 0, e.L)), run = Math.hypot(p1[0] - p0[0], p1[2] - p0[2]), pit = run > 4 ? clamp(Math.atan2(p1[1] - p0[1], run), -.22, .22) : B.pit;
   if (B.yaw === undefined || !dt || Math.abs(y - B.ey) > 14) { B.yaw = car.yaw; B.ey = y; B.pit = pit; } else { B.yaw += wrapA(car.yaw - B.yaw) * (1 - Math.exp(-dt * 5)); B.ey += (y - B.ey) * k; B.pit += (pit - B.pit) * (1 - Math.exp(-dt * 1.4)); }
-  const fx = Math.cos(car.yaw), fz = Math.sin(car.yaw), ex = car.x + fx * (V.len * .5 + .25), ez = car.z + fz * (V.len * .5 + .25), Pp = B.pit - .05, cp = Math.cos(Pp);
+  const fx = Math.cos(car.yaw), fz = Math.sin(car.yaw), ex = car.x + fx * (V.len * .5 + .15), ez = car.z + fz * (V.len * .5 + .15), Pp = B.pit - .11, cp = Math.cos(Pp);
   camera.position.set(ex, B.ey, ez); camera.fov = 62; camera.near = .35; camera.far = 190000; camera.lookAt(ex + Math.cos(B.yaw) * cp * 50, B.ey + Math.sin(Pp) * 50, ez + Math.sin(B.yaw) * cp * 50); camera.updateProjectionMatrix(); camera.updateMatrixWorld(true);
   if ((B.hudT += dt) > .25) { B.hudT = 0; busHud(); }
 }
@@ -3899,26 +3917,29 @@ function busCam(dt) {
 function tramAt(t, ahead) { const tk = t.tk, q = pathAt(tk.pts, clamp(t.s + ahead * t.dir, 0, tk.L) / tk.L, TR.t6), l = Math.hypot(q[3], q[5]) || 1, fx = q[3] / l * t.dir, fz = q[5] / l * t.dir; return [q[0] + fz * 1.6, q[1] + .12, q[2] - fx * 1.6, fx, fz]; }
 function tramNext(t) { const tk = t.tk; let ds = 1e9, nm = ''; tk.stops.forEach((q, i) => { const d = (q - t.s) * t.dir; if (d > -1 && d < ds && q !== t.last) { ds = Math.max(d, 0); nm = tk.stopN[i]; } });
   const endD = t.dir > 0 ? tk.L - 6 - t.s : t.s - 6; return endD < ds ? [endD, 'the end of the line'] : [ds, nm || 'a tram stop']; }
-function tramHud() { const t = TR.t, el = document.getElementById('tramS'); if (!t || !el) return; const [ds, nm] = tramNext(t), at = t.dwell > 0 && t.v < .2 ? t.tk.stopN[t.tk.stops.indexOf(t.last)] : '';
-  const txt = at ? 'At ' + at : 'Next: ' + nm + (ds < 1e8 ? ' · ' + (ds < 1000 ? Math.max(10, Math.round(ds / 10) * 10) + ' m' : (ds / 1000).toFixed(1) + ' km') : ''); if (txt !== TR.shown) { TR.shown = txt; el.querySelector('span').textContent = txt; } }
+function rideBtn(req, held) { const b = document.getElementById('rideStopB'), tx = held ? 'Go on' : req ? 'Stopping' : 'Stop'; if (b.textContent !== tx) b.textContent = tx; b.classList.toggle('on', !!req && !held); b.classList.toggle('held', !!held); }
+function tramStopBtn() { const t = TR.t; if (!TR.on || !t) return; if (TR.held) { TR.held = false; t.dwell = 0; } else TR.stopReq = !TR.stopReq; tramHud(); }
+function tramHud() { const t = TR.t, el = document.getElementById('tramS'); if (!t || !el) return; rideBtn(TR.stopReq, TR.held); const [ds, nm] = tramNext(t), at = TR.held && t.dwell > 0 && t.v < .2 ? t.tk.stopN[t.tk.stops.indexOf(t.last)] : '';
+  const txt = at ? 'At ' + at : (TR.stopReq ? 'Stopping at ' : 'Next: ') + nm + (ds < 1e8 ? ' · ' + (ds < 1000 ? Math.max(10, Math.round(ds / 10) * 10) + ' m' : (ds / 1000).toFixed(1) + ' km') : ''); if (txt !== TR.shown) { TR.shown = txt; el.querySelector('span').textContent = txt; } }
 function tramRideStart(ln, stop) {
   if (TR.on || DRIVE.on || DRIVE.entering || !TRAMS.list.length) return; plClose(); pinClear(); if (TOUR.on) stopTour(); if (FOCUS.label) exitFocus(); userInput(); document.body.classList.remove('menu', 'tp'); document.getElementById('rideTag').textContent = 'Tram';
   if (ln && stop) {   /* (from the Ride card: the tram going that way that is nearest the stop is brought to it, and waits there a moment) */
     let best = null, bd = 1e9; for (const t of TRAMS.list) { if (t.tk !== ln.tk || t.dir !== ln.dir) continue; const d = Math.abs(t.s - stop[3]); if (d < bd) { bd = d; best = t; } }
-    if (best) { best.s = stop[3]; best.v = 0; best.dwell = 3; best.last = stop[3]; TR.t = best; TR.on = true; TR.az0 = cam.az; TR.pol0 = cam.pol; TR.yaw = TR.pit = undefined; TR.shown = ''; document.body.classList.add('tram'); tramHud(); return; } }
+    if (best) { best.s = stop[3]; best.v = 0; best.dwell = 3; best.last = stop[3]; TR.t = best; TR.on = true; TR.stopReq = TR.held = TR.fast = false; TR.az0 = cam.az; TR.pol0 = cam.pol; TR.yaw = TR.pit = undefined; TR.shown = ''; document.body.classList.add('tram'); tramHud(); return; } }
   /* the tram nearest what is being looked at (from the whole-island view: one in Central), on the main line for preference */
   const c = cam.dist > 2600 ? SITE('hsbc') : [cam.tx, cam.tz]; let best = null, bd = 1e9; for (const t of TRAMS.list) { const p = tramAt(t, 0), d = Math.hypot(p[0] - c[0], p[2] - c[1]) + (t.tk.main ? 0 : 500); if (d < bd) { bd = d; best = t; } }
-  TR.t = best; TR.on = true; TR.az0 = cam.az; TR.pol0 = cam.pol; TR.yaw = TR.pit = undefined; TR.shown = ''; best.dwell = Math.min(best.dwell, 2); document.body.classList.add('tram'); tramHud();
+  TR.t = best; TR.on = true; TR.stopReq = TR.held = TR.fast = false; TR.az0 = cam.az; TR.pol0 = cam.pol; TR.yaw = TR.pit = undefined; TR.shown = ''; best.dwell = Math.min(best.dwell, 2); document.body.classList.add('tram'); tramHud();
 }
-function tramRideStop() { if (!TR.on) return; const p = tramAt(TR.t, 0); TR.on = false; TR.t = null; document.body.classList.remove('tram');
+function tramRideStop() { if (!TR.on) return; const p = tramAt(TR.t, 0); if (TR.t.dwell > 60) TR.t.dwell = 4; TR.on = false; TR.t = null; TR.held = TR.stopReq = TR.fast = false; document.body.classList.remove('tram');
   Object.assign(cam, { tx: p[0], tz: p[2], dist: 60, az: Math.atan2(p[4], p[3]) + PI, pol: 78 * RAD, fov: 40, ty: 2 }); cam.fly = null; cam.tour = null; placeCamera(0); flyTo({ tx: p[0], tz: p[2], dist: 320, pol: 60 * RAD, fov: 40, ty: 0, dur: 2.4 }); }
-function tramSkip() { const t = TR.t; if (!TR.on || !t) return; if (t.dwell > 0) { t.dwell = 0; return; } const ds = tramNext(t)[0]; if (ds > 26 && ds < 1e8) { t.s += (ds - 16) * t.dir; t.v = Math.min(t.v, 4.5); } }
 function tramRideCam(dt) {
-  const t = TR.t; if (t.dwell > 6) t.dwell = 6; const p = tramAt(t, 0), fx = p[3], fz = p[4], ex = p[0] + fx * 5.95, ey = p[1] + 3.25, ez = p[2] + fz * 5.95, a = tramAt(t, 34);
+  /* the seat: at the front, at the height of the roof, looking a little down at the line ahead. Lower, at an upstairs window, lorries, buses and the tram
+     in front fill the view; from here the eye passes over them (and traffic is not drawn within some 20 m of it: DYN.uClear) */
+  const t = TR.t, p = tramAt(t, 0), fx = p[3], fz = p[4], ex = p[0] + fx * 6.0, ey = p[1] + 4.75, ez = p[2] + fz * 6.0, a = tramAt(t, 34);
   /* it looks where the line goes, 34 m on (so into the bend before the tram turns), eased; the drag turns the head from there */
   const hx = a[0] - ex, hz = a[2] - ez, yaw = Math.hypot(hx, hz) > 4 ? Math.atan2(hz, hx) : Math.atan2(fz, fx), pit = Math.atan2(a[1] + 2.6 - ey, Math.max(Math.hypot(hx, hz), 12)), k = 1 - Math.exp(-dt * 3);
   if (TR.yaw === undefined || !dt) { TR.yaw = yaw; TR.pit = pit; } else { TR.yaw += wrapA(yaw - TR.yaw) * k; TR.pit += (pit - TR.pit) * k; }
-  const Y = TR.yaw + clamp(wrapA(cam.az - TR.az0), -2.6, 2.6), Pp = clamp(TR.pit + clamp(TR.pol0 - cam.pol, -.6, .5), -1, 1.1), cp = Math.cos(Pp);
+  const Y = TR.yaw + clamp(wrapA(cam.az - TR.az0), -2.6, 2.6), Pp = clamp(TR.pit - .1 + clamp(TR.pol0 - cam.pol, -.6, .5), -1, 1.1), cp = Math.cos(Pp);
   camera.position.set(ex, ey, ez); camera.fov = 62; camera.near = .35; camera.far = 190000; camera.lookAt(ex + Math.cos(Y) * cp * 50, ey + Math.sin(Pp) * 50, ez + Math.sin(Y) * cp * 50); camera.updateProjectionMatrix(); camera.updateMatrixWorld(true);
   cam.tx = p[0]; cam.tz = p[2]; cam.dist = 60; cam.ty = 3; cam.fly = null; cam.tour = null; cam.vaz = cam.vpol = cam.vx = cam.vz = cam.vzoom = 0;
   if ((TR.hudT += dt) > .25) { TR.hudT = 0; tramHud(); }
@@ -4911,9 +4932,9 @@ const AUTO_KMH = [150, 140, 110, 100, 90, 80, 65, 45, 40];   /* self-driving cru
 /* the self-driving pace: fast. Flat out for the road, braking hard and late only for bends, the turn at the next junction and the
    destination. It does not yield to traffic: anything in the way gets knocked flying. After arriving it stops and stays there */
 function autoPilot(car, e, plan, vmax, V, dt) {
-  const BUS = DRIVE.bus, sp = car.v, LAT = BUS ? 2.6 : 8, DEC = BUS ? 2.4 : 7, cruise = BUS ? Math.min(vmax * .95, AUTO_KMH[e.c] / 3.6 * .62, 15) : Math.min(vmax * .95, AUTO_KMH[e.c] / 3.6); let vt = cruise;   /* (a bus takes its bends and its stops gently, and keeps a bus's pace) */
-  if (BUS && !DRIVE.nav && !DRIVE.autoStop) { if (BUS.legs && BUS.wait && ST.t > BUS.wait && BUS.li < BUS.legs.length) { BUS.wait = 0; busLeg(BUS); } return { thr: 0, brk: 1 }; }
-  if (DRIVE.autoStop) { if (sp < .5) { DRIVE.autoStop = false; if (BUS) { BUS.wait = ST.t + (BUS.turning ? .8 : 5); return { thr: 0, brk: 1 }; } setAuto(false); return { thr: 0, brk: 0 }; } return { thr: 0, brk: sp > 4 ? 1 : 0 }; }   /* (arrived: the car stops and stays where it is, the wheel handed back. Nothing is chosen for you and no screen comes up: the pin button is there for the next place) */
+  const BUS = DRIVE.bus, FAST = BUS && BUS.fast, sp = car.v, LAT = BUS ? (FAST ? 6 : 2.6) : 8, DEC = BUS ? (FAST ? 5 : 2.4) : 7, cruise = BUS ? Math.min(vmax * .95, AUTO_KMH[e.c] / 3.6 * (FAST ? 1.3 : .62), FAST ? 27 : 15) : Math.min(vmax * .95, AUTO_KMH[e.c] / 3.6); let vt = cruise;   /* (the button held: the bus hurries) */   /* (a bus takes its bends and its stops gently, and keeps a bus's pace) */
+  if (BUS && !DRIVE.nav && !DRIVE.autoStop) { if (BUS.legs && BUS.wait && ST.t > BUS.wait && BUS.li < BUS.legs.length) { BUS.wait = 0; busRun(BUS); } return { thr: 0, brk: 1 }; }
+  if (DRIVE.autoStop) { if (sp < .5) { DRIVE.autoStop = false; if (BUS) { BUS.wait = BUS.held ? 1e12 : ST.t + (BUS.turning ? .8 : .3); return { thr: 0, brk: 1 }; }   /* (stopped because it was asked to: it waits to be told to go on) */ setAuto(false); return { thr: 0, brk: 0 }; } return { thr: 0, brk: sp > 4 ? 1 : 0 }; }   /* (arrived: the car stops and stays where it is, the wheel handed back. Nothing is chosen for you and no screen comes up: the pin button is there for the next place) */
   if (!DRIVE.nav) return { thr: 0, brk: 0 };
   /* bends on this road up to 90 m ahead: the speed each one allows (sideways grip LAT), less what there is room to brake off before it */
   /* (the way ahead runs on through the planned turn and along the road it leaves by: a corner just past the junction is seen in time,
@@ -5196,9 +5217,9 @@ function driveStep(dt) {
   /* drawn after the roads, with its outline first: wherever a deck, a crest or a lorry covers the car, a pale shape of it shows through */
   { const gh = DRIVE.ghost || (DRIVE.ghost = dGhost()); if (DRIVE.mesh.material === propMat) DRIVE.mesh.material = DRIVE.carMat || (DRIVE.carMat = new THREE.ShaderMaterial({ uniforms: U, vertexShader: BLD_VS, fragmentShader: PROP_FS(), side: THREE.DoubleSide, transparent: true, blending: THREE.NoBlending }));
     DRIVE.mesh.renderOrder = 27; gh.geometry = DRIVE.mesh.geometry; gh.visible = !G0;
-    if (G0) { if (DRIVE.roadGhost) DRIVE.roadGhost.visible = false; } else if (ST.t - RG.t > .1 || RG.e !== car.e) { RG.e = car.e; dRoadGhost(plan); } }
+    if (G0 || DRIVE.bus) { if (DRIVE.roadGhost) DRIVE.roadGhost.visible = false; }   /* (a passenger on the bus has no need of the road shown through buildings) */ else if (ST.t - RG.t > .1 || RG.e !== car.e) { RG.e = car.e; dRoadGhost(plan); } }
   M.setPosition(car.x, yD + (e.br ? .14 : .32), car.z); DRIVE.ghost.matrix.copy(M); DRIVE.ghost.matrixWorldNeedsUpdate = true;   /* road surfaces are drawn just above the height profile (0.3 m, 0.12 m on decks) */ DRIVE.mesh.matrixWorldNeedsUpdate = true;
-  if (!G0) { crashStep(); propStep(dt, car, V, sp, h0); }
+  if (!G0 && !DRIVE.bus) { crashStep(); propStep(dt, car, V, sp, h0); }   /* (the bus knocks nothing about, and nothing lies in its road: it is a ride) */
   /* the combo runs out a couple of seconds after the last knock */
   if (DRIVE.comboT > 0 && (DRIVE.comboT -= dt) <= 0) { if (DRIVE.combo >= 8) dMsg('Combo ×' + DRIVE.combo); DRIVE.combo = 0; }
   DRIVE.punch = Math.max(0, (DRIVE.punch || 0) - dt * 2.2);
@@ -5802,6 +5823,7 @@ addEventListener('keydown', e => { keys[e.code] = 1; if (DRIVE.on && e.code !== 
   if (e.code === 'KeyF' && FOCUS.label) FOCUS.active ? exitFocus() : enterFocus(FOCUS.label); if (e.code === 'KeyI' && FOCUS.active) setFocusMode(!FOCUS.iso); if (e.code === 'KeyC' && FOCUS.active) setFocusClay(!FOCUS.clay); if (e.code === 'KeyB' && FOCUS.active) focusBestView(); if (e.code === 'KeyL') setLight({ golden: 'noon', noon: 'dusk', dusk: 'golden' }[L.name]); if (e.code === 'KeyT') TOUR.on ? stopTour() : startTour(); });
 addEventListener('keyup', e => { keys[e.code] = 0; });
 function stepCamera(dt) {
+  DYN.uClear.value = TR.on || DRIVE.bus ? 20 : 0;
   if (DRIVE.on) { driveStep(dt); placeCamera(dt); camGuard(dt); camSmooth(dt); if (DRIVE.bus && !DRIVE.garage) busCam(dt); return; }
   if (TR.on) { tramRideCam(dt); return; }
   if (cam.fly) {
@@ -5979,7 +6001,9 @@ async function boot() {
   initClock(); initPlaces();
   document.getElementById('bTour').onclick = () => { if (TOUR.on) { stopTour(); cam.fly = null; cam.tour = null; } else { plClose(); pinClear(); if (FOCUS.label) exitFocus(); startTour(); } };
   document.getElementById('tourS').onclick = e => { e.stopPropagation(); stopTour(); cam.fly = null; cam.tour = null; };
-  initRide(); document.getElementById('tramOff').onclick = e => { e.stopPropagation(); if (DRIVE.bus) exitDrive(); else tramRideStop(); }; document.getElementById('tramNext').onclick = e => { e.stopPropagation(); if (DRIVE.bus) busSkip(); else tramSkip(); };
+  initRide(); document.getElementById('tramOff').onclick = e => { e.stopPropagation(); if (DRIVE.bus) exitDrive(); else tramRideStop(); }; document.getElementById('rideStopB').onclick = e => { e.stopPropagation(); if (DRIVE.bus) busStopBtn(); else tramStopBtn(); };
+  { const f = document.getElementById('rideFast'), set = on => { TR.fast = on; if (DRIVE.bus) DRIVE.bus.fast = on; f.classList.toggle('on', on); };   /* (held down: faster; let go: the ordinary pace) */
+    f.addEventListener('pointerdown', e => { e.stopPropagation(); e.preventDefault(); try { f.setPointerCapture(e.pointerId); } catch (err) { /* synthetic */ } set(true); }); for (const t of ['pointerup', 'pointercancel', 'lostpointercapture']) f.addEventListener(t, () => set(false)); f.addEventListener('contextmenu', e => e.preventDefault()); addEventListener('blur', () => set(false)); }
   for (const t of ['pointerdown', 'pointerup', 'touchstart', 'mousedown', 'click']) document.getElementById('tramS').addEventListener(t, e => e.stopPropagation(), { passive: true });
   addEventListener('keydown', e => { if (e.code === 'Escape' && TR.on) tramRideStop(); });
   document.getElementById('bLabels').onclick = e => { LABELS.on = !LABELS.on; e.currentTarget.classList.toggle('on', LABELS.on); };
