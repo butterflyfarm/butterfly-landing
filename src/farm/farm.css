@@ -934,6 +934,23 @@
   font: italic 400 2rem/1.05 'Newsreader', Georgia, serif;
 }
 
+/* a seedling with a page of its own: its name leads there */
+.tag__name a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: rgba(61, 58, 47, 0.35);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.16em;
+}
+.tag__name a:hover {
+  text-decoration-color: #c9962a;
+}
+.tag__name a:focus-visible {
+  outline: 2px solid #c9962a;
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
 .tag__card .tag__note {
   margin-top: 0.45rem;
   font-size: 0.84rem;
