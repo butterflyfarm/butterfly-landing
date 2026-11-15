@@ -4970,8 +4970,8 @@ const AUTO_KMH = [150, 140, 110, 100, 90, 80, 65, 45, 40];   /* self-driving cru
    destination. It does not yield to traffic: anything in the way gets knocked flying. After arriving it stops and stays there */
 function autoPilot(car, e, plan, vmax, V, dt) {
   const BUS = DRIVE.bus, sp = car.v, LAT = BUS ? 2.6 : 8, DEC = BUS ? 2.4 : 7, cruise = BUS ? Math.min(vmax * .95, AUTO_KMH[e.c] / 3.6 * .62, 15) : Math.min(vmax * .95, AUTO_KMH[e.c] / 3.6); let vt = cruise;   /* (left to itself a ride keeps a bus's pace and takes its bends gently; the accelerator is the passenger's) */   /* (a bus takes its bends and its stops gently, and keeps a bus's pace) */
-  if (BUS && !DRIVE.nav && !DRIVE.autoStop) { if (BUS.legs && BUS.wait && ST.t > BUS.wait && BUS.li < BUS.legs.length) { if (BUS.board && ST.t < BUS.board + 12 && !b3dSettled(car.x, car.z)) return { thr: 0, brk: 1 };   /* (not before the buildings round the first stop are in, or twelve seconds) */ BUS.board = 0; BUS.wait = 0; busRun(BUS); } return { thr: 0, brk: 1 }; }
-  if (DRIVE.autoStop) { if (sp < .5) { DRIVE.autoStop = false; if (BUS) { BUS.wait = BUS.held ? 1e12 : ST.t + (BUS.turning ? .8 : .3); return { thr: 0, brk: 1 }; }   /* (stopped because it was asked to: it waits to be told to go on) */ setAuto(false); return { thr: 0, brk: 0 }; } return { thr: 0, brk: sp > 4 ? 1 : 0 }; }   /* (arrived: the car stops and stays where it is, the wheel handed back. Nothing is chosen for you and no screen comes up: the pin button is there for the next place) */
+  if (BUS && !DRIVE.nav && !DRIVE.autoStop) { if (BUS.legs && BUS.wait && ST.t > BUS.wait && BUS.li < BUS.legs.length) { BUS.vt = undefined; BUS.acc = 0; if (BUS.board && ST.t < BUS.board + 12 && !b3dSettled(car.x, car.z)) return { thr: 0, brk: 1 };   /* (not before the buildings round the first stop are in, or twelve seconds) */ BUS.board = 0; BUS.wait = 0; busRun(BUS); } return { thr: 0, brk: 1 }; }
+  if (DRIVE.autoStop) { if (sp < .5) { DRIVE.autoStop = false; if (BUS) { BUS.wait = BUS.held ? 1e12 : ST.t + (BUS.turning ? .8 : .3); return { thr: 0, brk: 1 }; }   /* (stopped because it was asked to: it waits to be told to go on) */ setAuto(false); return { thr: 0, brk: 0 }; } return BUS ? { thr: 0, brk: 0, acc: BUS.acc = lerp(BUS.acc || 0, -clamp(sp * 1.2, 1.2, 3.2), 1 - Math.exp(-dt * 5)) } : { thr: 0, brk: sp > 4 ? 1 : 0 }; }   /* (arrived: the car stops and stays where it is, the wheel handed back. Nothing is chosen for you and no screen comes up: the pin button is there for the next place) */
   if (!DRIVE.nav) return { thr: 0, brk: 0 };
   /* bends on this road up to 90 m ahead: the speed each one allows (sideways grip LAT), less what there is room to brake off before it */
   /* (the way ahead runs on through the planned turn and along the road it leaves by: a corner just past the junction is seen in time,
@@ -4984,8 +4984,13 @@ function autoPilot(car, e, plan, vmax, V, dt) {
   if (plan && plan.path && plan.left < 160) { const r = Math.abs(plan.path.rel || 0), vj = r > 1.2 ? 10 : r > .6 ? 14 : r > .3 ? 20 : 99; vt = Math.min(vt, Math.sqrt(vj * vj + 2 * DEC * Math.max(0, plan.left - 4))); }
   else if (plan && plan.dead) vt = Math.min(vt, Math.sqrt(2 * DEC * Math.max(0, plan.left - 4)));
   /* the destination */
-  const left = navLeft(); vt = Math.min(vt, Math.sqrt(2 * 5 * Math.max(0, left - 6)) + 2);
+  const left = navLeft(); vt = Math.min(vt, Math.sqrt(2 * (BUS ? 2.2 : 5) * Math.max(0, left - 6)) + 2);
   const clear = vt >= cruise - .5;   /* nothing ahead to slow for: a car running over its cruising speed (after a burst of boost) coasts down and does not brake */
+  /* a ride is not driven by pedals pressed all the way or not at all: that gave a bus the full throttle (12 m/s2) and the full brake (11 m/s2) of the game
+     in turn, a lurch at every bend and a shiver at cruising speed. It is given the acceleration itself: towards the speed wanted, gently, within what a bus does */
+  /* (the speed wanted is read from the bends ahead in 10 m steps, so it wavers from frame to frame: it is followed down at once and up slowly, and the
+     acceleration itself changes over a quarter of a second, not in a frame) */
+  if (BUS) { const vs = BUS.vt = BUS.vt === undefined || vt < BUS.vt ? vt : BUS.vt + (vt - BUS.vt) * (1 - Math.exp(-dt * 1.5)); return { thr: 0, brk: 0, acc: BUS.acc = lerp(BUS.acc || 0, clamp((vs - sp) * 1.4, -3.2, 2.4), 1 - Math.exp(-dt * 5)) }; }
   if (sp < vt - .5) return { thr: 1, brk: 0 };
   if (sp > vt + 1.5) return { thr: 0, brk: clear ? 0 : 1 };
   return { thr: .5, brk: 0 };
@@ -5194,7 +5199,7 @@ function driveStep(dt) {
   let e = E[car.e]; const grade = (() => { const p0 = dPos(e, car.u - 3 * car.d), p1 = dPos(e, car.u + 3 * car.d); return (p1[1] - p0[1]) / 6; })();
   const vmax0 = V.top * [1, 1, .85, .85, .8, .85, .62, .45, .45][e.c];
   /* self-driving: the car sets its own pace (your brake or throttle still wins, steering still turns) */
-  const manBrk = brk > 0; if (!G0 && (DRIVE.auto || DRIVE.autoStop) && !thr && !brk) { const ap = autoPilot(car, e, plan, vmax0, V, dt); thr = ap.thr; brk = ap.brk; }
+  const manBrk = brk > 0; let rideA; if (!G0 && (DRIVE.auto || DRIVE.autoStop) && !thr && !brk) { const ap = autoPilot(car, e, plan, vmax0, V, dt); thr = ap.thr; brk = ap.brk; rideA = ap.acc; }
   /* boost: three charges. A tap spends one on a burst of 2.2 s: full throttle with more shove and a third more top speed; holding spends the next when
      one ends. A charge comes back about every ten seconds, and sooner from knocks, drifts and air. Braking yourself ends a burst. The self-driving
      car never spends a charge by itself: tap, and it hurries along its route, still slowing for bends and traffic as it must */
@@ -5208,8 +5213,9 @@ function driveStep(dt) {
   DRIVE.stopT = brk && Math.abs(car.v) < .5 ? (DRIVE.stopT || 0) + dt : 0;
   if (brk) a = car.v > .4 ? -11 : RD ? -car.v / Math.max(dt, .001) : DRIVE.stopT > .6 && car.v > -4 ? -3.2 : car.v < -.4 ? 0 : -car.v / Math.max(dt, .001);   /* brake to a stop; keep holding to back up (a ride held at its stop stands still: it backed slowly away from it) */
   if (!thr && !brk) a -= car.v > .3 ? 2.2 : car.v < -.3 ? -2.2 : 0;   /* let go: slow down */
+  if (rideA !== undefined) a = rideA;   /* (a ride left to itself: the autopilot's own gentle acceleration) */
   if (car.fly) a = -.4;   /* in the air: no drive, no brakes */
-  car.v += a * dt; if (!thr && !brk && Math.abs(car.v) < .35) car.v = 0;
+  car.v += a * dt; if (rideA !== undefined) { if (car.v < 0) car.v = 0; } else if (!thr && !brk && Math.abs(car.v) < .35) car.v = 0;
   /* along the road, through junctions */
   let du = car.v * dt * car.d; car.u += du; let hops = 0;
   while ((car.u > e.L || car.u < 0) && hops++ < 4) {
