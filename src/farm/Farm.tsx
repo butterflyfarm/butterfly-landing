@@ -22,13 +22,15 @@ import './farm.css'
  * What is planted in the garden bed, left to right. The farm grows apps:
  * a plot with a name is sprouting, a plot without one is resting soil.
  * A seedling says nothing until it is touched; then its tag shows `kind`,
- * `name` and `note`. When an app is grown, its story goes here.
+ * `name` and `note`, and a name with an `href` leads to the app's own page.
+ * When an app is grown, its story goes here.
  */
-type Plot = { name?: string; kind?: string; note?: string; thanks?: string }
+type Plot = { name?: string; kind?: string; note?: string; thanks?: string; href?: string }
 const PLOTS: readonly Plot[] = [
   {},
   {
     name: 'Nicety',
+    href: '/nicety/',
     kind: 'First seedling',
     note: 'Still growing. More when it blooms.',
     // shown once a visitor has brought it rain and light
@@ -1176,7 +1178,15 @@ export default function Farm() {
             >
               <div className="tag__card">
                 {growing.kind && <p className="tag__kind">{growing.kind}</p>}
-                <p className="tag__name">{growing.name}</p>
+                <p className="tag__name">
+                  {growing.href ? (
+                    <a href={growing.href} tabIndex={open ? undefined : -1}>
+                      {growing.name}
+                    </a>
+                  ) : (
+                    growing.name
+                  )}
+                </p>
                 <p className="tag__note">{(stage === 3 && growing.thanks) || growing.note}</p>
               </div>
             </div>
