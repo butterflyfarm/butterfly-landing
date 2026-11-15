@@ -34,8 +34,9 @@
   #tpBar::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff4df;border:2px solid #5a3a12;cursor:pointer}
   #tPanel .tpH{display:flex;justify-content:space-between;font-size:10px;letter-spacing:.06em;opacity:.7;font-variant-numeric:tabular-nums;margin-top:-3px}
   body.driving #tClock{top:calc(max(12px,env(safe-area-inset-top)) + 158px)} body.driving #tPanel{top:calc(max(12px,env(safe-area-inset-top)) + 146px)}
+  body.riding #tClock{top:calc(max(12px,env(safe-area-inset-top)) + 198px)} body.riding #tPanel{top:calc(max(12px,env(safe-area-inset-top)) + 186px)}   /* (room for the Skip button above it) */
   body.photo #tClock,body.garage #tClock,body.navopen #tClock,body.places #tClock,body.garage #tPanel,body.navopen #tPanel,body.places #tPanel{display:none}
-  @media (max-height:520px){body.driving #tClock{top:max(10px,env(safe-area-inset-top));right:calc(max(12px,env(safe-area-inset-right)) + 96px)} body.driving #tPanel{top:calc(max(10px,env(safe-area-inset-top)) + 72px);right:max(12px,env(safe-area-inset-right))}}   /* (a phone held sideways: beside the speed, clear of Horn and Boost) */
+  @media (max-height:520px){body.driving #tClock,body.riding #tClock{top:max(10px,env(safe-area-inset-top));right:calc(max(12px,env(safe-area-inset-right)) + 96px)} body.driving #tPanel{top:calc(max(10px,env(safe-area-inset-top)) + 72px);right:max(12px,env(safe-area-inset-right))}}   /* (a phone held sideways: beside the speed, clear of Horn and Boost) */
   .lb.hit b,.lb.hit em{pointer-events:auto}
   #ui .g{display:flex;gap:3px;align-items:center}
   #ui .g+.g{padding-left:10px;border-left:1px solid rgba(255,196,128,.22)}
@@ -334,6 +335,8 @@
   /* self-driving: the Auto button shows while a route is set */
   #drv #dAuto{display:none;padding:8px 10px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
   body.navving #drv #dAuto{display:block}
+  #drv #dSkip{display:none;padding:8px 10px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
+  body.riding #drv #dSkip{display:block}   /* (only while the car is driving itself to a place) */
   #drv #dAuto.on{background:rgba(64,170,220,.7);border-color:rgba(170,228,255,.95);color:#fff}
   #mini{position:fixed;z-index:6;left:max(12px,env(safe-area-inset-left));top:calc(max(10px,env(safe-area-inset-top)) + 54px);width:156px;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;touch-action:manipulation}
   #mmC{display:block;width:156px;height:156px;border-radius:50%;box-shadow:0 2px 12px rgba(0,0,0,.55)}
@@ -419,7 +422,7 @@
   <canvas id="plMap" aria-label="Map of the island with the places to fly to"></canvas>
   <div class="pcar"><button id="plPrev" class="parr" type="button" aria-label="Previous place">‹</button><div class="psel"><b id="plName"></b><em id="plSub"></em></div><button id="plNext" class="parr" type="button" aria-label="Next place">›</button></div>
   <div id="plDots" class="pdots"></div>
-  <div class="pl3"><button id="plGo" class="pgo" type="button" title="The view flies there and picks the clearest angle">Fly there</button><button id="plDrive" class="pgo alt" type="button" title="Drive there: the route is shown, and you choose whether the car drives or you do">Drive there</button><button id="plRide" class="pgo alt" type="button" title="Sit back: the car drives you there along the streets, then on to the next place">Ride there</button></div>
+  <div class="pl3"><button id="plGo" class="pgo" type="button" title="The view flies there and picks the clearest angle">Fly there</button><button id="plDrive" class="pgo alt" type="button" title="Drive there: the route is shown, and you choose whether the car drives or you do">Drive there</button><button id="plRide" class="pgo alt" type="button" title="Sit back: the car drives you there along the streets and stops there. Skip jumps to the end">Ride there</button></div>
 </div></div>
 <div id="labels"></div>
 <div id="fc" role="dialog" aria-label="Landmark"><button class="x" id="fcX" title="Close (Esc)" aria-label="Close">✕</button><h3 id="fcN"></h3><p id="fcY" class="yr"></p><p id="fcF" class="fact"></p><p id="fcS"></p>
@@ -446,7 +449,7 @@
 <div id="bigs"><button id="bigDrive" class="big" type="button" aria-label="Drive around Hong Kong Island"><i><svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="24" cy="24" r="4.5" fill="currentColor"/><path d="M8 21.5c5-2.6 10.4-3.6 16-3.6s11 1 16 3.6M24 28.5v11.5M20 26l-9.5 9M28 26l9.5 9" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg></i><span><b>Drive</b><em>Every street on the island</em></span></button><button id="bPlaces" class="big" type="button" aria-label="Places: search, fly or ride anywhere on the island"><i><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 4.2a2.8 2.8 0 1 1 0 5.6 2.8 2.8 0 0 1 0-5.6Z"/></svg></i><span><b>Places</b><em>Search, fly or ride there</em></span></button><button id="bTour" class="big sm" type="button" aria-label="Tour: a flight round the island, golden afternoon into dusk"><i><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l11-6.5-11-6.5Z"/></svg></i><span><b>Tour</b><em>Sit back and watch</em></span></button><button id="bReset" class="big sm" type="button" aria-label="Whole island: back to the full view"><i><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></i><span><b>Island</b><em>The whole view</em></span></button></div>
 <div id="drv"><div id="dTop"><button id="dExit" title="Stop driving (Esc)" aria-label="Stop driving">✕</button><button id="dNavB" title="Go somewhere" aria-label="Navigate"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 1 7 7c0 4.9-5.6 11.2-6.3 12a1 1 0 0 1-1.4 0C10.6 20.2 5 13.9 5 9a7 7 0 0 1 7-7zm0 4.2A2.8 2.8 0 1 0 12 11.8 2.8 2.8 0 0 0 12 6.2z"/></svg></button><button id="dCar" title="Change vehicle (G)" aria-label="Change vehicle"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M5 11l1.5-4.2A2 2 0 0 1 8.4 5.5h7.2a2 2 0 0 1 1.9 1.3L19 11h.5A1.5 1.5 0 0 1 21 12.5V17h-2v1.5a1 1 0 0 1-2 0V17H7v1.5a1 1 0 0 1-2 0V17H3v-4.5A1.5 1.5 0 0 1 4.5 11zm2.2 0h9.6l-1.1-3.2a.5.5 0 0 0-.5-.3H8.8a.5.5 0 0 0-.5.3zM6.5 15a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6zm11 0a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6z"/></svg></button>
   <div id="dInfo"><span id="dSt"></span><span id="dNx"><i id="dArr">↑</i><b id="dNxD"></b><em id="dNxN"></em></span><span id="dGo"><i>➤</i><em></em></span></div>
-  <div id="dSide"><div id="dSpdBox"><b id="dSpd">0</b><small>km/h</small></div><button id="dU" title="Turn round (U)">U-turn</button><button id="dAuto" title="Self-driving on or off">Auto</button></div></div>
+  <div id="dSide"><div id="dSpdBox"><b id="dSpd">0</b><small>km/h</small></div><button id="dU" title="Turn round (U)">U-turn</button><button id="dAuto" title="Self-driving on or off">Auto</button><button id="dSkip" type="button" title="Skip the journey: the car is put down at the destination">Skip ▸▸</button></div></div>
   <canvas id="dFx" aria-hidden="true"></canvas><button id="dBoost" title="Boost: a burst of speed. Three charges; they come back with time, and faster from drifts, jumps and knocks (Space)" aria-label="Boost"><svg viewBox="0 0 84 84" aria-hidden="true"><circle class="bt" cx="42" cy="42" r="37" stroke-dasharray="71.5 6"/><circle class="bn" id="dBoostN" cx="42" cy="42" r="37" stroke-dasharray="0 232.5"/><circle class="bf" id="dBoostF" cx="42" cy="42" r="37" stroke-dasharray="0 232.5"/></svg><b>Boost</b></button><button id="dHorn" title="Horn: traffic ahead jumps aside (H)" aria-label="Horn"><b>Horn</b></button><div id="dCombo" aria-live="off"><b id="dComboN"></b><em>combo</em></div>
   <div id="mini" title="Tap for the whole island"><canvas id="mmC"></canvas><span id="mmD"></span></div><div id="isle"><div class="ic"><div class="ih"><b>Hong Kong Island</b><button id="isleGo" type="button">Choose destination</button><button id="isleX" type="button" aria-label="Close the map">✕</button></div><canvas id="isleC" aria-label="Map of Hong Kong Island: where you are, your route, and the places to drive to"></canvas></div></div><div id="dJoy"><i></i></div><div id="dTun"></div><div id="dMsg"></div>
   <div id="navP"><div class="nh"><b>Where to?</b><button id="navX" aria-label="Close">✕</button></div><div id="navL"></div></div>
@@ -478,7 +481,7 @@
       <div class="gmodes"><button id="gAuto" class="gmode auto"><b>Drive me</b><em>Sit back: the car drives itself there, fast</em><i id="gAutoBest"></i></button><button id="gFree" class="gmode"><b>I'll drive</b><em>You steer, following the route on the road</em><i id="gFreeBest"></i></button></div>
       <button id="gBack3" class="glink">‹ Pick another place</button></div></div></div>
 <div id="cr">© 2026 Butterfly Farm Studio Limited · Buildings and 3D building models: Lands Department, HKSAR Government, via <a href="https://data.gov.hk/en-data/dataset/hk-landsd-openmap-landsd-building" target="_blank" rel="noopener">DATA.GOV.HK</a> and <a href="https://3d.map.gov.hk/" target="_blank" rel="noopener">Open3Dhk</a> · map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors · addresses: <a href="https://data.gov.hk/en-data/dataset/hk-dpo-als_01-als" target="_blank" rel="noopener">Address Lookup Service</a>, HKSAR Government · elevation NASA SRTM</div>
-<script>window.__errs=[];addEventListener("error",function(e){window.__errs.push(String(e.message).slice(0,300)+" @"+e.lineno)});(function(){var ce=console.error;console.error=function(){try{window.__errs.push(Array.prototype.join.call(arguments," ").slice(0,900))}catch(e){}ce.apply(console,arguments)}})();</script>
+<script>window.__errs=[];addEventListener("error",function(e){window.__errs.push(String(e.message).slice(0,300)+" @"+e.lineno);var b=document.getElementById("boot");if(b&&e.message&&!window.__hk){b.className="err";var m=document.getElementById("bootMsg"),p=document.getElementById("bootPct");if(m)m.textContent="Could not start. Please reload the page.";if(p)p.textContent=""}});(function(){var ce=console.error;console.error=function(){try{window.__errs.push(Array.prototype.join.call(arguments," ").slice(0,900))}catch(e){}ce.apply(console,arguments)}})();</script>
 <script type="module">
 import * as THREE from 'three';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -3534,19 +3537,13 @@ function plAddr() {
 function plPick(e) { const q = document.getElementById('plQ'); q.value = ''; q.blur(); plSearch(''); if (e.place !== undefined) { plSet(e.place); return; }
   PLC.sel = e; document.getElementById('plName').textContent = e.name; document.getElementById('plSub').textContent = e.kind; [...document.getElementById('plDots').children].forEach(d => d.classList.remove('on')); plDraw();
   const m = document.getElementById('plMap'); if (m.scrollIntoView) m.scrollIntoView({ block: 'nearest' }); }
-/* the ride: a tour by road. The car drives itself from the place nearest the view to the chosen one, then on from place to place, until you take the
-   wheel (Auto), choose somewhere yourself, or leave */
+/* the ride: the car drives itself from the place nearest the view to the chosen one and stops there. Auto takes the wheel on the way; Skip puts the
+   car down at the destination at once */
 const placeObj = S => { const P = placeXZ(S); return { id: S.id, name: S.name, x: P[0], z: P[1], kind: 'Place' }; };
 async function rideAlong(to) {   /* to: { name, x, z } and, for one of the places, its id */
   if (DRIVE.on || DRIVE.entering || !to) return; const from = tripFrom(to);
   plClose(); await enterDrive(); if (!DRIVE.on || !DRIVE.car || !from) return;
   dStart(from.id); closeGarage(to, true); DRIVE.ride = true; ctlHint.first = false; ctlHint.show(['Riding to ' + to.name, 'Auto to take the wheel', '✕ to leave'], 8000);
-}
-function rideNext() {
-  const car = DRIVE.car, i = Math.max(0, STARTS.findIndex(q => q.id === DRIVE.lastDest));
-  for (let k = 1; k <= STARTS.length; k++) { const S = STARTS[(i + k) % STARTS.length], P = placeXZ(S); if (!P || Math.hypot(P[0] - car.x, P[1] - car.z) < 300) continue;
-    DRIVE.start = DRIVE.lastDest || 'here'; DRIVE.run = null; navStart(placeObj(S)); if (DRIVE.nav) { DRIVE.ride = true; dMsg('Next: ' + S.name, 4); return true; } }
-  return false;
 }
 function initPlaces() {
   const q = id => document.getElementById(id), el = q('places'); if (!el) return;
@@ -3736,13 +3733,18 @@ function initFocus() {
   });
 }
 /* fly the camera to a pose, keeping the current heading unless one is given */
+/* how far a flight must rise. Half-way there the view should take in the whole journey (the eye about 0.85 of the distance travelled away), so a flight
+   from one street to another some kilometres off first draws back until both are in the picture, crosses, and comes down; it does not skim the roofs
+   all the way. A short hop, or a change of height over the same spot, rises not at all. (The measure: how many times e the eye must draw back beyond
+   the even change from the first distance to the last.) */
+function flyArc(a, b) { const move = Math.hypot(b.tx - a.tx, b.tz - a.tz); return clamp(Math.log(Math.max(move * .85, 1) / Math.max(Math.sqrt(a.dist * b.dist), 1)), 0, 5); }
 function flyTo(b, then) {
   const a = { tx: cam.tx, tz: cam.tz, dist: cam.dist, az: cam.az, pol: cam.pol, fov: cam.fov, ty: cam.ty };
   const tgt = { tx: b.tx, tz: b.tz, dist: b.dist ?? cam.dist, az: b.az ?? cam.az, pol: b.pol ?? cam.pol, fov: b.fov ?? cam.fov, ty: b.ty || 0 };
   cam.tour = null; cam.vaz = cam.vpol = cam.vx = cam.vz = cam.vzoom = 0;
   let daz = (tgt.az - a.az) % TAU; if (daz > PI) daz -= TAU; if (daz < -PI) daz += TAU;
-  const move = Math.hypot(tgt.tx - a.tx, tgt.tz - a.tz), arc = clamp(Math.log(Math.max(move * 1.4, 1) / Math.max(Math.sqrt(a.dist * tgt.dist), 1)), 0, 2.2) * .8;
-  cam.fly = { a, b: tgt, daz, t: 0, dur: b.dur || 2.2 + arc * 1.4, arc, then };
+  const arc = flyArc(a, tgt);
+  cam.fly = { a, b: tgt, daz, t: 0, dur: b.dur || clamp(2.2 + arc * 1.3, 2.2, 7.5), arc, then };
 }
 /* shareable views: the URL hash keeps the camera and the time of day */
 function viewHash() { return '#v=' + [cam.tx, cam.tz, cam.dist].map(x => Math.round(x)).join(',') + ',' + [cam.az / RAD, cam.pol / RAD].map(x => x.toFixed(1)).join(',') + ',' + Math.round(cam.fov) + ',' + TOD.h.toFixed(2) + (FOCUS.active ? '&f=' + encodeURIComponent(FOCUS.label.name) + (FOCUS.iso ? '&i=1' : '') + (FOCUS.clay ? '' : '&c=0') : ''); }
@@ -3901,13 +3903,24 @@ function b3dLanes(bb) {
   if (!L.length) return null;
   /* the box that holds them all, for a quick first test */
   L.x0 = L.z0 = L.y0 = 1e9; L.x1 = L.z1 = L.y1 = -1e9; for (const q of L) { L.x0 = Math.min(L.x0, q[0] - q[6], q[2] - q[6]); L.x1 = Math.max(L.x1, q[0] + q[6], q[2] + q[6]); L.z0 = Math.min(L.z0, q[1] - q[6], q[3] - q[6]); L.z1 = Math.max(L.z1, q[1] + q[6], q[3] + q[6]); L.y0 = Math.min(L.y0, q[4] - .3, q[5] - .3); L.y1 = Math.max(L.y1, q[4] + 4.6, q[5] + 4.6); }
+  /* each stretch's own box (with its width and the driving height), and, where there are many, a 12 m grid of which stretches lie in each cell: a mall
+     standing over several roads has tens of thousands of triangles and hundreds of stretches under it, and trying each against each froze the drive */
+  const n = L.length, bx = L.bx = new Float32Array(n * 6); for (let i = 0; i < n; i++) { const q = L[i], w = q[6], o = i * 6; bx[o] = Math.min(q[0], q[2]) - w; bx[o + 1] = Math.max(q[0], q[2]) + w; bx[o + 2] = Math.min(q[1], q[3]) - w; bx[o + 3] = Math.max(q[1], q[3]) + w; bx[o + 4] = Math.min(q[4], q[5]) - .3; bx[o + 5] = Math.max(q[4], q[5]) + 4.6; }
+  if (n > 10) { const cs = 12, gw = Math.max(1, Math.ceil((L.x1 - L.x0) / cs)), gh = Math.max(1, Math.ceil((L.z1 - L.z0) / cs)); if (gw * gh <= 60000) { const cells = new Array(gw * gh);
+      for (let i = 0; i < n; i++) { const o = i * 6, i0 = clamp(Math.floor((bx[o] - L.x0) / cs), 0, gw - 1), i1 = clamp(Math.floor((bx[o + 1] - L.x0) / cs), 0, gw - 1), j0 = clamp(Math.floor((bx[o + 2] - L.z0) / cs), 0, gh - 1), j1 = clamp(Math.floor((bx[o + 3] - L.z0) / cs), 0, gh - 1);
+        for (let j = j0; j <= j1; j++) for (let k = i0; k <= i1; k++) (cells[j * gw + k] || (cells[j * gw + k] = [])).push(i); }
+      L.g = { cs, gw, gh, cells }; L.stamp = new Int32Array(n); L.tick = 0; } }
   return L;
 }
 /* does a triangle of a building stand in the driving space: inside a carriageway, between just under the road and 4.6 m above it? */
 function b3dBlocked(L, ax, ay, az, bx, by, bz, cx, cy, cz) {
   const y0 = Math.min(ay, by, cy); if (y0 > L.y1) return false; const y1 = Math.max(ay, by, cy); if (y1 < L.y0) return false;
   const x0 = Math.min(ax, bx, cx), x1 = Math.max(ax, bx, cx), z0 = Math.min(az, bz, cz), z1 = Math.max(az, bz, cz); if (x0 > L.x1 || x1 < L.x0 || z0 > L.z1 || z1 < L.z0) return false; let C = null;
-  for (const q of L) { if (y0 > Math.max(q[4], q[5]) + 4.6 || y1 < Math.min(q[4], q[5]) - .3) continue; const w = q[6]; if (x0 > Math.max(q[0], q[2]) + w || x1 < Math.min(q[0], q[2]) - w || z0 > Math.max(q[1], q[3]) + w || z1 < Math.min(q[1], q[3]) - w) continue; (C || (C = [])).push(q); }
+  const LB = L.bx, G = L.g;
+  if (G) { const st = L.stamp, tk = ++L.tick, cs = G.cs, gw = G.gw, i0 = clamp(Math.floor((x0 - L.x0) / cs), 0, gw - 1), i1 = clamp(Math.floor((x1 - L.x0) / cs), 0, gw - 1), j0 = clamp(Math.floor((z0 - L.z0) / cs), 0, G.gh - 1), j1 = clamp(Math.floor((z1 - L.z0) / cs), 0, G.gh - 1);
+    for (let j = j0; j <= j1; j++) for (let k = i0; k <= i1; k++) { const a = G.cells[j * gw + k]; if (!a) continue; for (let m = 0; m < a.length; m++) { const li = a[m]; if (st[li] === tk) continue; st[li] = tk; const o = li * 6;
+        if (x0 > LB[o + 1] || x1 < LB[o] || z0 > LB[o + 3] || z1 < LB[o + 2] || y0 > LB[o + 5] || y1 < LB[o + 4]) continue; (C || (C = [])).push(L[li]); } } }
+  else for (let li = 0, o = 0; li < L.length; li++, o += 6) { if (x0 > LB[o + 1] || x1 < LB[o] || z0 > LB[o + 3] || z1 < LB[o + 2] || y0 > LB[o + 5] || y1 < LB[o + 4]) continue; (C || (C = [])).push(L[li]); }
   if (!C) return false;
   const n = clamp(Math.ceil(Math.max(x1 - x0, y1 - y0, z1 - z0) / 2.2), 1, 12);
   for (let i = 0; i <= n; i++) for (let j = 0; j <= n - i; j++) { const u = i / n, v = j / n, w = 1 - u - v, px = ax * w + bx * u + cx * v, py = ay * w + by * u + cy * v, pz = az * w + bz * u + cz * v;
@@ -3935,36 +3948,40 @@ function b3dShow(undo) { for (const [pos, idx, ys] of undo.v) { for (let k = 0; 
    lower and ends at the foot's level; brought down, the tower's wall would lie in the podium's and the two would flicker). A tower standing well inside
    its podium is brought down too, out of sight within it; a taller neighbour in a terrace is no support. Left alone as a whole: a model standing clear
    of level ground (a bridge or a walkway, see below). Returns how many feet were moved. */
-function b3dFeet(list, hand) {
+async function b3dFeet(list, hand, pace) {
   const C = 2, G = new Map(); let moved = 0;
   /* every wall position of every model, by 2 m cell: model, lowest and highest point there */
-  list.forEach((b, bi) => { const V = b.V, n = b.n, foot = b.ft = new Map(); let ymin = 32767;
+  for (let bi = 0; bi < list.length; bi++) { const b = list[bi], V = b.V, n = b.n, foot = b.ft = new Map(); let ymin = 32767; if (pace) await pace();
     for (let k = 0; k < n * 3; k += 3) { const vy = V[k + 1], key = (V[k] + 32768) * 65536 + (V[k + 2] + 32768), f = foot.get(key); if (f === undefined) foot.set(key, [vy, vy]); else { if (vy < f[0]) f[0] = vy; if (vy > f[1]) f[1] = vy; } if (vy < ymin) ymin = vy; }
     b.ymin = ymin;
-    for (const [key, f] of foot) { if (f[1] - f[0] < 5) continue; const X = b.x + (Math.floor(key / 65536) - 32768) / 10, Z = b.z + (key % 65536 - 32768) / 10, ck = Math.floor(X / C) * 65536 + Math.floor(Z / C); let a = G.get(ck); if (!a) G.set(ck, a = []); a.push(bi, b.y + f[0] / 10, b.y + f[1] / 10); } });
-  list.forEach((b, bi) => { const V = b.V, n = b.n; let drop = null, lmin = 1e9, g0 = 1e9, g1 = -1e9;
+    for (const [key, f] of foot) { if (f[1] - f[0] < 5) continue; const X = b.x + (Math.floor(key / 65536) - 32768) / 10, Z = b.z + (key % 65536 - 32768) / 10, ck = Math.floor(X / C) * 65536 + Math.floor(Z / C); let a = G.get(ck); if (!a) G.set(ck, a = []); a.push(bi, b.y + f[0] / 10, b.y + f[1] / 10); } }
+  for (let bi = 0; bi < list.length; bi++) { const b = list[bi], V = b.V, n = b.n; let drop = null, lmin = 1e9, g0 = 1e9, g1 = -1e9; if (pace) await pace();
     /* a thing that stands wholly clear of level ground (every foot 2.5 m up or more, the ground under it within 2 m of level) is not a building on a slope
        but a bridge, a walkway or a deck on columns: brought down, it would become a solid block across the street beneath it */
     for (const [key, f] of b.ft) { if (f[1] - f[0] < 5 || f[0] > b.ymin + 30) continue; const g = groundY(b.x + (Math.floor(key / 65536) - 32768) / 10, b.z + (key % 65536 - 32768) / 10), l = b.y + f[0] / 10 - g; if (l < lmin) lmin = l; if (g < g0) g0 = g; if (g > g1) g1 = g; }
-    if (lmin >= 2.5 && g1 - g0 < 2) { b.ft = null; return; }
+    if (lmin >= 2.5 && g1 - g0 < 2) { b.ft = null; continue; }
     for (const [key, f] of b.ft) { if (f[1] - f[0] < 5 || f[0] > b.ymin + 30) continue; const X = b.x + (Math.floor(key / 65536) - 32768) / 10, Z = b.z + (key % 65536 - 32768) / 10, fy = b.y + f[0] / 10;
       const g = Math.min(groundY(X, Z), groundY(X + 2.5, Z), groundY(X - 2.5, Z), groundY(X, Z + 2.5), groundY(X, Z - 2.5)), lift = fy - g; if (lift <= .15 || lift > 30) continue;
       let on = false; const cx = Math.floor(X / C), cz = Math.floor(Z / C);
       for (let dx = -1; dx <= 1 && !on; dx++) for (let dz = -1; dz <= 1 && !on; dz++) { const a = G.get((cx + dx) * 65536 + cz + dz); if (!a) continue; for (let q = 0; q < a.length; q += 3) if (a[q] !== bi && a[q + 1] <= fy - 1 && Math.abs(a[q + 2] - fy) <= 1.5) { on = true; break; } }
       if (!on) for (const q of hand) if (X > q.bb[0] - .5 && X < q.bb[2] + .5 && Z > q.bb[1] - .5 && Z < q.bb[3] + .5 && q.y <= fy - 1 && Math.abs(q.y + q.top - fy) <= 1.5) { on = true; break; }
       if (on) continue; (drop || (drop = new Map())).set(key, [f[0], Math.max(-32768, Math.round((g - .4 - b.y) * 10))]); }
-    b.ft = null; if (!drop) return;
+    b.ft = null; if (!drop) continue;
     for (let k = 0; k < n * 3; k += 3) { const d = drop.get((V[k] + 32768) * 65536 + (V[k + 2] + 32768)); if (d && V[k + 1] <= d[0] + 1) V[k + 1] = d[1]; }
-    moved += drop.size; });
+    moved += drop.size; }
   return moved;
 }
+/* a breath between slices of long work: the next frame (or, where no frames are drawn, a short wait). Loading a sheet while driving used to stop the
+   picture for most of a second in one go (every wall triangle tried against the carriageways, every wall foot against the ground); now it is done a few
+   milliseconds a frame, with the survey's plain blocks standing in until it is ready */
+const b3dBreath = () => new Promise(r => { let d = 0; const go = () => { if (!d) { d = 1; r(); } }; requestAnimationFrame(go); setTimeout(go, 34); });
 async function b3dLoad(T) {
-  B3D.loading = true; const t0 = performance.now();
+  B3D.loading = true; const t0 = performance.now(); let tk = performance.now(), work = 0, slow = 0, stage = 'read', slowAt = ''; const pace = async () => { const n = performance.now(); if (n - tk < 6) return; work += n - tk; if (n - tk > slow) { slow = n - tk; slowAt = stage; } await b3dBreath(); tk = performance.now(); };
   try { const res = await fetch(b3dURL(T.id + '.bin')); if (!res.ok) throw new Error(res.status); let u8 = new Uint8Array(await res.arrayBuffer());
     if (u8[0] === 0x1f && u8[1] === 0x8b) u8 = new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
     const t1 = performance.now();
     const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength), nb = dv.getUint32(4, true), G = b3dGrid(), recs = CITY.recs, td = CITY.tex.image.data; let o = 8, nv = 0, ni = 0; const list = [], hand = []; const LMAT = new Set(); for (const e of B3D.index || []) if (e.lm && GOVK.has(e.lm)) for (const q of e.at) LMAT.add(Math.round(q[0] * 10) + '_' + Math.round(q[1] * 10));
-    for (let b = 0; b < nb; b++) { const x = dv.getFloat32(o, true), z = dv.getFloat32(o + 4, true), y = dv.getFloat32(o + 8, true), top = dv.getFloat32(o + 12, true), n = dv.getUint32(o + 16, true), nt = dv.getUint32(o + 20, true), wide = dv.getUint8(o + 24), nc = dv.getUint8(o + 25); o += 26; const po = o; o += nc * 6; const vo = o; o += n * 6; const co = o; o += n; const io = o; o += nt * 3 * (wide ? 4 : 2);
+    for (let b = 0; b < nb; b++) { await pace(); const x = dv.getFloat32(o, true), z = dv.getFloat32(o + 4, true), y = dv.getFloat32(o + 8, true), top = dv.getFloat32(o + 12, true), n = dv.getUint32(o + 16, true), nt = dv.getUint32(o + 20, true), wide = dv.getUint8(o + 24), nc = dv.getUint8(o + 25); o += 26; const po = o; o += nc * 6; const vo = o; o += n * 6; const co = o; o += n; const io = o; o += nt * 3 * (wide ? 4 : 2);
       /* its outline box, and the surveyed buildings it stands for: those with their centre inside it and at least half their own box under it */
       const V = new Int16Array(u8.buffer.slice(u8.byteOffset + vo, u8.byteOffset + vo + n * 6)); let ix0 = 32767, iz0 = 32767, ix1 = -32768, iz1 = -32768; for (let k = 0; k < n * 3; k += 3) { const vx = V[k], vz = V[k + 2]; if (vx < ix0) ix0 = vx; if (vx > ix1) ix1 = vx; if (vz < iz0) iz0 = vz; if (vz > iz1) iz1 = vz; }
       const x0 = x + ix0 / 10, x1 = x + ix1 / 10, z0 = z + iz0 / 10, z1 = z + iz1 / 10;
@@ -3983,10 +4000,10 @@ async function b3dLoad(T) {
       let lk = (GOV_LOOK.find(([re]) => own.some(q => re.test(recs[q].nm))) || [])[1]; if (lk && top < (lk.min ?? 60)) lk = null; let xP = null;
       if (lk && lk.belts) { xP = []; const J = wide ? new Uint32Array(u8.buffer.slice(u8.byteOffset + io, u8.byteOffset + io + nt * 12)) : new Uint16Array(u8.buffer.slice(u8.byteOffset + io, u8.byteOffset + io + nt * 6)); for (const yb of lk.belts) b3dBand(V, J, nt * 3, (yb - y) * 10, (yb + lk.bh - y) * 10, xP); }
       const xn = xP ? xP.length / 3 : 0; list.push({ x, z, y, top, n, nt, wide, V, io, hit, po, co, nc, bb: [x0, z0, x1, z1], lk, xP, xn }); nv += n + xn; ni += nt * 3 + xn; }
-    { const tf = performance.now(); T.feet = b3dFeet(list, hand); T.feetMs = Math.round(performance.now() - tf); }
+    stage = 'feet'; T.feet = await b3dFeet(list, hand, pace); stage = 'walls';
     const NRM = new Float32Array(nv * 3);   /* not facings: each building's own origin (x, z) and main wall direction (y); see the shader */
     const P = new Float32Array(nv * 3), Cc = new Float32Array(nv * 3), AP = new Float32Array(nv * 4), AQ = new Float32Array(nv * 4), I = new Uint32Array(ni), hide = new Set(); let v0 = 0, i0 = 0, cut = 0;
-    for (const b of list) { let col, type, sd, roof = 0, lit, hue, flags = 0;
+    for (const b of list) { await pace(); let col, type, sd, roof = 0, lit, hue, flags = 0;
       if (b.hit.length) { let ri = b.hit[0]; for (const q of b.hit) { hide.add(q); recs[q].gov = T.id; if (recs[q].A > recs[ri].A) ri = q; } const k = ri * 12; col = [td[k], td[k + 1], td[k + 2]]; type = td[k + 3]; sd = td[k + 4]; roof = td[k + 5]; lit = td[k + 8]; hue = td[k + 9]; flags = td[k + 10]; }
       else { sd = hash2(Math.round(b.x * 3), Math.round(b.z * 3)); const ht = b.tall || b.top; type = ht > 70 ? 2 : ht > 22 ? 1 : 0; const pal = type === 2 ? PAL.glass : type === 1 ? PAL.res : PAL.tong; col = pal[(sd * 997 | 0) % pal.length]; lit = .4 + sd * .3; hue = sd; }
       /* each part of the building takes its own wall colour, read from the Lands Department's photo textures: for curtain-wall glass towers the mean of the
@@ -4000,7 +4017,8 @@ async function b3dLoad(T) {
         NRM[q] = b.x; NRM[q + 2] = b.z; const pc = pal[u8[b.co + k]] || col; Cc[q] = pc[0]; Cc[q + 1] = pc[1]; Cc[q + 2] = pc[2]; AP[w] = sd; AP[w + 1] = type; AP[w + 2] = roof; AP[w + 3] = b.y; AQ[w] = b.y + b.top; AQ[w + 1] = lit; AQ[w + 2] = hue; AQ[w + 3] = flags; }
       const nI = b.nt * 3, src = u8.buffer.slice(u8.byteOffset + b.io, u8.byteOffset + b.io + nI * (b.wide ? 4 : 2)), J = b.wide ? new Uint32Array(src) : new Uint16Array(src); /* a few of the models hold triangles with no area (three points in a line): left out, as they have no facing */
       const LN = b3dLanes(b.bb); let C4 = 0, S4 = 0;   /* the building's main wall direction: its walls' facings, folded four times round */   /* once the streets are known, parts of a model standing in a carriageway are left out too */
-      for (let k = 0, V = b.V; k < nI; k += 3) { const a = J[k] * 3, e = J[k + 1] * 3, c = J[k + 2] * 3, ux = V[e] - V[a], uy = V[e + 1] - V[a + 1], uz = V[e + 2] - V[a + 2], wx = V[c] - V[a], wy = V[c + 1] - V[a + 1], wz = V[c + 2] - V[a + 2];
+      for (let k = 0, V = b.V; k < nI; k += 3) { if (k % 192 === 0 && performance.now() - tk > 6) await pace();   /* (a mall standing over several roads has tens of thousands of triangles, each tried against every lane under it: a breath within it too, looked for every 64 triangles) */
+        const a = J[k] * 3, e = J[k + 1] * 3, c = J[k + 2] * 3, ux = V[e] - V[a], uy = V[e + 1] - V[a + 1], uz = V[e + 2] - V[a + 2], wx = V[c] - V[a], wy = V[c + 1] - V[a + 1], wz = V[c + 2] - V[a + 2];
         if (uy * wz === uz * wy && uz * wx === ux * wz && ux * wy === uy * wx) continue;
         { const nx = uy * wz - uz * wy, ny = uz * wx - ux * wz, nz = ux * wy - uy * wx, l2 = nx * nx + nz * nz; if (l2 > 4 * ny * ny) { const c2 = (nx * nx - nz * nz) / l2, s2 = 2 * nx * nz / l2, ar = Math.sqrt(l2); C4 += (c2 * c2 - s2 * s2) * ar; S4 += 2 * c2 * s2 * ar; } }
         if (LN && b.y + Math.min(V[a + 1], V[e + 1], V[c + 1]) / 10 <= LN.y1 && b3dBlocked(LN, b.x + V[a] / 10, b.y + V[a + 1] / 10, b.z + V[a + 2] / 10, b.x + V[e] / 10, b.y + V[e + 1] / 10, b.z + V[e + 2] / 10, b.x + V[c] / 10, b.y + V[c + 1] / 10, b.z + V[c + 2] / 10)) { cut++; continue; }
@@ -4009,13 +4027,14 @@ async function b3dLoad(T) {
         AP[w] = sd; AP[w + 1] = 4; AP[w + 2] = 0; AP[w + 3] = b.y; AQ[w] = b.y + b.top; AQ[w + 1] = 0; AQ[w + 2] = hue; AQ[w + 3] = 0; I[i0++] = vq; }   /* (the belts: plain dark wall, no windows) */
       { const th = Math.atan2(S4, C4) / 4; for (let k = 0; k < b.n + (b.xn || 0); k++) NRM[(v0 + k) * 3 + 1] = th; }
       v0 += b.n + (b.xn || 0); }
+    await b3dBreath(); const tEnd = performance.now();   /* (what follows is done in one go, in a frame of its own: the model shown and the survey's blocks it replaces put away) */
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setAttribute('aCol', new THREE.BufferAttribute(Cc, 3)); g.setAttribute('aP', new THREE.BufferAttribute(AP, 4)); g.setAttribute('aQ', new THREE.BufferAttribute(AQ, 4));
     g.setAttribute('aF', new THREE.BufferAttribute(new Float32Array(nv), 1)); g.setAttribute('normal', new THREE.BufferAttribute(NRM, 3)); g.setIndex(new THREE.BufferAttribute(I.subarray(0, i0), 1));
     const mat = B3D.mat || (B3D.mat = new THREE.ShaderMaterial({ uniforms: U, vertexShader: BLD_VS, fragmentShader: BLD_FS(), defines: { FOC_SINK: 1, FLATN: 1 } }));
     let ylo = 1e9, yhi = -1e9; for (const b of list) { ylo = Math.min(ylo, b.y - 35); yhi = Math.max(yhi, b.y + b.top + 5); } if (!list.length) ylo = yhi = 0;
     g.boundingSphere = new THREE.Sphere(new THREE.Vector3((T.box[0] + T.box[2]) / 2, (ylo + yhi) / 2, (T.box[1] + T.box[3]) / 2), Math.hypot(T.box[2] - T.box[0], yhi - ylo, T.box[3] - T.box[1]) / 2 + 30);
     const mesh = new THREE.Mesh(g, mat); mesh.layers.enable(1); scene.add(mesh);   /* casts shadows; left out of the water's reflection pass */
-    T.mesh = mesh; if (T.st) T.stl = list.concat(hand).map(b => ({ x: b.x, z: b.z, y: b.y, top: b.top, bb: b.bb, at: b.at })); T.undo = b3dHide(hide); T.hide = hide; T.tris = i0 / 3; T.cut = cut; T.ms = Math.round(performance.now() - t0); T.sync = Math.round(performance.now() - t1); B3D.tiles.set(T.id, T); SH.farDirty = SH.nearDirty = true; NEAR.fx = NEAR.fz = 1e9;
+    T.mesh = mesh; if (T.st) T.stl = list.concat(hand).map(b => ({ x: b.x, z: b.z, y: b.y, top: b.top, bb: b.bb, at: b.at })); T.undo = b3dHide(hide); T.hide = hide; T.tris = i0 / 3; T.cut = cut; T.endMs = Math.round(performance.now() - tEnd); T.slow = Math.round(slow) + ' ' + slowAt; T.ms = Math.round(performance.now() - t0); T.sync = Math.round(work + performance.now() - tk);   /* (sync: the work itself, without the waits between its slices) */ B3D.tiles.set(T.id, T); SH.farDirty = SH.nearDirty = true; NEAR.fx = NEAR.fz = 1e9;
   } catch (err) { B3D.fail.add(T.id); console.warn('b3d ' + T.id + ': ' + (err && err.message)); }
   B3D.loading = false;
 }
@@ -4033,7 +4052,9 @@ async function b3dStreet(T) {
     const gun = async f => { const res = await fetch(b3dURL(f)); if (!res.ok) throw new Error(f + ' ' + res.status); let u = new Uint8Array(await res.arrayBuffer());
       if (u[0] === 0x1f && u[1] === 0x8b) u = new Uint8Array(await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer()); return u; };
     const wantInf = !!(DRIVE.SG && T.inf), gone = () => B3D.tiles.get(T.id) !== T || !T.mesh;
-    const [u8, sh, tex, inf] = await Promise.all([gun(T.id + '.st2.bin'), gun(T.id + '.bin'), new THREE.TextureLoader().loadAsync(b3dURL(T.id + '.dr.png')), wantInf ? gun(T.id + '.inf.bin').catch(() => null) : null]);
+    /* (the picture is decoded off the main thread where the browser can: decoding a 2048 px sheet on it is a visible hitch on a phone) */
+    const pic = async f => { try { if (typeof createImageBitmap === 'function') { const res = await fetch(b3dURL(f)); if (!res.ok) throw new Error(f + ' ' + res.status); return new THREE.Texture(await createImageBitmap(await res.blob())); } } catch (e) { /* fall through to the plain loader */ } return new THREE.TextureLoader().loadAsync(b3dURL(f)); };
+    const [u8, sh, tex, inf] = await Promise.all([gun(T.id + '.st2.bin'), gun(T.id + '.bin'), pic(T.id + '.dr.png'), wantInf ? gun(T.id + '.inf.bin').catch(() => null) : null]);
     tex.flipY = false; tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy()); tex.needsUpdate = true;
     if (gone()) { tex.dispose(); return; }
     /* the sheet's own models, by their origin: where each one's points and triangles lie in the file */
@@ -4059,18 +4080,21 @@ async function b3dStreet(T) {
       const emit = (poly, ci) => { if (!ci || poly.length < 3) return; const c = CH[ci - 1]; if (!c) return; const id = poly.map(p => vert(p, c));
         for (let i = 1; i < id.length - 1; i++) { const a = id[0], e = id[i], f = id[i + 1]; if (a === e || e === f || a === f) continue;
           if (LN && b3dBlocked(LN, P[a * 3], P[a * 3 + 1], P[a * 3 + 2], P[e * 3], P[e * 3 + 1], P[e * 3 + 2], P[f * 3], P[f * 3 + 1], P[f * 3 + 2])) continue; I.push(a, e, f); } };
-      for (let i = 0; i < ntr; i++) { const od = ords[i]; if (od >= R.nt) continue; const lo = wide ? dv.getUint16(to + i * 4, true) : u8[to + i * 2], hi = wide ? dv.getUint16(to + i * 4 + 2, true) : u8[to + i * 2 + 1];
+      for (let i = 0; i < ntr; i++) { if ((i & 63) === 63 && performance.now() - tick > 5) { await b3dBreath(); tick = performance.now(); if (gone()) { tex.dispose(); return; } }
+        const od = ords[i]; if (od >= R.nt) continue; const lo = wide ? dv.getUint16(to + i * 4, true) : u8[to + i * 2], hi = wide ? dv.getUint16(to + i * 4 + 2, true) : u8[to + i * 2 + 1];
         let poly = [0, 1, 2].map(q => { const vi = J[od * 3 + q]; return [V[vi * 3] / 10, V[vi * 3 + 1] / 10, V[vi * 3 + 2] / 10, vi]; }); const y0 = Math.min(poly[0][1], poly[1][1], poly[2][1]); let y1 = Math.max(poly[0][1], poly[1][1], poly[2][1]);
         if (y1 > yb) { poly = clipY(poly, yb, true); if (poly.length < 3) continue; y1 = yb; }
         if (y1 <= ys) emit(poly, lo); else if (y0 >= ys) emit(poly, hi); else { emit(clipY(poly, ys, true), lo); emit(clipY(poly, ys, false), hi); } }
       /* a little at a time: a sheet has tens of thousands of these, and the view must not stop for them */
-      if (performance.now() - tick > 5) { await new Promise(r => setTimeout(r, 0)); tick = performance.now(); if (gone()) { tex.dispose(); return; } } }
+      if (performance.now() - tick > 5) { await b3dBreath(); tick = performance.now(); if (gone()) { tex.dispose(); return; } } }
     const S = T.stm = { tex, tris: I.length / 3, noInfra: !!T.inf && !inf, ms: Math.round(performance.now() - t0) };
-    if (I.length) { const g = new THREE.BufferGeometry(), nv = P.length / 3, F = (a, n) => new THREE.BufferAttribute(new Float32Array(a), n);
-      g.setAttribute('position', F(P, 3)); g.setAttribute('aUv', F(UV, 2)); g.setAttribute('aP', F(AP, 4)); g.setAttribute('aQ', F(AQ, 4)); g.setAttribute('normal', F(OR, 3)); g.setAttribute('aCol', new THREE.BufferAttribute(new Float32Array(nv * 3).fill(1), 3)); g.setAttribute('aF', new THREE.BufferAttribute(new Float32Array(nv), 1));
+    if (I.length) { const g = new THREE.BufferGeometry(), nv = P.length / 3, parts = [['position', P, 3], ['aUv', UV, 2], ['aP', AP, 4], ['aQ', AQ, 4], ['normal', OR, 3]]; let tA = performance.now(), worst = 0;
+      /* (a dense sheet has a quarter of a million points here: each list is made into its buffer in a frame of its own) */
+      for (const [nm, arr, n] of parts) { g.setAttribute(nm, new THREE.BufferAttribute(new Float32Array(arr), n)); arr.length = 0; worst = Math.max(worst, performance.now() - tA); await b3dBreath(); tA = performance.now(); if (gone() || T.stm !== S) { if (T.stm === S) { tex.dispose(); T.stm = null; } g.dispose(); return; } }   /* (put away while it was being made) */
+      g.setAttribute('aCol', new THREE.BufferAttribute(new Float32Array(nv * 3).fill(1), 3)); g.setAttribute('aF', new THREE.BufferAttribute(new Float32Array(nv), 1));
       g.setIndex(new THREE.BufferAttribute(new Uint32Array(I), 1)); g.boundingSphere = T.mesh.geometry.boundingSphere;
       S.mat = new THREE.ShaderMaterial({ uniforms: Object.assign({}, U, { uAtlas: { value: tex }, uAtlasPx: { value: W } }), vertexShader: BLD_VS, fragmentShader: BLD_FS(), defines: { FOC_SINK: 1, FLATN: 1, STREET: 1, DRAWN: 1 }, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4 });
-      S.mesh = new THREE.Mesh(g, S.mat); scene.add(S.mesh); }
+      S.mesh = new THREE.Mesh(g, S.mat); scene.add(S.mesh); S.endMs = Math.round(Math.max(worst, performance.now() - tA)); }
     if (inf) { const dv = new DataView(inf.buffer, inf.byteOffset, inf.byteLength), cut = (a, n) => inf.buffer.slice(inf.byteOffset + a, inf.byteOffset + a + n); let o = 4;
     /* footbridges and walkways: only once the streets are known, so that models of the roads themselves can be told apart and left out */
     const ni = dv.getUint32(o, true); o += 4;
@@ -4513,10 +4537,10 @@ function dGhost() {
    least 4.5 m above the road and as high as the line of sight, the road is taken to be under cover. (Straight overhead is not the test: from a slanting
    camera the stretch a flyover hides lies beyond the flyover, not beneath it.) Elsewhere the ribbon is not drawn, so a lorry or a lamp post that merely
    stands in front of the road does not get a wash of it. */
-const RG = { AHEAD: 150, BACK: 30, MAX: 1400, t: -9, R: 210, cx: 1e9, cz: 1e9, ct: -9, M: { value: new THREE.Matrix4() } };
+const RG = { AHEAD: 150, BACK: 30, MAX: 1400, t: -9, R: 210, cx: 1e9, cz: 1e9, ct: -9, M: { value: new THREE.Matrix4() } };   /* (R: on a phone 300, set in dCoverMap) */
 function dCoverMap(car) {
-  if (!SH.mk) return; if (!RG.rt) { RG.rt = SH.mk(512, 512, THREE.UnsignedIntType); RG.cam = new THREE.OrthographicCamera(-RG.R, RG.R, RG.R, -RG.R, 1, 3001); RG.cam.layers.set(1); RG.cam.up.set(0, 0, -1); }
-  if (Math.hypot(car.x - RG.cx, car.z - RG.cz) < 40 && ST.t - RG.ct < 4) return; RG.cx = car.x; RG.cz = car.z; RG.ct = ST.t;
+  if (!SH.mk) return; if (!RG.rt) { if (COARSE) RG.R = 300;   /* (a phone draws the map a third as often: a wider one, kept until the car has gone 90 m or 10 s) */ RG.rt = SH.mk(512, 512, THREE.UnsignedIntType); RG.cam = new THREE.OrthographicCamera(-RG.R, RG.R, RG.R, -RG.R, 1, 3001); RG.cam.layers.set(1); RG.cam.up.set(0, 0, -1); }
+  if (Math.hypot(car.x - RG.cx, car.z - RG.cz) < (COARSE ? 90 : 40) && ST.t - RG.ct < (COARSE ? 10 : 4)) return; RG.cx = car.x; RG.cz = car.z; RG.ct = ST.t;
   RG.cam.position.set(car.x, 2500, car.z); RG.cam.lookAt(car.x, 0, car.z); RG.cam.updateMatrixWorld(true); renderShadow(RG.rt, RG.cam, RG.M);
 }
 /* in a tunnel or a road through a building the camera is inside the hill or the building, and what it sees is dimmed almost to black. The dimming is drawn
@@ -4579,13 +4603,6 @@ function gStep(s) { const g = document.getElementById('garage'); g.dataset.step 
   if (s === 'dest') { document.getElementById('gDestH').textContent = DRIVE.gMid ? (DRIVE.nav ? 'Change destination' : 'Where to?') : DRIVE.gNext ? 'Where next?' : 'Where to?'; const L = pickList('dest'), cur = PICK.dest.id && L.findIndex(q => q.id === PICK.dest.id), keep = PICK.dest.sel; if (keep && DRIVE.gKeep) pickCustom('dest', { t: keep.name, x: keep.x, z: keep.z, kind: keep.kind, a: keep.sub === keep.kind ? '' : keep.sub }); else pickSet('dest', cur >= 0 ? cur : (L.findIndex(q => q.id === 'peak') + L.length) % L.length); DRIVE.gKeep = false; }
   if (s === 'mode') { const p = DRIVE.gDest, m = p.km; document.getElementById('gToName').textContent = p.name; document.getElementById('gToDist').textContent = m ? (m < 1 ? Math.round(m * 100) * 10 + ' m' : m.toFixed(1) + ' km') + ' by road' : '';
     const bt = DRIVE.start && DRIVE.start !== 'here' ? bestOf(DRIVE.start, p.id) : {}; document.getElementById('gAutoBest').textContent = bt.a ? 'Best ' + fmtT(bt.a) : ''; document.getElementById('gFreeBest').textContent = bt.m ? 'Your best ' + fmtT(bt.m) : 'Timed: set a best'; } }
-/* after arriving: the same big place picker as at the start (the island map, swipe from place to place), then drive me / I'll drive.
-   The trip starts where the car stands; the place just reached counts as its start for the timed runs */
-function openNext(from) {
-  const car = DRIVE.car; if (!car) return; isleClose(); DRIVE.gMid = null; DRIVE.hereXZ = [car.x, car.z]; if (from) DRIVE.start = from;
-  DRIVE.garage = true; DRIVE.gNext = true; DRIVE.run = null; DRIVE.boosting = false; DRIVE.joy = null; dJoyDraw(); car.v = 0; car.fly = null; document.body.classList.add('garage'); ctlHint.hide(); navClose();
-  PICK.dest.id = undefined; gStep('dest');
-}
 /* the destination button while driving (mid-trip, or just roaming): the same big place picker, with the place being driven to chosen. The drive
    waits; the back arrow returns to it as it was, a new place starts a new trip from where the car stands */
 function openDest(id) {
@@ -4706,10 +4723,10 @@ function initGarage() {
 }
 const AUTO_KMH = [150, 140, 110, 100, 90, 80, 65, 45, 40];   /* self-driving cruise by road class: expressway ... service lane */
 /* the self-driving pace: fast. Flat out for the road, braking hard and late only for bends, the turn at the next junction and the
-   destination. It does not yield to traffic: anything in the way gets knocked flying. After arriving it stops and asks where next */
+   destination. It does not yield to traffic: anything in the way gets knocked flying. After arriving it stops and stays there */
 function autoPilot(car, e, plan, vmax, V, dt) {
   const sp = car.v, LAT = 8, DEC = 7, cruise = Math.min(vmax * .95, AUTO_KMH[e.c] / 3.6); let vt = cruise;
-  if (DRIVE.autoStop) { if (sp < .5) { DRIVE.autoStop = false; if (DRIVE.ride && rideNext()) return { thr: 0, brk: 0 }; setAuto(false); openNext(DRIVE.lastDest); return { thr: 0, brk: 0 }; } return { thr: 0, brk: sp > 4 ? 1 : 0 }; }
+  if (DRIVE.autoStop) { if (sp < .5) { DRIVE.autoStop = false; setAuto(false); return { thr: 0, brk: 0 }; } return { thr: 0, brk: sp > 4 ? 1 : 0 }; }   /* (arrived: the car stops and stays where it is, the wheel handed back. Nothing is chosen for you and no screen comes up: the pin button is there for the next place) */
   if (!DRIVE.nav) return { thr: 0, brk: 0 };
   /* bends on this road up to 90 m ahead: the speed each one allows (sideways grip LAT), less what there is room to brake off before it */
   /* (the way ahead runs on through the planned turn and along the road it leaves by: a corner just past the junction is seen in time,
@@ -4842,6 +4859,15 @@ function navCheck() {
   const R = DRIVE.nav, car = DRIVE.car; if (!R || !car) return;
   const gN = DRIVE.N[R.goal];
   if (Math.hypot(car.x - R.dest.x, car.z - R.dest.z) < 45 || (R.k >= R.steps.length && gN && Math.hypot(car.x - gN.x, car.z - gN.z) < 30)) navArrive();
+}
+/* Skip: the rest of the journey left out. The car is put down on the last road of the route, at the point nearest the destination, and has arrived
+   (no best time is kept for a journey that was not driven) */
+function navSkip() {
+  const R = DRIVE.nav, car = DRIVE.car, E = DRIVE.E; if (!R || !car) return; const st = R.steps.length > R.k ? R.steps[R.steps.length - 1] : { c: car.e, d: car.d }, e = E[st.c]; if (!e) return;
+  let bi = 0, bd = 1e9; for (let i = 0; i <= e.n; i++) { const d = Math.hypot(e.xs[i] - R.dest.x, e.zs[i] - R.dest.z); if (d < bd) { bd = d; bi = i; } }
+  car.e = st.c; car.d = st.d; car.u = clamp(bi * e.st, Math.min(4, e.L / 2), Math.max(e.L - 4, e.L / 2)); car.v = 0; car.fly = null; car.yC = undefined; DRIVE.run = null; DRIVE.queue = []; DRIVE.lock = null; DRIVE.req = null; DRIVE.boosting = false; DRIVE.burst = 0;
+  DRIVE.camY = DRIVE.camG = undefined; DRIVE.azV = 0; cam.az = dTan(e, car.u) + (st.d > 0 ? 0 : PI) + PI; RG.t = -9; RG.ct = -9;
+  navArrive();
 }
 function navArrive() { const R = DRIVE.nav; if (!R) return; DRIVE.lastDest = R.dest.id; const tm = runFinish(R); dMsg('You have arrived: ' + R.dest.name + tm, tm ? 5 : 3); navStop(); if (DRIVE.auto) DRIVE.autoStop = true; }
 function navLeft() { const R = DRIVE.nav, car = DRIVE.car, E = DRIVE.E; if (!R) return 0; const e = E[car.e]; let m = car.d > 0 ? e.L - car.u : car.u; for (let k = R.k; k < R.steps.length; k++) m += E[R.steps[k].c].L; return m; }
@@ -5018,6 +5044,7 @@ function driveStep(dt) {
   const under = Math.max(e.tun && car.u > 6 && car.u < e.L - 6 ? 1 : 0, e.cov && e.cov[clamp(Math.round(car.u / e.st), 0, e.n)] ? 1 : 0, clamp((dGround(car.x, car.z) - car.y - 3) / 2.5, 0, 1), clamp((groundY(camera.position.x, camera.position.z) - car.y - 4) / 4, 0, 1) * (e.tun ? 1 : 0));
   DRIVE.tun = lerp(DRIVE.tun, under, 1 - Math.exp(-dt * 6));
   DRIVE.deep = DRIVE.tun > .9 && !!e.tun;
+  { const rd = !!(DRIVE.auto && DRIVE.nav && !G0); if (rd !== DRIVE.ridingCls) { DRIVE.ridingCls = rd; document.body.classList.toggle('riding', rd); } }
   { const vm = DRIVE.veil || (DRIVE.veil = dVeilMesh()); vm.visible = DRIVE.tun > .01; vm.material.uniforms.uA.value = DRIVE.tun;
     if (DRIVE.roadGhost) { const mt = DRIVE.roadGhost.material; mt.uniforms.uTun.value = DRIVE.tun; mt.depthFunc = DRIVE.tun > .25 ? THREE.AlwaysDepth : THREE.GreaterDepth; } }   /* (in the dark the ribbon is drawn whatever stands before it) */
   dHud(e, sp);
@@ -5330,7 +5357,7 @@ async function enterDrive0() {
   document.body.classList.add('driving'); DYN.uNoNear.value = 12; trafDetail(true); U.uDrv.value = 1; cam.dist = 30; openGarage(); dStart(DRIVE.pendingStart);
 }
 function exitDrive() {
-  if (!DRIVE.on) return; DRIVE.on = false; DRIVE.joy = null; dJoyDraw(); LABELS.on = DRIVE.labelsWas; document.body.classList.remove('driving', 'garage'); DRIVE.garage = false; if (DRIVE.ghost) DRIVE.ghost.visible = false; if (DRIVE.roadGhost) DRIVE.roadGhost.visible = false; if (DRIVE.veil) DRIVE.veil.visible = false; if (DRIVE.mesh) DRIVE.mesh.visible = false; DYN.uNoNear.value = 0; trafDetail(false); U.uDrv.value = 0; for (let i = 0; i < HITN; i++) hitFree(i); for (const k of [...PROPS.spots.keys()]) propDrop(k); if (TRL.mesh) { TRL.hist.length = 0; TRL.mesh.visible = false; } dFx(0, 0, 0); DRIVE.boosting = false; DRIVE.combo = 0; DRIVE.run = null; if (DRIVE.car) DRIVE.car.fly = null; navStop(); navClose(); setAuto(false); DRIVE.autoStop = false;
+  if (!DRIVE.on) return; DRIVE.on = false; DRIVE.joy = null; dJoyDraw(); LABELS.on = DRIVE.labelsWas; document.body.classList.remove('driving', 'garage', 'riding'); DRIVE.ridingCls = false; DRIVE.garage = false; if (DRIVE.ghost) DRIVE.ghost.visible = false; if (DRIVE.roadGhost) DRIVE.roadGhost.visible = false; if (DRIVE.veil) DRIVE.veil.visible = false; if (DRIVE.mesh) DRIVE.mesh.visible = false; DYN.uNoNear.value = 0; trafDetail(false); U.uDrv.value = 0; for (let i = 0; i < HITN; i++) hitFree(i); for (const k of [...PROPS.spots.keys()]) propDrop(k); if (TRL.mesh) { TRL.hist.length = 0; TRL.mesh.visible = false; } dFx(0, 0, 0); DRIVE.boosting = false; DRIVE.combo = 0; DRIVE.run = null; if (DRIVE.car) DRIVE.car.fly = null; navStop(); navClose(); setAuto(false); DRIVE.autoStop = false;
   const c = DRIVE.car; flyTo({ tx: c.x, tz: c.z, dist: 700, pol: 62 * RAD, az: cam.az, fov: 40, ty: 0, dur: 2.2 });
 }
 function dUturn() { const c = DRIVE.car; if (!c) return; c.d = -c.d; c.lat = -c.lat; c.v = 0; c.yaw += PI; DRIVE.req = null; DRIVE.queue = []; DRIVE.lock = null; if (DRIVE.nav) navStart(DRIVE.nav.dest); }
@@ -5417,7 +5444,7 @@ function initDrive() {
   const H = DRIVE.hud, q = id => document.getElementById(id); Object.assign(H, { spd: q('dSpd'), st: q('dSt'), nx: q('dNx'), arr: q('dArr'), nxd: q('dNxD'), nxn: q('dNxN'), tun: q('dTun'), msg: q('dMsg'), joy: q('dJoy'), boost: q('dBoost'), bF: q('dBoostF'), bN: q('dBoostN'), combo: q('dCombo'), comboN: q('dComboN') });
   { const b = q('dBoost'), on = e => { e.preventDefault(); DRIVE.boostBtn = true; DRIVE.boostTap = true; }, off = () => { DRIVE.boostBtn = false; }; b.addEventListener('pointerdown', on); for (const t of ['pointerup', 'pointercancel', 'pointerleave']) b.addEventListener(t, off); { const hb = q('dHorn'); hb.addEventListener('pointerdown', e => { e.preventDefault(); dHorn(); }); hb.addEventListener('keydown', e => { if (e.code === 'Enter' || e.code === 'Space') { e.preventDefault(); if (!e.repeat) dHorn(); } }); } }
   q('dNavB').onclick = () => openDest(); q('navX').onclick = navClose;
-  q('bigDrive').onclick = () => enterDrive(); q('bigDrive').classList.add('ready'); q('dExit').onclick = exitDrive; q('dU').onclick = dUturn;
+  q('bigDrive').onclick = () => enterDrive(); q('bigDrive').classList.add('ready'); q('dExit').onclick = exitDrive; q('dU').onclick = dUturn; q('dSkip').onclick = navSkip;
   addEventListener('keydown', e => { if (!DRIVE.on) return; if (e.code === 'KeyU' && !DRIVE.garage) dUturn(); if (e.code === 'KeyH' && !DRIVE.garage && !e.repeat) dHorn(); if (e.code === 'KeyG' && !DRIVE.garage) openGarage(); if (e.code === 'Escape') exitDrive(); });
   initGarage(); initMini();
 }
@@ -5592,7 +5619,9 @@ function stepCamera(dt) {
   if (cam.fly) {
     const f = cam.fly; f.t = Math.min(1, f.t + dt / f.dur); const e = f.t * f.t * f.t * (f.t * (6 * f.t - 15) + 10), a = f.a, b = f.b;
     const arc = Math.sin(e * PI) * f.arc;
-    cam.tx = lerp(a.tx, b.tx, e); cam.tz = lerp(a.tz, b.tz, e); cam.dist = Math.exp(lerp(Math.log(a.dist), Math.log(b.dist), e) + arc); cam.az = a.az + f.daz * e; cam.pol = lerp(a.pol, b.pol, e) - arc * .25; cam.fov = lerp(a.fov, b.fov, e); cam.ty = lerp(a.ty, b.ty, e);
+    /* the crossing itself waits a little at each end of a long flight: rise first, cross while high, then come down on the place */
+    const lag = .13 * clamp(f.arc / 2, 0, 1), tp = clamp((f.t - lag) / (1 - 2 * lag), 0, 1), ep = tp * tp * tp * (tp * (6 * tp - 15) + 10);
+    cam.tx = lerp(a.tx, b.tx, ep); cam.tz = lerp(a.tz, b.tz, ep); cam.dist = Math.exp(lerp(Math.log(a.dist), Math.log(b.dist), e) + arc); cam.az = a.az + f.daz * e; cam.pol = lerp(a.pol, b.pol, e) - Math.min(arc, 2.6) * .25; cam.fov = lerp(a.fov, b.fov, e); cam.ty = lerp(a.ty, b.ty, e);
     if (f.t >= 1) { cam.fly = null; if (f.then) cam.tour = f.then(); }
   } else if (cam.tour) { cam.tour(dt); }
   else {
@@ -5612,8 +5641,8 @@ function goPreset(i, instant) {
   if (instant) { Object.assign(cam, { tx: b.tx, tz: b.tz, dist: b.dist, az: b.az, pol: b.pol, fov: b.fov, ty: b.ty || 0 }); cam.fly = null; cam.tour = b.tour ? b.tour() : null; placeCamera(0); return; }
   const a = { tx: cam.tx, tz: cam.tz, dist: cam.dist, az: cam.az, pol: cam.pol, fov: cam.fov, ty: cam.ty };
   let daz = (b.az - a.az) % TAU; if (daz > PI) daz -= TAU; if (daz < -PI) daz += TAU;
-  const move = Math.hypot(b.tx - a.tx, b.tz - a.tz), arc = clamp(Math.log(Math.max(move * 1.4, 1) / Math.max(Math.sqrt(a.dist * b.dist), 1)), 0, 2.2) * .8;
-  cam.fly = { a, b: { ...b, ty: b.ty || 0 }, daz, t: 0, dur: 2.2 + arc * 1.4, arc, then: b.tour };
+  const arc = flyArc(a, b);
+  cam.fly = { a, b: { ...b, ty: b.ty || 0 }, daz, t: 0, dur: clamp(2.2 + arc * 1.3, 2.2, 7.5), arc, then: b.tour };
 }
 
 /* ═════════════ 10. BOOT / LOOP ═════════════ */
