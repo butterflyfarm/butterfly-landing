@@ -2801,7 +2801,7 @@ function updateShadows(focus, radius) {
     fitShadowCam(SH.farCam, sun, pts, 0); renderShadow(SH.farRT, SH.farCam, U.uShFarM); SH.farDirty = false; SH.nearDirty = true;
   }
   const R = clamp(radius, 260, 2600);
-  if (SH.nearDirty || focus.distanceTo(SH.nc) > SH.nr * .22 || Math.abs(R - SH.nr) > SH.nr * .3) {
+  if (SH.nearDirty || focus.distanceTo(SH.nc) > SH.nr * (DRIVE.on ? .3 : .22) || Math.abs(R - SH.nr) > SH.nr * .3) {
     SH.nc.copy(focus); SH.nr = R; const pts = [];
     for (const x of [-R, R]) for (const z of [-R, R]) for (const y of [-10, 60]) pts.push([focus.x + x, focus.y + y, focus.z + z]);
     fitShadowCam(SH.nearCam, sun, pts, SH.nearRT.width); SH.nearCam.far = 60000; SH.nearCam.updateProjectionMatrix();
@@ -3068,13 +3068,22 @@ function makeTrams() {
   TRAMS.movers = movers;
   hooks.push(dt => {
     dt = Math.min(dt, .1);
+    /* a tram the driven vehicle runs into is knocked off its rails like any other traffic: it flies, tumbles, lands and lies there, and is back on its
+       rails once the vehicle is well away. On a tram ride the reach is wider, so that the trams met on the other track go too as they pass */
+    const car = DRIVE.on && !DRIVE.garage && DRIVE.car ? DRIVE.car : null, V = DRIVE.V || { len: 4.6, wid: 1.8 }, reach = DRIVE.bus && DRIVE.bus.ln.rail ? 1.5 : 0, cux = car ? Math.cos(car.yaw) : 1, cuz = car ? Math.sin(car.yaw) : 0;
     for (const t of TRAMS.list) {
+      if (t.fly) { const F = t.fly; F.t += dt;
+        if (!F.land) { F.vy -= 15 * dt; F.x += F.vx * dt; F.y += F.vy * dt; F.z += F.vz * dt; F.yaw += F.spin * dt; F.pit += F.tum * dt; if (F.y <= F.y0 && F.vy < 0) { F.y = F.y0; F.land = true; F.pit = 0; } }
+        else { const k = Math.exp(-dt * 2.5); F.vx *= k; F.vz *= k; F.spin *= k; F.x += F.vx * dt; F.z += F.vz * dt; F.yaw += F.spin * dt; }
+        const cp = Math.cos(F.pit); t.mv.set(t.i, F.x, F.y, F.z, Math.cos(F.yaw) * cp, Math.sin(F.pit), Math.sin(F.yaw) * cp, 1, 1, 1);
+        if (F.land && F.t > 5 && (!car || Math.hypot(F.x - car.x, F.z - car.z) > 150 || F.t > 40)) { t.fly = null; t.dwell = 3; t.v = 0; }
+        continue; }
       const tk = t.tk; if (t.dwell > 0) { t.dwell -= dt; t.v = 0; }
       else {
         /* next stop ahead, and the tram ahead on the same track and direction */
         let ds = 1e9; for (const q of tk.stops) { const d = (q - t.s) * t.dir; if (d > .5 && d < ds && q !== t.last) ds = d; }
         const endD = t.dir > 0 ? tk.L - 6 - t.s : t.s - 6; ds = Math.min(ds, endD);
-        let gap = 1e9; for (const o of TRAMS.list) { if (o === t || o.tk !== tk || o.dir !== t.dir) continue; const d = (o.s - t.s) * t.dir; if (d > 0 && d < gap) gap = d; }
+        let gap = 1e9; for (const o of TRAMS.list) { if (o === t || o.fly || o.tk !== tk || o.dir !== t.dir) continue; const d = (o.s - t.s) * t.dir; if (d > 0 && d < gap) gap = d; }
         const vt = Math.min(VMAX, Math.sqrt(2 * A * Math.max(ds - .4, 0)), Math.sqrt(2 * A * Math.max(gap - 22, 0)));
         t.v = vt > t.v ? Math.min(vt, t.v + A * dt) : vt; t.s += t.v * dt * t.dir;
         if (ds < .6 && t.v < .75) {   /* (was v < .25, which the braking curve never reaches before the stop is passed: the trams slowed at their stops and rolled on) */ if (ds === endD) { t.dir = -t.dir; t.dwell = 20 + (t.i % 7) * 3; t.last = -1; } else { t.dwell = 9 + (t.i % 5) * 3; for (const q of tk.stops) if (Math.abs(q - t.s) < 2) t.last = q; } }
@@ -3082,7 +3091,13 @@ function makeTrams() {
       t.s = clamp(t.s, 0, tk.L);
       const q = pathAt(tk.pts, t.s / tk.L, t6), l = Math.hypot(q[3], q[5]) || 1, fx = q[3] / l * t.dir, fz = q[5] / l * t.dir;
       /* trams keep left: the left-hand track of the direction of travel */
-      t.mv.set(t.i, q[0] + fz * 1.6, q[1] + .12, q[2] - fx * 1.6, fx, 0, fz, 1, 1, 1);
+      const px = q[0] + fz * 1.6, py = q[1] + .12, pz = q[2] - fx * 1.6; t.mv.set(t.i, px, py, pz, fx, 0, fz, 1, 1, 1);
+      if (car && Math.abs(car.v) > 2 && Math.abs(px - car.x) < 16 && Math.abs(pz - car.z) < 16 && Math.abs(py - car.y) < 3 && rectsHit(car.x, car.z, cux, cuz, V.len / 2, V.wid / 2 + reach, px, pz, fx, fz, 5.8, 1)) {
+        const sp = Math.abs(car.v), h = car.h ?? car.yaw, cfx = Math.cos(h) * Math.sign(car.v), cfz = Math.sin(h) * Math.sign(car.v), lx = cfz, lz = -cfx, side = Math.sign((px - car.x) * lx + (pz - car.z) * lz) || (Math.random() < .5 ? -1 : 1);
+        let dx = cfx * .55 + lx * side, dz = cfz * .55 + lz * side; const dl = Math.hypot(dx, dz) || 1, v0 = 5 + sp * .45; dx /= dl; dz /= dl;
+        t.fly = { x: px, y: py, z: pz, y0: py, vx: dx * v0, vy: 4.5 + Math.min(sp, 30) * .16, vz: dz * v0, yaw: Math.atan2(fz, fx), spin: (2 + Math.random() * 3) * side, pit: 0, tum: (Math.random() - .5) * 3, t: 0, land: false };
+        DRIVE.combo = (DRIVE.combo || 0) + 1; DRIVE.comboT = 2.6; DRIVE.hits = (DRIVE.hits || 0) + 1; DRIVE.best = Math.max(DRIVE.best || 0, DRIVE.combo); DRIVE.punch = Math.min(1, (DRIVE.punch || 0) + .5); DRIVE.boost = Math.min(1, (DRIVE.boost || 0) + .05);
+        if (navigator.vibrate) try { navigator.vibrate(18); } catch (e) { /* not allowed */ } }
     }
     for (const m of movers) m.flush();
   });
@@ -3419,7 +3434,7 @@ function* regenNearG(fx, fz) {
   T.geo.instanceCount = nt; for (const a of [T.aa, T.ab]) { a.updateRange.offset = 0; a.updateRange.count = Math.max(nt, 1) * 4; a.needsUpdate = true; }
   /* kitchen steam */
   const P = DYN.puff; if (P) { for (let k = P.base; k < P.NP; k++) { const q = (k - P.base) * 3; if (q + 2 < steam.length) { P.A[k * 4] = steam[q]; P.A[k * 4 + 1] = steam[q + 1]; P.A[k * 4 + 2] = steam[q + 2]; P.A[k * 4 + 3] = 2.2 + (k % 5) * .5; P.B[k * 4] = (k * .618) % 1; P.B[k * 4 + 1] = 7 + (k % 4) * 2; P.B[k * 4 + 2] = .34; P.B[k * 4 + 3] = .13 + (k % 3) * .04; } else P.B[k * 4 + 2] = 0; } P.pa.needsUpdate = true; P.pb.needsUpdate = true; }
-  NEAR.fx = fx; NEAR.fz = fz; NEAR.n = n; NEAR.nt = nt; NEAR.ms = performance.now() - t0; SH.nearDirty = true;
+  NEAR.fx = fx; NEAR.fz = fz; NEAR.n = n; NEAR.nt = nt; NEAR.ms = performance.now() - t0; if (NEAR.sync) SH.nearDirty = true;   /* (while driving the shadow round the car is not drawn again for this: it is a second drawing of the whole scene, a dropped frame on a phone; the new awnings and trees get their shadows when it is next drawn, within 90 m) */
 }
 function updateNear() {
   const cx = camera.position.x, cz = camera.position.z, hg = camera.position.y - groundY(cx, cz);
@@ -3429,7 +3444,7 @@ function updateNear() {
   let fx, fz;
   /* on the road the detail is centred a little ahead of the car, along its way: centred before the camera, it was made again every time the chase
      camera swung round a bend (a turn of 30 degrees moves that point 60 m) */
-  if (drv) { const c = DRIVE.car; fx = c.x + Math.cos(c.h) * 50; fz = c.z + Math.sin(c.h) * 50; }
+  if (drv) { const c = DRIVE.car; fx = c.x + Math.cos(c.h) * 30; fz = c.z + Math.sin(c.h) * 30; }   /* (30 m: a right-angle turn moves that point 42 m, short of the 60 m that has the detail made again) */
   else { camera.getWorldDirection(_v); const a = clamp(110 * (1 - Math.abs(_v.y)), 0, 110), l = Math.hypot(_v.x, _v.z) || 1; fx = cx + _v.x / l * a; fz = cz + _v.z / l * a; }
   if ((fx - NEAR.fx) ** 2 + (fz - NEAR.fz) ** 2 > 60 * 60) { if (drv && NEAR.n) { NEAR.job = regenNearG(fx, fz); NEAR.tk = performance.now(); if (NEAR.job.next().done) NEAR.job = null; } else regenNear(fx, fz); }
 }
@@ -4354,7 +4369,8 @@ async function b3dStreet(T) {
     /* footbridges and walkways: only once the streets are known, so that models of the roads themselves can be told apart and left out */
     const ni = dv.getUint32(o, true); o += 4;
     if (DRIVE.SG && ni) { const P2 = [], C2 = [], A2 = [], Q2 = [], O2 = [], I2 = []; let w0 = 0, kept = 0;
-      for (let k = 0; k < ni; k++) { const x = dv.getFloat32(o, true), z = dv.getFloat32(o + 4, true), y = dv.getFloat32(o + 8, true), n = dv.getUint32(o + 12, true), nt = dv.getUint32(o + 16, true), wide = dv.getUint8(o + 20), col = C(Math.min(1, dv.getUint8(o + 21) * 1.25 / 255), Math.min(1, dv.getUint8(o + 22) * 1.25 / 255), Math.min(1, dv.getUint8(o + 23) * 1.25 / 255)); o += 24; const vo = o; o += n * 6; const io = o; o += nt * 3 * (wide ? 4 : 2);
+      for (let k = 0; k < ni; k++) { if (performance.now() - tick > B3D.slice - 1) { await b3dBreath(); tick = performance.now(); if (gone() || T.stm !== S) return; }   /* (a sheet in town has dozens of walkways, each tried against the lanes under it: a breath between them) */
+        const x = dv.getFloat32(o, true), z = dv.getFloat32(o + 4, true), y = dv.getFloat32(o + 8, true), n = dv.getUint32(o + 12, true), nt = dv.getUint32(o + 16, true), wide = dv.getUint8(o + 20), col = C(Math.min(1, dv.getUint8(o + 21) * 1.25 / 255), Math.min(1, dv.getUint8(o + 22) * 1.25 / 255), Math.min(1, dv.getUint8(o + 23) * 1.25 / 255)); o += 24; const vo = o; o += n * 6; const io = o; o += nt * 3 * (wide ? 4 : 2);
         const V = new Int16Array(cut(vo, n * 6)), J = wide ? new Uint32Array(cut(io, nt * 12)) : new Uint16Array(cut(io, nt * 6)); let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9, top = 0;
         for (let i = 0; i < n; i++) { const vx = x + V[i * 3] / 10, vz = z + V[i * 3 + 2] / 10; if (vx < x0) x0 = vx; if (vx > x1) x1 = vx; if (vz < z0) z0 = vz; if (vz > z1) z1 = vz; top = Math.max(top, V[i * 3 + 1] / 10); }
         if (Math.max(x1 - x0, z1 - z0) > 400 || y + top < dGround((x0 + x1) / 2, (z0 + z1) / 2) + 2.5) continue;      /* a road tunnel or a subway under the street: not for the open air */
@@ -4368,7 +4384,9 @@ async function b3dStreet(T) {
         for (const i of keep) I2.push(w0 + J[i], w0 + J[i + 1], w0 + J[i + 2]); w0 += n; }
       if (I2.length) { const g = new THREE.BufferGeometry(), nv = P2.length / 3, F = (a, n) => new THREE.BufferAttribute(new Float32Array(a), n);
         g.setAttribute('position', F(P2, 3)); g.setAttribute('aCol', F(C2, 3)); g.setAttribute('aP', F(A2, 4)); g.setAttribute('aQ', F(Q2, 4)); g.setAttribute('normal', F(O2, 3)); g.setAttribute('aF', new THREE.BufferAttribute(new Float32Array(nv), 1));
-        g.setIndex(new THREE.BufferAttribute(new Uint32Array(I2), 1)); g.boundingSphere = T.mesh.geometry.boundingSphere; S.infra = new THREE.Mesh(g, B3D.mat); S.infra.layers.enable(1); scene.add(S.infra); S.infraN = kept;
+        g.setIndex(new THREE.BufferAttribute(new Uint32Array(I2), 1)); g.boundingSphere = T.mesh.geometry.boundingSphere;
+        if (DRIVE.on && !b3dRush()) { const off = () => gone() || T.stm !== S; await gpuWarm(g, off); if (off()) { g.dispose(); return; } }   /* (3 to 7 MB of lists: not all in the frame the walkways first show) */
+        S.infra = new THREE.Mesh(g, B3D.mat); S.infra.layers.enable(1); scene.add(S.infra); S.infraN = kept;
         /* the guessed footbridges of this sheet give way to the real ones */
         if (PBm && DRIVE.fbAll) { const pos = PBm.geometry.attributes.position; S.fb = []; for (const [a, b, fx, fz] of DRIVE.fbAll) { if (fx < T.box[0] || fx > T.box[2] || fz < T.box[1] || fz > T.box[3]) continue; for (let v = a; v < b; v++) { S.fb.push(v, pos.array[v * 3 + 1]); pos.array[v * 3 + 1] -= 4000; } } pos.needsUpdate = true; } } }
     }
@@ -5249,7 +5267,7 @@ function driveStep(dt) {
   const lim = Math.max(e.hw - V.wid / 2 - .15, .2), lane = e.ow || e.c >= 7 || e.lanes < 2 && e.c >= 6 ? 0 : Math.min(e.hw * .5, lim), sp = Math.abs(car.v);
   /* drift: steer hard into a bend at speed (the self-driving car does it by itself) and the tail steps out; hold it for a burst of speed on the way out */
   const DR = DRIVE.drift || (DRIVE.drift = { t: 0, off: 0, ang: 0, dir: 0 });
-  const bend = Math.abs(kap) > .011 && sp > 13 && !car.fly && !G0, wantD = bend && (DRIVE.auto ? Math.abs(kap) > .02 : Math.abs(steer) > .5 && Math.sign(steer) === Math.sign(kap));
+  const bend = Math.abs(kap) > .011 && sp > 13 && !car.fly && !G0, wantD = bend && !RD && (DRIVE.auto ? Math.abs(kap) > .02 : Math.abs(steer) > .5 && Math.sign(steer) === Math.sign(kap));   /* (not a ride: a bus that steps its tail out 11 degrees in a bend and leaves it with a burst of speed and a kick of the view is a jolt, not a ride) */
   if (wantD) { DR.t += dt; DR.off = 0; DR.dir = Math.sign(kap); }
   else if (DR.t > 0 && (DR.off += dt) > .22) { if (DR.t > .7) { const g = Math.min(DR.t, 2.5); car.v += 2.5 + g * 2.5; DRIVE.boost = Math.min(1, DRIVE.boost + .1 * g); DRIVE.punch = Math.max(DRIVE.punch || 0, .6); if (g >= 1.5 && !DRIVE.auto) dMsg('Drift ' + g.toFixed(1) + ' s'); } DR.t = 0; }
   DR.ang = lerp(DR.ang, wantD ? DR.dir * Math.min(.6, .22 + DR.t * .5) : 0, 1 - Math.exp(-dt * (wantD ? 5 : 7)));
@@ -5578,7 +5596,7 @@ function camGuard(dt) {
        down on to the roof for that and creep back out, a jolt at every bridge in the middle of town. Now it holds its place and the deck passes beneath it.
        Once it has come in it stays in until the way is clear, and it comes in a little less sharply) */
     const was = DRIVE.deckK ?? 1; if (t0 < 1 && was > .97) { const over = (x, z) => { for (let y = cy + 3; y < cy + 18; y += 1.5) if (inDeck(x, y, z, cy)) return true; return false; }, h = car.h ?? car.yaw; if (!(over(car.x, car.z) && over(car.x + Math.cos(h) * 20, car.z + Math.sin(h) * 20))) t0 = 1; }   /* (under it here and still under it 20 m on) */
-    const to = t0 < 1 ? Math.max(.28, t0 - .03) : 1, K = DRIVE.deckK = lerp(was, to, 1 - Math.exp(-dt * (to < was ? 9 : 2.2)));
+    const to = t0 < 1 ? Math.max(.28, t0 - .03) : 1, K = DRIVE.deckK = to < was ? Math.max(lerp(was, to, 1 - Math.exp(-dt * 9)), was - dt * 1.6) : lerp(was, to, 1 - Math.exp(-dt * 2.2));   /* (its first step was 2.7 m in one frame) */
     if (K < .995) { p.set(tx + (p.x - tx) * K, ty + (p.y - ty) * K, tz + (p.z - tz) * K); if (DRIVE.camY !== undefined) DRIVE.camY = Math.min(DRIVE.camY, p.y + .2); camera.updateMatrixWorld(true); } }
   else DRIVE.deckK = 1;
   for (let i = 1; i <= 24 && !hit; i++) { const t = i / 24; if (f(hx + (p.x - hx) * t, hy + (p.y - hy) * t, hz + (p.z - hz) * t)) hit = 1; }
@@ -6028,7 +6046,7 @@ function frame(dt) {
   selectTerrain();
   skyMesh.position.copy(camera.position);
   waterMesh.position.set(Math.round(camera.position.x / 1000) * 1000, 0, Math.round(camera.position.z / 1000) * 1000);
-  const fl = _v.set(cam.tx, cam.tyS, cam.tz).clone(); updateShadows(fl, cam.dist * .9 + 120);
+  const fl = _v.set(cam.tx, cam.tyS, cam.tz).clone(); updateShadows(fl, DRIVE.on && !DRIVE.garage ? 300 : cam.dist * .9 + 120);
   renderReflection();
   composer.render();
   ST.frame++;
