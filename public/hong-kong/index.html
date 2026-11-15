@@ -69,6 +69,7 @@
   #rideLines{display:grid;grid-template-columns:repeat(auto-fit,minmax(56px,1fr));gap:6px} #rideLines button{padding:9px 2px;border-radius:14px;border:1px solid rgba(255,196,128,.3);background:rgba(255,190,110,.07);font-size:12.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#fff4df;white-space:nowrap}
   #rideDirs{display:grid;grid-template-columns:1fr 1fr;gap:8px} #rideDirs button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0;padding:9px 12px;border-radius:14px;border:1px solid rgba(255,196,128,.3);background:rgba(255,190,110,.07);text-align:left}
   #rideDirs button b{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fff4df} #rideDirs button em{font-style:normal;font-size:11px;opacity:.8;line-height:1.25}
+  #rideDirs.n3{grid-template-columns:1fr 1fr 1fr;gap:6px} #rideDirs.n3 button{padding:9px 9px} #rideDirs.n3 button b{font-size:12px;letter-spacing:.04em;line-height:1.2}   /* (a boat: steered freely, or on its course either way) */
   #rideLines button.on,#rideDirs button.on{background:rgba(255,176,84,.3);border-color:rgba(255,206,140,.8)}
   #rideMap{display:block;box-sizing:border-box;width:100%;height:clamp(150px,32vh,300px);border-radius:12px;border:1px solid rgba(255,196,128,.25);touch-action:manipulation;cursor:pointer}
   #ride .rcar{display:flex;align-items:center;gap:10px} #ride .rsel{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;text-align:center}
@@ -232,7 +233,12 @@
   @media (max-width:1180px) and (min-width:561px){.big em{display:none} .big{padding:6px 14px 6px 6px;gap:9px} .big i{width:46px;height:46px} .big b{font-size:17px}}   /* (six buttons in the row on a narrow window) */
   /* a cruise: the ride's strip (no Stop: a boat calls nowhere), a small chart of its own, and nothing else of the page's controls */
   body.cruising #ui,body.cruising #nav,body.cruising #fc,body.cruising #pm,body.cruising #pin,body.cruising #tourS{display:none !important} body.cruising #brand{opacity:0} body.cruising #labels *{pointer-events:none !important}
-  body.cruising #tramS{display:flex} body.cruising #rideStopB{display:none} body.cruising canvas#c{cursor:crosshair}
+  body.cruising #tramS{display:flex} body.cruising #rideStopB{display:none} body.cruising canvas#c{cursor:crosshair} body.cfree canvas#c{cursor:grab}
+  /* steering it oneself: the helm, a round pad at the lower left. Its knob goes sideways for the rudder (and springs back), up and down for the speed (and stays where it is put) */
+  #cJoy{position:fixed;z-index:7;left:max(18px,env(safe-area-inset-left));bottom:calc(max(18px,env(safe-area-inset-bottom)) + 10px);width:148px;height:148px;border-radius:50%;display:none;box-sizing:border-box;border:2px solid rgba(255,206,140,.55);background:rgba(9,20,28,.38);touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;cursor:pointer}
+  body.cfree #cJoy{display:block} #cJoy::before{content:"";position:absolute;left:50%;top:22px;bottom:22px;width:2px;margin-left:-1px;background:rgba(255,206,140,.3)} #cJoy::after{content:"";position:absolute;left:50%;top:50%;width:30px;height:2px;margin:-1px 0 0 -15px;background:rgba(255,206,140,.65)}
+  #cJoy i{position:absolute;z-index:1;left:50%;top:50%;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:50%;background:rgba(255,201,138,.9);box-shadow:0 2px 10px rgba(0,0,0,.4);pointer-events:none} #cJoy.back i{background:rgba(255,104,84,.92)}
+  #cJoy em{position:absolute;left:0;right:0;text-align:center;font-style:normal;font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#fff4df;opacity:.75;pointer-events:none} #cJoy em.t{top:7px} #cJoy em.b{bottom:7px}
   body.cruising #tClock{top:calc(max(12px,env(safe-area-inset-top)) + 64px)} body.cruising #tPanel{top:calc(max(12px,env(safe-area-inset-top)) + 52px)}
   #cmini{position:fixed;z-index:6;left:max(12px,env(safe-area-inset-left));top:calc(max(10px,env(safe-area-inset-top)) + 54px);width:156px;display:none;flex-direction:column;align-items:center;gap:5px;pointer-events:none}
   body.cruising #cmini{display:flex} #cmC{display:block;width:156px;height:156px;border-radius:50%;box-shadow:0 2px 12px rgba(0,0,0,.55)}
@@ -494,10 +500,11 @@
 </div>
 <button id="tourS" type="button" title="End the tour" aria-live="polite"><span></span><i>✕</i></button>
 <div id="cmini" aria-hidden="true"><canvas id="cmC"></canvas><span id="cmD"></span></div>
+<div id="cJoy" role="group" aria-label="Helm: sideways to steer, up and down to set the speed, a tap to stop"><em class="t">Fast</em><i></i><em class="b">Back</em></div>
 <div id="tramS" aria-live="polite"><b id="rideTag">Tram</b><span></span><i id="rideSpd" title="Speed"><b>0</b><small>km/h</small></i><button id="rideStopB" type="button" title="Stop at the next stop (it does not stop unless asked)">Stop</button><button id="tramOff" type="button" title="Get off (Esc)">Get off ✕</button></div>
 <div id="pin"><div class="pb"><div class="pt"><b></b><em></em></div><button type="button" aria-label="Remove this label">✕</button></div><i></i><u></u></div>
 <div id="hint" aria-live="polite"></div>
-<div id="bigs"><button id="bigDrive" class="big" type="button" aria-label="Drive around Hong Kong Island"><i><svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="24" cy="24" r="4.5" fill="currentColor"/><path d="M8 21.5c5-2.6 10.4-3.6 16-3.6s11 1 16 3.6M24 28.5v11.5M20 26l-9.5 9M28 26l9.5 9" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg></i><span><b>Drive</b><em>Every street on the island</em></span></button><button id="bPlaces" class="big" type="button" aria-label="Places: search, fly or ride anywhere on the island"><i><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 4.2a2.8 2.8 0 1 1 0 5.6 2.8 2.8 0 0 1 0-5.6Z"/></svg></i><span><b>Places</b><em>Search, fly or ride there</em></span></button><button id="bRide" class="big" type="button" aria-label="Ride: the tram or a bus along its real route"><i><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" d="M6.5 4.5h11a2 2 0 0 1 2 2v9.5a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2V6.500a2 2 0 0 1 2-2ZM4.500 11.500h15M4.500 8h15M8 18l-1 2.500M16 18l1 2.500M8 15h.010M16 15h.010"/></svg></i><span><b>Ride</b><em>The tram and four bus lines</em></span></button><button id="bCruise" class="big" type="button" aria-label="Cruise: a junk or a yacht round the island's shore"><i><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" d="M2.500 17.500h19l-2.300 3.500H4.800L2.500 17.500ZM12 3v12M12 4.500l6.500 10H12M10 7.500l-4.800 7H10"/></svg></i><span><b>Cruise</b><em>A junk or a yacht round the shore</em></span></button><button id="bTour" class="big sm" type="button" aria-label="Tour: a flight round the island, golden afternoon into dusk"><i><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l11-6.5-11-6.5Z"/></svg></i><span><b>Tour</b><em>Sit back and watch</em></span></button><button id="bReset" class="big sm" type="button" aria-label="Whole island: back to the full view"><i><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></i><span><b>Island</b><em>The whole view</em></span></button></div>
+<div id="bigs"><button id="bigDrive" class="big" type="button" aria-label="Drive around Hong Kong Island"><i><svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="24" cy="24" r="4.5" fill="currentColor"/><path d="M8 21.5c5-2.6 10.4-3.6 16-3.6s11 1 16 3.6M24 28.5v11.5M20 26l-9.5 9M28 26l9.5 9" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg></i><span><b>Drive</b><em>Every street on the island</em></span></button><button id="bPlaces" class="big" type="button" aria-label="Places: search, fly or ride anywhere on the island"><i><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 4.2a2.8 2.8 0 1 1 0 5.6 2.8 2.8 0 0 1 0-5.6Z"/></svg></i><span><b>Places</b><em>Search, fly or ride there</em></span></button><button id="bRide" class="big" type="button" aria-label="Ride: the tram or a bus along its real route"><i><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" d="M6.5 4.5h11a2 2 0 0 1 2 2v9.5a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2V6.500a2 2 0 0 1 2-2ZM4.500 11.500h15M4.500 8h15M8 18l-1 2.500M16 18l1 2.500M8 15h.010M16 15h.010"/></svg></i><span><b>Ride</b><em>The tram and four bus lines</em></span></button><button id="bCruise" class="big" type="button" aria-label="Cruise: a junk or a yacht round the island's shore"><i><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" d="M2.500 17.500h19l-2.300 3.500H4.800L2.500 17.500ZM12 3v12M12 4.500l6.500 10H12M10 7.500l-4.800 7H10"/></svg></i><span><b>Cruise</b><em>A junk or a yacht: steer it, or sit back</em></span></button><button id="bTour" class="big sm" type="button" aria-label="Tour: a flight round the island, golden afternoon into dusk"><i><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l11-6.5-11-6.5Z"/></svg></i><span><b>Tour</b><em>Sit back and watch</em></span></button><button id="bReset" class="big sm" type="button" aria-label="Whole island: back to the full view"><i><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></i><span><b>Island</b><em>The whole view</em></span></button></div>
 <div id="drv"><div id="dTop"><button id="dExit" title="Stop driving (Esc)" aria-label="Stop driving">✕</button><button id="dNavB" title="Go somewhere" aria-label="Navigate"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 1 7 7c0 4.9-5.6 11.2-6.3 12a1 1 0 0 1-1.4 0C10.6 20.2 5 13.9 5 9a7 7 0 0 1 7-7zm0 4.2A2.8 2.8 0 1 0 12 11.8 2.8 2.8 0 0 0 12 6.2z"/></svg></button><button id="dCar" title="Change vehicle (G)" aria-label="Change vehicle"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M5 11l1.5-4.2A2 2 0 0 1 8.4 5.5h7.2a2 2 0 0 1 1.9 1.3L19 11h.5A1.5 1.5 0 0 1 21 12.5V17h-2v1.5a1 1 0 0 1-2 0V17H7v1.5a1 1 0 0 1-2 0V17H3v-4.5A1.5 1.5 0 0 1 4.5 11zm2.2 0h9.6l-1.1-3.2a.5.5 0 0 0-.5-.3H8.8a.5.5 0 0 0-.5.3zM6.5 15a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6zm11 0a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6z"/></svg></button>
   <div id="dInfo"><span id="dSt"></span><span id="dNx"><i id="dArr">↑</i><b id="dNxD"></b><em id="dNxN"></em></span><span id="dGo"><i>➤</i><em></em></span></div>
   <div id="dSide"><div id="dSpdBox"><b id="dSpd">0</b><small>km/h</small></div><button id="dU" title="Turn round (U)">U-turn</button><button id="dAuto" title="Self-driving on or off">Auto</button><button id="dSkip" type="button" title="Skip the journey: the car is put down at the destination">Skip ▸▸</button></div></div>
@@ -3216,7 +3223,7 @@ function makeHarbour() {
   for (let k = 0; k < Math.min(6, SITES.beaches.length); k++) { const b = SITES.beaches[k], l = bayLoop([b[0], b[1]], 180 + k * 40); if (l) route('yacht', l, 6 + R() * 5, { loop: true, L: 14, wake: .6 }); }
   /* typhoon shelters: moored craft packed behind the surveyed breakwaters and along the Aberdeen channel */
   const moor = (cx, cz, rad, n, yf, far = 220) => { let put = 0; for (let t = 0; t < n * 6 && put < n; t++) { const a = R() * TAU, rr = Math.sqrt(R()) * rad, x = cx + Math.cos(a) * rr, z = cz + Math.sin(a) * rr; if (!inDom(x, z)) continue; const sd = sdAt(x, z); if (sd > -9 || sd < -far) continue;
-    const ty = R() < yf ? 'yacht' : R() < .25 ? 'fishing' : 'sampan'; if (M[ty].n >= M[ty].cap) continue; const gx = sdAt(x + 8, z) - sdAt(x - 8, z), gz = sdAt(x, z + 8) - sdAt(x, z - 8); yawSet(M[ty], M[ty].add(), x, 0, z, Math.atan2(gz, gx) + PI / 2 + (R() - .5) * .3 + (R() < .5 ? PI : 0)); put++; } };
+    const ty = R() < yf ? 'yacht' : R() < .25 ? 'fishing' : 'sampan'; if (M[ty].n >= M[ty].cap) continue; const gx = sdAt(x + 8, z) - sdAt(x - 8, z), gz = sdAt(x, z + 8) - sdAt(x, z - 8); yawSet(M[ty], M[ty].add(), x, 0, z, Math.atan2(gz, gx) + PI / 2 + (R() - .5) * .3 + (R() < .5 ? PI : 0)); (BOATS.moored || (BOATS.moored = [])).push(x, z, ty === 'sampan' ? 4.5 : 7); put++; } };
   for (const b of PATHS.bw) moor(b[0], b[1], 330, 80, .2);
   { const cb = SITE('cbts'); moor(cb[0], cb[1], Math.max(cb[3], cb[4]) * .5, 240, .45, 400); }
   { let ax = 1e9, bx = -1e9, az = 1e9; const alc = G.coast.reduce((a, b) => { const c = polyCen(b), d = Math.hypot(c[0] - SITE('leitung')[0], c[1] - SITE('leitung')[1]); return d < a[0] ? [d, b] : a; }, [1e9, null])[1]; for (const p of alc) { ax = Math.min(ax, p[0]); bx = Math.max(bx, p[0]); az = Math.min(az, p[1]); }
@@ -3245,12 +3252,12 @@ function makeHarbour() {
     const dens = .25 + .75 * ST.traffic;
     for (let k = 0; k < BOATS.length; k++) { const b = BOATS[k];
       if (b.player) { const Cz = CRUISE, L = Cz.spec ? Cz.spec.len : 26; b.ws = lerp(b.ws, Cz.on ? 1 : 0, Math.min(1, dt * 1.5)); WAKE.a[k * 4] = Cz.x - Math.cos(Cz.h) * L * .34; WAKE.a[k * 4 + 1] = Cz.z - Math.sin(Cz.h) * L * .34; WAKE.a[k * 4 + 2] = Cz.h;
-        WAKE.a[k * 4 + 3] = Math.min(Cz.v * (Cz.spec ? Cz.spec.wake : 10), 420) + 30; WAKE.b[k * 2] = (14 + L * 1.1) * .6; WAKE.b[k * 2 + 1] = b.ws * clamp(Cz.v / 14, .18, .9); continue; }
+        WAKE.a[k * 4 + 3] = Math.min(Math.abs(Cz.v) * (Cz.spec ? Cz.spec.wake : 10), 420) + 30; WAKE.b[k * 2] = (14 + L * 1.1) * .6; WAKE.b[k * 2 + 1] = b.ws * clamp(Math.abs(Cz.v) / 14, .18, .9); continue; }
       if (b.dwell > 0) { b.dwell -= dt; } else if (b.follow) { b.s = b.follow.s + 95 * b.follow.dir; b.dir = b.follow.dir; } else { b.s += b.v * dt * b.dir; if (b.loop) { if (b.s > b.len) b.s -= b.len; } else if (b.s > b.len) { b.s = b.len; b.dir = -1; b.dwell = 14; } else if (b.s < 0) { b.s = 0; b.dir = 1; b.dwell = 14; } }
       const g = clamp(b.s / 40, 0, b.pts.length - 1.001), i = g | 0, f = g - i, p0 = b.pts[i], p1 = b.pts[i + 1], x = lerp(p0[0], p1[0], f), z = lerp(p0[1], p1[1], f);
       let hd = Math.atan2((p1[1] - p0[1]) * b.dir, (p1[0] - p0[0]) * b.dir); if (b.type === 'star' || b.type === 'sampan') hd = Math.atan2(p1[1] - p0[1], p1[0] - p0[0]);   // double-ended: never turns round
       let dh = hd - b.hd; while (dh > PI) dh -= TAU; while (dh < -PI) dh += TAU; b.hd += dh * Math.min(1, dt * .8 + (ST.frame < 3 ? 1 : 0));
-      const hide = hash2(k, 3) > dens && !b.follow && b.type !== 'star';
+      const hide = hash2(k, 3) > dens && !b.follow && b.type !== 'star'; b.x = x; b.z = z; b.hid = hide;
       M[b.type].set(b.i, x, hide ? -80 : Math.sin(ST.t * .7 + k) * .12, z, Math.cos(b.hd), 0, Math.sin(b.hd), 1, 1, 1);
       const mv = b.dwell > 0 || hide ? 0 : 1, wh = b.type === 'star' || b.type === 'sampan' ? Math.atan2((p1[1] - p0[1]) * b.dir, (p1[0] - p0[0]) * b.dir) : b.hd; b.ws = lerp(b.ws ?? mv, mv, Math.min(1, dt * .5));
       WAKE.a[k * 4] = x - Math.cos(wh) * b.L * .3; WAKE.a[k * 4 + 1] = z - Math.sin(wh) * b.L * .3; WAKE.a[k * 4 + 2] = wh; WAKE.a[k * 4 + 3] = Math.min(b.v * 26, 380) * Math.min(b.wake, 1.2) + 25; WAKE.b[k * 2] = (14 + Math.min(b.L, 80) * 1.1) * Math.min(b.wake, 1.4); WAKE.b[k * 2 + 1] = b.ws * clamp(b.v / 5, .25, 1);
@@ -3849,6 +3856,8 @@ const BUSL = {"b15p":{"stops":[[-3320,-3761,"Central (Exchange Square)"],[-2932,
 /* ---------- Ride: a line is chosen (the tram either way, bus 6 either way), and a stop to board at ---------- */
 const RIDE = { lines: null, li: 0, si: 0, mode: 'ride', built: '', liBy: {} };
 const cardLines = () => RIDE.mode === 'cruise' ? cruiseLines() : rideLines();
+/* (the lines come in groups, a tab for each: a tram or bus line's two directions; a boat steered freely, or on its course either way) */
+const tabOf = (L, i) => L[i].tab ?? i >> 1, tabLines = (L, t) => { const o = []; for (let i = 0; i < L.length; i++) if (tabOf(L, i) === t) o.push(i); return o; };
 function rideLines() {
   if (RIDE.lines) return RIDE.lines; const L = [], tk = TRAMS.tracks.find(t => t.main);
   if (tk) { const east = tk.pts[tk.pts.length - 1][0] > tk.pts[0][0] ? 1 : -1, asc = tk.stops.map((q, i) => { const p = tk.pts[Math.min(tk.pts.length - 1, Math.round(q / 8))]; return [Math.round(p[0]), Math.round(p[2]), tk.stopN[i] || 'Tram stop', q]; }), fw = [], bk = [];
@@ -3865,24 +3874,26 @@ function rideLines() {
 }
 function rideOpen(mode) { if (DRIVE.on || DRIVE.entering || CRUISE.on) return; RIDE.mode = mode === 'cruise' ? 'cruise' : 'ride'; plClose(); if (TOUR.on) stopTour(); document.body.classList.remove('menu', 'tp'); document.body.classList.add('rideopen'); const L = cardLines(), box = document.getElementById('rideLines');
   /* (the lines come in pairs, one for each way: a tab for each line, and under them its two directions) */
-  if (RIDE.built !== RIDE.mode) { RIDE.built = RIDE.mode; box.textContent = ''; document.getElementById('rideDirs').textContent = ''; document.querySelector('#ride .rh b').textContent = RIDE.mode === 'cruise' ? 'Cruise' : 'Ride'; for (let k = 0; k < L.length; k += 2) { const b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'tab'); b.textContent = L[k].tag; b.onclick = () => rideSet(k); box.appendChild(b); }
-    const dirs = document.getElementById('rideDirs'); for (let j = 0; j < 2; j++) { const b = document.createElement('button'); b.type = 'button'; b.innerHTML = '<b></b><em></em>'; b.onclick = () => rideSet((RIDE.li & ~1) + j); dirs.appendChild(b); } }
+  if (RIDE.built !== RIDE.mode) { RIDE.built = RIDE.mode; box.textContent = ''; document.getElementById('rideDirs').textContent = ''; document.querySelector('#ride .rh b').textContent = RIDE.mode === 'cruise' ? 'Cruise' : 'Ride'; let nt = 0, nd = 0; for (let i = 0; i < L.length; i++) nt = Math.max(nt, tabOf(L, i) + 1);
+    for (let t = 0; t < nt; t++) { const g = tabLines(L, t), b = document.createElement('button'); nd = Math.max(nd, g.length); b.type = 'button'; b.setAttribute('role', 'tab'); b.textContent = L[g[0]].tag;
+      b.onclick = () => { const cl = cardLines(), j = RIDE.mode === 'cruise' ? tabLines(cl, tabOf(cl, RIDE.li)).indexOf(RIDE.li) : 0; rideSet(g[Math.min(Math.max(j, 0), g.length - 1)]); }; box.appendChild(b); }   /* (another boat: the same way of going as was chosen) */
+    const dirs = document.getElementById('rideDirs'); dirs.classList.toggle('n3', nd > 2); for (let j = 0; j < nd; j++) { const b = document.createElement('button'); b.type = 'button'; b.innerHTML = '<b></b><em></em>'; b.onclick = () => { const cl = cardLines(), g = tabLines(cl, tabOf(cl, RIDE.li)); if (g[j] !== undefined) rideSet(g[j]); }; dirs.appendChild(b); } }
   rideSet(RIDE.liBy[RIDE.mode] || 0, true); }
 function rideClose() { document.body.classList.remove('rideopen'); }
 /* a line chosen: the stop nearest what is being looked at (from far off: the first), never the last, where there is nowhere to ride to */
-function rideSet(li, keep) { const L = cardLines(); RIDE.li = (li + L.length) % L.length; RIDE.liBy[RIDE.mode] = RIDE.li; const ln = L[RIDE.li]; if (ln.kind === 'boat') { if (!CRUISE.mesh[ln.veh]) CRUISE.mesh[ln.veh] = cruiseBoat(ln.veh); cruiseModel(ln.veh); }   /* (the boat's model is fetched while the card is open) */ [...document.getElementById('rideLines').children].forEach((b, i) => { b.classList.toggle('on', i === RIDE.li >> 1); b.setAttribute('aria-selected', i === RIDE.li >> 1 ? 'true' : 'false'); });
-  [...document.getElementById('rideDirs').children].forEach((b, j) => { const q = L[(RIDE.li & ~1) + j]; b.style.display = q ? '' : 'none'; if (!q) return; b.firstChild.textContent = q.dir || q.name; b.lastChild.textContent = q.sub; b.classList.toggle('on', (RIDE.li & 1) === j); b.setAttribute('aria-pressed', (RIDE.li & 1) === j ? 'true' : 'false'); });
-  let si = 0; if (cam.dist < 2600) { let bd = 700; ln.stops.forEach((q, i) => { const d = Math.hypot(q[0] - cam.tx, q[1] - cam.tz); if (d < bd && i < ln.stops.length - 1) { bd = d; si = i; } }); } else if (ln.kind === 'tram') { const i = ln.stops.findIndex(q => /Pedder/.test(q[2])); if (i >= 0) si = i; }
+function rideSet(li, keep) { const L = cardLines(); RIDE.li = (li + L.length) % L.length; RIDE.liBy[RIDE.mode] = RIDE.li; const ln = L[RIDE.li]; if (ln.kind === 'boat') { if (!CRUISE.mesh[ln.veh]) CRUISE.mesh[ln.veh] = cruiseBoat(ln.veh); cruiseModel(ln.veh); }   /* (the boat's model is fetched while the card is open) */ const tb = tabOf(L, RIDE.li), grp = tabLines(L, tb); [...document.getElementById('rideLines').children].forEach((b, i) => { b.classList.toggle('on', i === tb); b.setAttribute('aria-selected', i === tb ? 'true' : 'false'); });
+  [...document.getElementById('rideDirs').children].forEach((b, j) => { const q = L[grp[j]]; b.style.display = q ? '' : 'none'; if (!q) return; b.firstChild.textContent = q.dir || q.name; b.lastChild.textContent = q.sub; b.classList.toggle('on', grp[j] === RIDE.li); b.setAttribute('aria-pressed', grp[j] === RIDE.li ? 'true' : 'false'); });
+  let si = 0; if (cam.dist < 2600) { let bd = 700; ln.stops.forEach((q, i) => { const d = Math.hypot(q[0] - cam.tx, q[1] - cam.tz); if (d < bd && (i < ln.stops.length - 1 || ln.loop)) { bd = d; si = i; } }); } else if (ln.kind === 'tram') { const i = ln.stops.findIndex(q => /Pedder/.test(q[2])); if (i >= 0) si = i; }
   ridePick(si); }
-function ridePick(si) { const ln = cardLines()[RIDE.li], n = ln.stops.length; RIDE.si = clamp(si, 0, ln.loop ? n - 1 : n - 2); const q = ln.stops[RIDE.si]; document.getElementById('rideStop').textContent = q[2] || 'Stop'; document.getElementById('rideGo0').textContent = 'From the start · ' + (ln.stops[0][2] || 'the first stop');
-  document.getElementById('rideSub').textContent = ln.loop ? 'All the way round: ' + ln.km + ' km' : (n - 1 - RIDE.si) + (n - 1 - RIDE.si === 1 ? ' stop' : ' stops') + ' to ' + (ln.stops[n - 1][2] || 'the end of the line'); rideDraw(); }
+function ridePick(si) { const ln = cardLines()[RIDE.li], n = ln.stops.length; RIDE.si = clamp(si, 0, ln.loop ? n - 1 : n - 2); const q = ln.stops[RIDE.si]; document.getElementById('rideStop').textContent = q[2] || 'Stop'; { const g0 = document.getElementById('rideGo0'); g0.textContent = 'From the start · ' + (ln.stops[0][2] || 'the first stop'); g0.style.display = ln.free ? 'none' : ''; document.getElementById('rideGo').textContent = ln.free ? 'Cast off here' : 'Board here'; }
+  document.getElementById('rideSub').textContent = ln.free ? 'Steer it yourself, anywhere on the water' : ln.loop ? 'All the way round: ' + ln.km + ' km' : (n - 1 - RIDE.si) + (n - 1 - RIDE.si === 1 ? ' stop' : ' stops') + ' to ' + (ln.stops[n - 1][2] || 'the end of the line'); rideDraw(); }
 function rideDraw() {
   const cv = document.getElementById('rideMap'); if (!cv || !cv.clientWidth) return; const dpr = Math.min(devicePixelRatio || 1, 2), W = Math.round(cv.clientWidth * dpr), H = Math.round(cv.clientHeight * dpr); if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
   const g = cv.getContext('2d'), T = plXf(cv), X = x => x * T.k + T.ox, Z = z => z * T.k + T.oz, ln = cardLines()[RIDE.li]; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.fillStyle = '#163a50'; g.fillRect(0, 0, T.w, T.h);
   g.fillStyle = '#26352d'; g.strokeStyle = 'rgba(255,214,160,.35)'; g.lineWidth = 1; for (const r of G.coast) { if (r.length < 3) continue; g.beginPath(); g.moveTo(X(r[0][0]), Z(r[0][1])); for (let i = 1; i < r.length; i++) g.lineTo(X(r[i][0]), Z(r[i][1])); g.closePath(); g.fill(); g.stroke(); }
   /* the line: faint where it is behind the chosen stop, bright from there on */
   const P = ln.path, stroke = (col, w) => { g.strokeStyle = col; g.lineWidth = w; g.lineJoin = g.lineCap = 'round'; g.beginPath(); g.moveTo(X(P[0]), Z(P[1])); for (let i = 2; i < P.length; i += 2) g.lineTo(X(P[i]), Z(P[i + 1])); g.stroke(); };
-  stroke('rgba(9,20,28,.8)', 5); stroke(ln.kind === 'tram' ? '#6fd08a' : ln.kind === 'boat' ? '#6fd2ff' : '#ffb054', 2.6);
+  if (P.length > 3) { stroke('rgba(9,20,28,.8)', 5); stroke(ln.kind === 'tram' ? '#6fd08a' : ln.kind === 'boat' ? '#6fd2ff' : '#ffb054', 2.6); }
   ln.stops.forEach((q, i) => { g.beginPath(); g.arc(X(q[0]), Z(q[1]), i === RIDE.si ? 0 : i < RIDE.si && !ln.loop ? 1.6 : 2.3, 0, TAU); g.fillStyle = i < RIDE.si && !ln.loop ? 'rgba(255,244,223,.45)' : '#fff4df'; g.fill(); });
   const q = ln.stops[RIDE.si], e = ln.loop ? q : ln.stops[ln.stops.length - 1]; g.beginPath(); g.arc(X(e[0]), Z(e[1]), 4.5, 0, TAU); g.fillStyle = '#fff4df'; g.fill(); g.strokeStyle = '#2a1606'; g.lineWidth = 1.5; g.stroke();
   g.beginPath(); g.arc(X(q[0]), Z(q[1]), 7, 0, TAU); g.fillStyle = '#ffb054'; g.fill(); g.strokeStyle = '#fff4df'; g.lineWidth = 2; g.stroke();
@@ -5845,7 +5856,7 @@ canvas.addEventListener('pointerdown', e => {
   } else GS.mode = null;
 });
 canvas.addEventListener('pointermove', e => {
-  if (CRUISE.on) return;
+  if (CRUISE.on) { if (CRUISE.free) cruisePointer(e); return; }
   if (DRIVE.on) { dPointer(e); return; }
   const p = ptrs.get(e.pointerId); if (!p) return; const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
   const now = performance.now(); moveDt = clamp((now - lastMoveT) / 1000, .008, .1); lastMoveT = now;
@@ -5883,7 +5894,7 @@ const pUp = e => {
 };
 canvas.addEventListener('pointerup', pUp); canvas.addEventListener('pointercancel', pUp);
 canvas.addEventListener('wheel', e => {
-  e.preventDefault(); if (CRUISE.on) { CRUISE.zoom = clamp(CRUISE.zoom + e.deltaY * .06, -22, 220); return; } if (DRIVE.on) { DRIVE.zoom = clamp(DRIVE.zoom + e.deltaY * .02, -7, 45); return; } userInput();
+  e.preventDefault(); if (CRUISE.on) { if (CRUISE.free) CRUISE.zf = clamp(CRUISE.zf * Math.exp(clamp(e.deltaY * (e.deltaMode ? 30 : 1), -240, 240) * .0016), .5, 16); else CRUISE.zoom = clamp(CRUISE.zoom + e.deltaY * .06, -22, 220); return; } if (DRIVE.on) { DRIVE.zoom = clamp(DRIVE.zoom + e.deltaY * .02, -7, 45); return; } userInput();
   const dz = clamp(e.deltaY * (e.deltaMode ? 30 : 1), -240, 240), f = Math.exp(dz * .0016), p = pickGround(e.clientX, e.clientY);
   const nd = clamp(cam.dist * f, 30, 42000), rf = nd / cam.dist; cam.dist = nd;
   if (p && rf < 1) { cam.tx += (p.x - cam.tx) * (1 - rf); cam.tz += (p.z - cam.tz) * (1 - rf); }
@@ -5923,7 +5934,7 @@ function initNav() {
 /* Safari on a Mac sends trackpad pinch and rotate as gesture events rather than ctrl+wheel */
 let gsc = 1, gro = 0;
 addEventListener('gesturestart', e => { if (e.target !== canvas || ptrs.size) return; e.preventDefault(); userInput(); gsc = e.scale; gro = e.rotation; });
-addEventListener('gesturechange', e => { if (e.target !== canvas) return; e.preventDefault(); if (ptrs.size || DRIVE.on) return; if (e.scale > 0) cam.dist = clamp(cam.dist * gsc / e.scale, 30, 42000); gsc = e.scale; cam.az += (e.rotation - gro) * RAD; gro = e.rotation; });
+addEventListener('gesturechange', e => { if (e.target !== canvas) return; e.preventDefault(); if (CRUISE.on) { if (CRUISE.free && e.scale > 0) CRUISE.zf = clamp(CRUISE.zf * gsc / e.scale, .5, 16); gsc = e.scale; return; } if (ptrs.size || DRIVE.on) return; if (e.scale > 0) cam.dist = clamp(cam.dist * gsc / e.scale, 30, 42000); gsc = e.scale; cam.az += (e.rotation - gro) * RAD; gro = e.rotation; });
 const keys = {};
 addEventListener('keydown', e => { keys[e.code] = 1; if (CRUISE.on) { if (e.code === 'Escape') cruiseExit(); if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault(); return; } if (DRIVE.on && e.code !== 'KeyL') { if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault(); return; } if (e.code.startsWith('Digit')) { const i = +e.code.slice(5) - 1; if (i >= 0 && i < 6) goPreset(i); }
   if (e.code === 'KeyR') goPreset(0); if (e.code === 'Escape' && FOCUS.label) exitFocus();
@@ -5961,17 +5972,18 @@ function goPreset(i, instant) {
   cam.fly = { a, b: { ...b, ty: b.ty || 0 }, daz, t: 0, dur: clamp(2.2 + arc * 1.3, 2.2, 7.5), arc, then: b.tour };
 }
 
-/* ═════════════ 9c. CRUISE: a boat round the island's shore ═════════════ */
-/* A junk or a motor yacht on a fixed course 170 m off the shore, all the way round the island. The course is traced from the map of distance to the
-   shore (the one that keeps the harbour's own boats off the land); the sights are the island's districts that lie by the water, each at the nearest point
-   of the course. Like a ride: left alone the boat keeps a gentle pace, a hold anywhere is the throttle, and nothing steers. */
-const BOATSPEC = { junk: { tag: 'Junk', name: 'Junk', len: 28, cruise: 7, top: 20, acc: 1.8, camD: 66, tgt: 10, wake: 6, lean: .5, squat: .006 }, yacht: { tag: 'Yacht', name: 'Yacht', len: 26, cruise: 13, top: 34, acc: 4.5, camD: 50, tgt: 5, wake: 7, lean: 1.6, squat: .045 } };
-const CRUISE = { on: false, x: 0, z: 0, h: 0, v: 0, s: 0, dir: 1, hold: false, path: null, lines: null, mesh: {}, ln: null, spec: null, zoom: 0, azV: 0, hudT: 0, mm: 0, turn: 0 };
+/* ═════════════ 9c. CRUISE: a boat on the water round the island ═════════════ */
+/* A junk or a motor yacht, of one speed. Either it is steered (free: it goes wherever there is water, from one of a few piers; a pad is its helm, and a
+   drag turns the view about the boat), or it keeps a fixed course 170 m off the shore all the way round the island, like a ride: left alone the boat keeps
+   a gentle pace, a hold anywhere is the throttle, and nothing steers. The course is traced from the map of distance to the shore (the one that keeps the
+   harbour's own boats off the land), and the same map keeps a steered boat off the land. */
+const BOATSPEC = { junk: { tag: 'Junk', name: 'Junk', len: 28, cruise: 18, top: 42, acc: 5, camD: 66, tgt: 10, wake: 6, lean: .5, squat: .006 }, yacht: { tag: 'Yacht', name: 'Yacht', len: 26, cruise: 18, top: 42, acc: 5, camD: 50, tgt: 5, wake: 7, lean: 1.6, squat: .045 } };
+const CRUISE = { on: false, free: false, x: 0, z: 0, h: 0, v: 0, s: 0, dir: 1, hold: false, path: null, lines: null, mesh: {}, ln: null, spec: null, zoom: 0, azV: 0, hudT: 0, mm: 0, turn: 0, lev: 0, rud: 0, joy: null, caz: 0, cpol: 1.34, zf: 1, hc: 0, ptr: new Map(), edge: 0 };
 function cruisePath() {
   if (CRUISE.path) return CRUISE.path; const D = 170;
   const grad = (x, z) => { const gx = sdAt(x + 12, z) - sdAt(x - 12, z), gz = sdAt(x, z + 12) - sdAt(x, z - 12), l = Math.hypot(gx, gz) || 1; return [gx / l, gz / l]; };
   /* on to the line 170 m from the shore, by the slope of the distance map */
-  const settle = (x, z, n) => { for (let k = 0; k < n; k++) { const e = sdAt(x, z) + D; if (Math.abs(e) < .5) break; const g = grad(x, z); x = clamp(x - g[0] * e * .7, X0 + 30, X1 - 30); z = clamp(z - g[1] * e * .7, Z0 + 30, Z1 - 30); } return [x, z]; };
+  const settle = (x, z, n, D1 = D) => { for (let k = 0; k < n; k++) { const e = sdAt(x, z) + D1; if (Math.abs(e) < .5) break; const g = grad(x, z); x = clamp(x - g[0] * e * .7, X0 + 30, X1 - 30); z = clamp(z - g[1] * e * .7, Z0 + 30, Z1 - 30); } return [x, z]; };
   /* from off the Central piers, along that line with the land to the left (west first), until it comes round to where it began */
   const c0 = SITE('ifc2') || [-3300, -3800]; let [x, z] = settle(c0[0], c0[1] - 500, 300); const P = [[x, z]], x0 = x, z0 = z; let closed = false;
   for (let k = 0; k < 16000; k++) { const g = grad(x, z); [x, z] = settle(x - g[1] * 12, z + g[0] * 12, 4); if (k > 400 && Math.hypot(x - x0, z - z0) < 18) { closed = true; break; } P.push([x, z]); }
@@ -5996,13 +6008,33 @@ function cruisePath() {
   S.sort((a, b) => a[3] - b[3]); for (let i = S.length - 1; i > 0; i--) if (S[i][3] - S[i - 1][3] < 300) S.splice(i, 1);
   { const k = S.findIndex(q => q[2] === 'Central Pier 9'); if (k > 0) S.push(...S.splice(0, k)); }
   const flat = []; for (let i = 0; i < n; i += 4) flat.push(Math.round(pts[i * 2]), Math.round(pts[i * 2 + 1])); flat.push(flat[0], flat[1]);
-  return (CRUISE.path = { pts, n, st, L, sights: S, flat, closed });
+  /* where a boat that is steered may set out: a few piers, the boat put on the water 70 m off each (or as far off as its harbour is wide), its head along the shore with the land to port */
+  const starts = [];
+  for (const [nm, lat, lon] of [['Central Pier 9', 22.28606, 114.16261], ['Aberdeen Promenade', 22.2469, 114.15603], ['Blake Pier at Stanley', 22.21741, 114.21016], ['Sai Wan Ho Ferry Pier', 22.28637, 114.22409], ['North Point Ferry Pier', 22.29415, 114.2018]]) {
+    const o = LL(lat, lon); let q = null; for (const d of [70, 45, 28]) { const c = settle(o[0], o[1], 80, d); if (sdAt(c[0], c[1]) < -d + 6 && Math.hypot(c[0] - o[0], c[1] - o[1]) < 400) { q = c; break; } } if (!q) continue;
+    /* (clear of the pier itself, which stands farther out than the shore's line, and of anything moored) */
+    for (let k = 0; k < 40; k++) { let mv = false; const w = cruiseWall(q[0], q[1], 40); if (w) { q = [q[0] + w[1] * w[0], q[1] + w[2] * w[0]]; mv = true; } const Mo = BOATS.moored || []; for (let i = 0; i < Mo.length; i += 3) { const dx = q[0] - Mo[i], dz = q[1] - Mo[i + 1], d = Math.hypot(dx, dz) || 1; if (d < 34) { q = [q[0] + dx / d * (34 - d), q[1] + dz / d * (34 - d)]; mv = true; } }
+      const e = sdAt(q[0], q[1]) + 28; if (e > 0) { const g = grad(q[0], q[1]); q = [q[0] - g[0] * e, q[1] - g[1] * e]; mv = true; } if (!mv) break; }
+    /* (its head: the way the course runs past it, which is steadier than the shore's own line among the piers; where the course is far off, as in Aberdeen's channel, the shore's) */
+    let bd = 450 * 450, bi = -1; for (let i = 0; i < n; i++) { const d = (pts[i * 2] - q[0]) ** 2 + (pts[i * 2 + 1] - q[1]) ** 2; if (d < bd) { bd = d; bi = i; } } const j = (bi + 4) % n, g = grad(q[0], q[1]);
+    starts.push([Math.round(q[0]), Math.round(q[1]), nm, 0, bi >= 0 ? Math.atan2(pts[j * 2 + 1] - pts[bi * 2 + 1], pts[j * 2] - pts[bi * 2]) : Math.atan2(g[0], -g[1])]); }
+  return (CRUISE.path = { pts, n, st, L, sights: S, starts, flat, closed });
 }
+/* what stands in the water beyond the shore's own line: the piers (an outline, or a walkway 5 m wide) and the breakwaters (9 m wide), each with the box it lies in.
+   `cruiseWall` says how far a point is inside one of them, widened by m, and which way is out: [depth, x out, z out], or null in the clear */
+function cruiseWalls() { if (CRUISE.walls) return CRUISE.walls; const W = [], add = (pts, closed, r) => { if (pts.length < 2) return; let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9; for (const q of pts) { if (q[0] < x0) x0 = q[0]; if (q[0] > x1) x1 = q[0]; if (q[1] < z0) z0 = q[1]; if (q[1] > z1) z1 = q[1]; } W.push({ pts, closed, r, x0, z0, x1, z1 }); };
+  for (const p of G.piers) add(p, !!p.flag && p.length > 2, p.flag ? 0 : 2.5); for (const b of G.breakwaters) add(b, false, 4.5); return (CRUISE.walls = W); }
+function cruiseWall(px, pz, m) { let best = null;
+  for (const w of cruiseWalls()) { const R = w.r + m; if (px < w.x0 - R || px > w.x1 + R || pz < w.z0 - R || pz > w.z1 + R) continue; const P = w.pts, n = P.length; let bd = 1e18, qx = 0, qz = 0;
+    for (let i = 0, e = w.closed ? n : n - 1; i < e; i++) { const a = P[i], b = P[(i + 1) % n], ux = b[0] - a[0], uz = b[1] - a[1], t = clamp(((px - a[0]) * ux + (pz - a[1]) * uz) / (ux * ux + uz * uz || 1), 0, 1), cx = a[0] + ux * t, cz = a[1] + uz * t, d = (px - cx) ** 2 + (pz - cz) ** 2; if (d < bd) { bd = d; qx = cx; qz = cz; } }
+    const d = Math.sqrt(bd) || .01, ins = w.closed && inPoly(px, pz, P), e = ins ? d + R : R - d; if (e > 0 && (!best || e > best[0])) best = ins ? [e, (qx - px) / d, (qz - pz) / d] : [e, (px - qx) / d, (pz - qz) / d]; }
+  return best; }
 function cruiseAt(s) { const P = CRUISE.path, f = (((s % P.L) + P.L) % P.L) / P.st, i = Math.floor(f) % P.n, j = (i + 1) % P.n, t = f - Math.floor(f), p = P.pts; return [p[i * 2] + (p[j * 2] - p[i * 2]) * t, p[i * 2 + 1] + (p[j * 2 + 1] - p[i * 2 + 1]) * t]; }
 function cruiseLines() {
   if (CRUISE.lines) return CRUISE.lines; const P = cruisePath(), S = P.sights, L = [], km = Math.round(P.L / 1000);
-  const mk = (veh, sg) => { const sp = BOATSPEC[veh]; L.push({ id: veh + (sg > 0 ? '-w' : '-e'), kind: 'boat', veh, loop: true, km, cdir: sg, tag: sp.tag, name: sp.name, dir: sg > 0 ? 'West first' : 'East first', sub: sg > 0 ? 'By Kennedy Town, then the south coast' : 'By North Point, then the east coast', stops: sg > 0 ? S : [S[0]].concat(S.slice(1).reverse()), path: P.flat }); };
-  mk('junk', 1); mk('junk', -1); mk('yacht', 1); mk('yacht', -1); return (CRUISE.lines = L);
+  const mk = (veh, sg) => { const sp = BOATSPEC[veh]; L.push({ id: veh + (sg > 0 ? '-w' : '-e'), kind: 'boat', veh, tab: veh === 'junk' ? 0 : 1, loop: true, km, cdir: sg, tag: sp.tag, name: sp.name, dir: sg > 0 ? 'Tour, west first' : 'Tour, east first', sub: sg > 0 ? 'It keeps its course round the island: Kennedy Town, then the south coast' : 'It keeps its course round the island: North Point, then the east coast', stops: sg > 0 ? S : [S[0]].concat(S.slice(1).reverse()), path: P.flat }); };
+  const fr = veh => { const sp = BOATSPEC[veh]; L.push({ id: veh + '-free', kind: 'boat', veh, tab: veh === 'junk' ? 0 : 1, free: true, loop: true, cdir: 1, tag: sp.tag, name: sp.name, dir: 'Steer freely', sub: 'You are at the helm: go wherever there is water', stops: P.starts, path: [] }); };
+  fr('junk'); mk('junk', 1); mk('junk', -1); fr('yacht'); mk('yacht', 1); mk('yacht', -1); return (CRUISE.lines = L);
 }
 /* the two boats as they were modelled in Blender (vehicles/junk.glb, vehicles/yacht.glb; boats_blend.py), brought into the scene's own prop format like the
    Drive vehicles: fetched when a boat is first chosen on the card. Until one has come (or if it cannot be fetched) the plain one below stands in */
@@ -6055,41 +6087,103 @@ function cruiseBoat(kind) {
 }
 function cruiseStart(ln, si) {
   if (DRIVE.on || DRIVE.entering || CRUISE.on) return; if (TOUR.on) stopTour(); if (FOCUS.label) exitFocus(); pinClear(); cam.fly = null; cam.tour = null;
-  const Cz = CRUISE; cruisePath(); Cz.ln = ln; Cz.spec = BOATSPEC[ln.veh]; Cz.dir = ln.cdir; Cz.s = ln.stops[si][3]; Cz.v = 0; Cz.hold = false; Cz.zoom = 0; Cz.azV = 0; Cz.turn = 0; Cz.hudT = 9; Cz.shown = '';
-  const q = cruiseAt(Cz.s), a = cruiseAt(Cz.s + 30 * Cz.dir); Cz.x = q[0]; Cz.z = q[1]; Cz.h = Math.atan2(a[1] - q[1], a[0] - q[0]);
+  const Cz = CRUISE, q0 = ln.stops[si]; cruisePath(); Cz.ln = ln; Cz.spec = BOATSPEC[ln.veh]; Cz.free = !!ln.free; Cz.dir = ln.cdir; Cz.s = q0[3]; Cz.v = 0; Cz.hold = false; Cz.zoom = 0; Cz.azV = 0; Cz.turn = 0; Cz.hudT = 9; Cz.shown = ''; Cz.lev = 0; Cz.rud = 0; Cz.joy = null; Cz.ptr.clear(); Cz.zf = 1; Cz.edge = 0; Cz.fast = 0;
+  if (Cz.free) { Cz.x = q0[0]; Cz.z = q0[1]; Cz.h = Cz.hc = q0[4]; Cz.caz = -.4; Cz.cpol = 77 * RAD; cam.az = Cz.hc + PI + Cz.caz; cJoyDraw(); }   /* (the view: from astern and a little to seaward, across the boat at the shore) */
+  else { const q = cruiseAt(Cz.s), a = cruiseAt(Cz.s + 30 * Cz.dir); Cz.x = q[0]; Cz.z = q[1]; Cz.h = Math.atan2(a[1] - q[1], a[0] - q[0]); cam.az = Cz.h + PI - Cz.dir * 1.1; }
   for (const k in Cz.mesh) Cz.mesh[k].visible = false; (Cz.mesh[ln.veh] || (Cz.mesh[ln.veh] = cruiseBoat(ln.veh))).visible = true; cruiseModel(ln.veh); Cz.on = true;
-  cam.az = Cz.h + PI - Cz.dir * 1.1; cam.dist = Cz.spec.camD + 60; cam.pol = 70 * RAD; cam.tx = Cz.x; cam.tz = Cz.z; cam.ty = Cz.spec.tgt; cam.vaz = cam.vpol = cam.vx = cam.vz = cam.vzoom = 0;
-  document.body.classList.remove('menu', 'tp'); document.body.classList.add('cruising'); document.getElementById('rideTag').textContent = Cz.spec.tag; document.querySelector('#rideSpd small').textContent = 'knots'; document.querySelector('#tramS span').textContent = 'From ' + ln.stops[si][2];
-  ctlHint.first = false; ctlHint.show([COARSE ? 'Hold anywhere to go faster' : 'Hold the mouse, ↑ or Space to go faster'], 8000); cruiseStep(0); placeCamera(0);
+  cam.dist = Cz.spec.camD + 60; cam.pol = 70 * RAD; cam.tx = Cz.x; cam.tz = Cz.z; cam.ty = Cz.spec.tgt; cam.vaz = cam.vpol = cam.vx = cam.vz = cam.vzoom = 0;
+  document.body.classList.remove('menu', 'tp'); document.body.classList.add('cruising'); document.body.classList.toggle('cfree', Cz.free); document.getElementById('rideTag').textContent = Cz.spec.tag; document.querySelector('#rideSpd small').textContent = 'knots'; document.querySelector('#tramS span').textContent = 'From ' + q0[2];
+  ctlHint.first = false; ctlHint.show(Cz.free ? (COARSE ? ['The pad: up for speed, sideways to steer', 'Drag to look round', 'Pinch to zoom'] : ['W S or the pad: speed', 'A D: steer', 'Drag to look round', 'Scroll to zoom']) : [COARSE ? 'Hold anywhere to go faster' : 'Hold the mouse, ↑ or Space to go faster'], Cz.free ? 11000 : 8000); cruiseStep(0); placeCamera(0);
 }
 function cruiseExit() {
-  const Cz = CRUISE; if (!Cz.on) return; Cz.on = false; Cz.hold = false; for (const k in Cz.mesh) Cz.mesh[k].visible = false; document.body.classList.remove('cruising'); document.querySelector('#rideSpd small').textContent = 'km/h'; ctlHint.hide();
+  const Cz = CRUISE; if (!Cz.on) return; Cz.on = false; Cz.hold = false; Cz.joy = null; Cz.ptr.clear(); for (const k in Cz.mesh) Cz.mesh[k].visible = false; document.body.classList.remove('cruising', 'cfree'); document.querySelector('#rideSpd small').textContent = 'km/h'; ctlHint.hide();
   flyTo({ tx: Cz.x, tz: Cz.z, dist: 1100, pol: 58 * RAD, az: cam.az, fov: 40, ty: 0, dur: 2.4 });
 }
-function cruisePointer(e) { const Cz = CRUISE; if (e.type === 'pointerdown') { Cz.hold = true; Cz.pid = e.pointerId; ctlHint.done(); } else if (Cz.pid === undefined || e.pointerId === Cz.pid) Cz.hold = false; }
+/* on its course a hold anywhere is the throttle. Steered, the screen is the view's: a drag turns and tilts it about the boat, two fingers draw it nearer or
+   farther, and two quick taps put it back astern */
+function cruisePointer(e) {
+  const Cz = CRUISE;
+  if (!Cz.free) { if (e.type === 'pointerdown') { Cz.hold = true; Cz.pid = e.pointerId; ctlHint.done(); } else if (Cz.pid === undefined || e.pointerId === Cz.pid) Cz.hold = false; return; }
+  const P = Cz.ptr, now = performance.now();
+  if (e.type === 'pointerdown') { try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* synthetic */ } P.set(e.pointerId, { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, t: now }); if (P.size === 2) { const [a, b] = [...P.values()]; Cz.pd = Math.hypot(a.x - b.x, a.y - b.y); } return; }
+  const p = P.get(e.pointerId); if (!p) return;
+  if (e.type === 'pointermove') { const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
+    if (P.size === 1) { Cz.caz = wrapA(Cz.caz + dx * .0046); Cz.cpol = clamp(Cz.cpol - dy * .0038, 14 * RAD, 87 * RAD); if (Math.hypot(p.x - p.x0, p.y - p.y0) > 30) ctlHint.done(); }
+    else if (P.size === 2) { const [a, b] = [...P.values()], d = Math.hypot(a.x - b.x, a.y - b.y); if (d > 1 && Cz.pd > 1) Cz.zf = clamp(Cz.zf * Cz.pd / d, .5, 16); Cz.pd = d; }
+    return; }
+  P.delete(e.pointerId); if (P.size) return;
+  if (Math.hypot(p.x - p.x0, p.y - p.y0) < 9 && now - p.t < 280) { const lt = Cz.tap; if (lt && now - lt.t < 340 && Math.hypot(p.x - lt.x, p.y - lt.y) < 40) { Cz.caz = 0; Cz.cpol = 77 * RAD; Cz.zf = 1; Cz.tap = null; } else Cz.tap = { x: p.x, y: p.y, t: now }; } else Cz.tap = null;
+}
+/* the helm. The knob moves with the thumb from wherever the thumb lands: sideways is the rudder, and it springs back; up and down is the speed lever, which
+   stays where it is left (above the middle ahead, below it astern, the middle stopped). A tap stops the boat */
+function cJoyDraw() { const Cz = CRUISE, el = document.getElementById('cJoy'), R = 47, J = Cz.joy; let x = (J ? J.raw : 0) * R, y = -Cz.lev * R; const l = Math.hypot(x, y); if (l > R) { x *= R / l; y *= R / l; } el.firstElementChild.nextElementSibling.style.transform = 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px)'; el.classList.toggle('back', Cz.lev < -.1); }
+function cJoyInit() {
+  const el = document.getElementById('cJoy'), Cz = CRUISE, R = 47;
+  el.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if (Cz.joy || !Cz.on) return; try { el.setPointerCapture(e.pointerId); } catch (err) { /* synthetic */ } Cz.joy = { id: e.pointerId, x0: e.clientX, y0: e.clientY, lev0: Cz.lev, steer: 0, raw: 0, t: performance.now(), far: 0 }; ctlHint.done(); });
+  el.addEventListener('pointermove', e => { const J = Cz.joy; if (!J || e.pointerId !== J.id) return; e.stopPropagation(); const dx = e.clientX - J.x0, dy = e.clientY - J.y0; J.far = Math.max(J.far, Math.hypot(dx, dy));
+    J.raw = clamp(dx / R, -1, 1); J.steer = Math.sign(J.raw) * Math.max(0, Math.abs(J.raw) - .1) / .9; const vy = Math.abs(dy) < 8 ? 0 : dy - Math.sign(dy) * 8; Cz.lev = clamp(J.lev0 - vy / R, -1, 1); cJoyDraw(); });
+  const up = e => { const J = Cz.joy; if (!J || e.pointerId !== J.id) return; e.stopPropagation(); Cz.joy = null; if ((J.far < 7 && performance.now() - J.t < 300) || Math.abs(Cz.lev) < .1) Cz.lev = 0; cJoyDraw(); };
+  el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up); for (const t of ['touchstart', 'mousedown', 'wheel', 'click', 'contextmenu']) el.addEventListener(t, e => { e.stopPropagation(); if (t === 'contextmenu') e.preventDefault(); }, { passive: t !== 'contextmenu' });
+}
 const _cm1 = new THREE.Matrix4(), _cm2 = new THREE.Matrix4();
+/* a boat that is steered: the lever sets the speed it makes for, the rudder turns it (the more way on it the better it answers, but a fast boat turns wide),
+   and the shore, the map's edge and the harbour's other boats stop it: it is put back on the water, slowed, and its head turned from the land */
+function cruiseFree(dt) {
+  const Cz = CRUISE, S = Cz.spec, J = Cz.joy;
+  const kx = (keys.ArrowRight || keys.KeyD ? 1 : 0) - (keys.ArrowLeft || keys.KeyA ? 1 : 0), ky = (keys.ArrowUp || keys.KeyW ? 1 : 0) - (keys.ArrowDown || keys.KeyS ? 1 : 0);
+  if (ky || keys.Space) { Cz.lev = keys.Space ? 0 : clamp(Cz.lev + ky * dt * .7, -1, 1); cJoyDraw(); ctlHint.done(); }
+  Cz.rud = lerp(Cz.rud, clamp((J ? J.steer : 0) + kx, -1, 1), dt ? 1 - Math.exp(-dt * 5) : 1);
+  const lv = Math.abs(Cz.lev) < .1 ? 0 : (Cz.lev - Math.sign(Cz.lev) * .1) / .9, vt = lv >= 0 ? lv * S.top : lv * 8; Cz.v += clamp(vt - Cz.v, -S.acc * 1.5 * dt, S.acc * dt);
+  const av = Math.abs(Cz.v), rate = Cz.rud * clamp(av / 6, .3, 1) * (Cz.v < -.3 ? -1 : 1) * Math.min(.62, 9.5 / Math.max(av, 1)); Cz.h = wrapA(Cz.h + rate * dt); Cz.turn = lerp(Cz.turn, rate / 1.6, dt ? 1 - Math.exp(-dt * 2) : 1);
+  let c = Math.cos(Cz.h), s = Math.sin(Cz.h), nx = Cz.x + c * Cz.v * dt, nz = Cz.z + s * Cz.v * dt, hit = 0, bow = 0, gx = 0, gz = 0; const L = S.len, M = 9;
+  /* the piers and breakwaters, what is moored, and last the shore: three times over, so that in a corner between two of them it comes to rest clear of both */
+  for (let rd = 0; rd < 3; rd++) { const rx = nx, rz = nz;
+  for (const o of [.45, 0, -.45]) { const w = cruiseWall(nx + c * L * o, nz + s * L * o, 5); if (!w) continue; nx += w[1] * w[0]; nz += w[2] * w[0]; hit = Math.max(hit, w[0]); if (o > 0) { bow = 1; gx = -w[1]; gz = -w[2]; } }
+  { const Mo = BOATS.moored || []; for (let i = 0; i < Mo.length; i += 3) { const dx0 = nx - Mo[i], dz0 = nz - Mo[i + 1]; if (dx0 * dx0 + dz0 * dz0 > 900) continue; for (const o of [.38, 0, -.38]) { const ex = nx + c * L * o - Mo[i], ez = nz + s * L * o - Mo[i + 1], d = Math.hypot(ex, ez) || 1, e = Mo[i + 2] + 3.5 - d; if (e <= 0) continue; nx += ex / d * e; nz += ez / d * e; hit = Math.max(hit, e); if (o > 0) { bow = 1; gx = -ex / d; gz = -ez / d; } } } }
+  for (const o of [.45, 0, -.45]) { const px = nx + c * L * o, pz = nz + s * L * o, e = sdAt(px, pz) + M; if (e <= 0) continue; const ax = sdAt(px + 12, pz) - sdAt(px - 12, pz), az = sdAt(px, pz + 12) - sdAt(px, pz - 12), l = Math.hypot(ax, az) || 1; nx -= ax / l * e; nz -= az / l * e; hit = Math.max(hit, e); if (o > 0) { bow = 1; gx = ax / l; gz = az / l; } }
+    if (nx === rx && nz === rz) break; }
+  { const x = clamp(nx, X0 + 90, X1 - 90), z = clamp(nz, Z0 + 90, Z1 - 90); if (x !== nx || z !== nz) { hit = Math.max(hit, 1); bow = 1; gx = Math.sign(nx - x); gz = Math.sign(nz - z); nx = x; nz = z; Cz.edge = 3; } }
+  for (const b of BOATS) { if (b.player || b.hid || b.x === undefined) continue; const dx0 = nx - b.x, dz0 = nz - b.z, rb = b.L * .5 + L * .5; if (dx0 * dx0 + dz0 * dz0 > rb * rb) continue; const bc = Math.cos(b.hd), bs = Math.sin(b.hd), w = clamp(b.L * .13, 3, 13), hl = Math.max(0, b.L * .5 - w);
+    for (const o of [.36, -.36]) { const px = nx + c * L * o - b.x, pz = nz + s * L * o - b.z, al = clamp(px * bc + pz * bs, -hl, hl), ex = px - bc * al, ez = pz - bs * al, d = Math.hypot(ex, ez) || 1, e = w + 4.5 - d; if (e <= 0) continue; nx += ex / d * e; nz += ez / d * e; hit = Math.max(hit, e); if (o > 0) { bow = 1; gx = -ex / d; gz = -ez / d; } } }
+  if (hit > 0 && dt) { Cz.v -= Cz.v * Math.min(1, dt * 3.2); if (bow && Cz.v > 0) { const cr = s * gx - c * gz; Cz.dfl = Math.abs(cr) > .25 ? Math.sign(cr) : Math.abs(Cz.rud) > .2 ? Math.sign(Cz.rud) : Cz.dfl || 1; Cz.h = wrapA(Cz.h + Cz.dfl * dt * .7); } }   /* (its head turned towards the open water, away from what it has met; met head on, the way the rudder is, or the way it last turned) */
+  Cz.x = nx; Cz.z = nz; if (Cz.edge > 0) Cz.edge -= dt; Cz.fast = hit > 0 && Cz.v < 3 && Cz.lev > .1 ? (Cz.fast || 0) + dt : 0;   /* (held fast: against something, the lever ahead, and no way on it) */
+}
 function cruiseStep(dt) {
-  const Cz = CRUISE, S = Cz.spec, P = Cz.path, hold = Cz.hold || keys.ArrowUp || keys.KeyW || keys.Space, vt = hold ? S.top : S.cruise;
-  Cz.v += clamp(vt - Cz.v, -2.4 * dt, (hold ? S.acc : 1.3) * dt); Cz.s = (((Cz.s + Cz.v * dt * Cz.dir) % P.L) + P.L) % P.L;
-  /* where it is, and where it heads: read 30 m on, so the course's corners come as slow turns */
-  const q = cruiseAt(Cz.s), a = cruiseAt(Cz.s + 30 * Cz.dir), dh = wrapA(Math.atan2(a[1] - q[1], a[0] - q[0]) - Cz.h), k = dt ? 1 - Math.exp(-dt * 1.6) : 1; Cz.h += dh * k; Cz.turn = lerp(Cz.turn, dh, dt ? 1 - Math.exp(-dt * 2) : 1); Cz.x = q[0]; Cz.z = q[1];
+  const Cz = CRUISE, S = Cz.spec, P = Cz.path;
+  if (Cz.free) cruiseFree(dt);
+  else { const hold = Cz.hold || keys.ArrowUp || keys.KeyW || keys.Space, vt = hold ? S.top : S.cruise;
+    Cz.v += clamp(vt - Cz.v, -2.4 * dt, (hold ? S.acc : 1.3) * dt); Cz.s = (((Cz.s + Cz.v * dt * Cz.dir) % P.L) + P.L) % P.L;
+    /* where it is, and where it heads: read a little way on (more the faster it goes), so the course's corners come as slow turns */
+    const q = cruiseAt(Cz.s), a = cruiseAt(Cz.s + Math.max(30, Cz.v * 1.1) * Cz.dir), dh = wrapA(Math.atan2(a[1] - q[1], a[0] - q[0]) - Cz.h), k = dt ? 1 - Math.exp(-dt * 1.6) : 1; Cz.h += dh * k; Cz.turn = lerp(Cz.turn, dh, dt ? 1 - Math.exp(-dt * 2) : 1); Cz.x = q[0]; Cz.z = q[1]; }
   /* on the water: it rises and falls a little, leans into its turns, and a yacht lifts its bow as it gathers speed */
-  const t = ST.t, u = Cz.v / S.top, bob = Math.sin(t * 1.15) * .1 + Math.sin(t * .63 + 1.3) * .07, pitch = Math.sin(t * .9 + .4) * .012 + u * S.squat, roll = Math.sin(t * .78) * .02 + clamp(Cz.turn * S.lean, -.14, .14) * (.3 + u);
+  const t = ST.t, u = Math.abs(Cz.v) / S.top, bob = Math.sin(t * 1.15) * .1 + Math.sin(t * .63 + 1.3) * .07, pitch = Math.sin(t * .9 + .4) * .012 + u * S.squat, roll = Math.sin(t * .78) * .02 + clamp(Cz.turn * S.lean, -.14, .14) * (.3 + u);
   const m = Cz.mesh[Cz.ln.veh]; m.matrix.makeRotationY(-Cz.h).multiply(_cm1.makeRotationZ(pitch)).multiply(_cm2.makeRotationX(roll)); m.matrix.setPosition(Cz.x, bob - u * .12, Cz.z); m.matrixWorldNeedsUpdate = true;
-  /* the camera follows astern and above, swinging round behind the boat's heading like a weight on a spring; it keeps a little to the seaward side,
-     so that it looks across the boat at the shore (the land is to port going west first, to starboard going east first) */
-  { const w = 1.9, err = wrapA(Cz.h + PI - Cz.dir * .4 - cam.az), sdt = Math.min(dt, .05); Cz.azV += (err * w * w - 2 * w * Cz.azV) * sdt; cam.az += Cz.azV * sdt; }
-  const e3 = dt ? 1 - Math.exp(-dt * 2.2) : 1; cam.tx = Cz.x + Math.cos(Cz.h) * S.len * .35; cam.tz = Cz.z + Math.sin(Cz.h) * S.len * .35; cam.ty = S.tgt;
-  cam.dist = lerp(cam.dist, S.camD + Cz.v * .5 + Cz.zoom, e3); cam.pol = lerp(cam.pol, 77 * RAD, e3); cam.fov = lerp(cam.fov, 50 + u * 12, e3); cam.vaz = cam.vpol = cam.vx = cam.vz = cam.vzoom = 0;
+  const e3 = dt ? 1 - Math.exp(-dt * 2.2) : 1, sdt = Math.min(dt, .05), w = 1.9;
+  if (Cz.free) {
+    /* the camera turns with the boat (behind its heading like a weight on a spring), at the angle and the distance the view has been given */
+    Cz.azV += (wrapA(Cz.h - Cz.hc) * w * w - 2 * w * Cz.azV) * sdt; Cz.hc += Cz.azV * sdt; cam.az = Cz.hc + PI + Cz.caz; cam.pol = lerp(cam.pol, Cz.cpol, dt ? 1 - Math.exp(-dt * 14) : 1);
+    cam.tx = Cz.x + Math.cos(Cz.h) * S.len * .1; cam.tz = Cz.z + Math.sin(Cz.h) * S.len * .1; cam.ty = S.tgt; cam.dist = lerp(cam.dist, (S.camD + Math.abs(Cz.v) * .5) * Cz.zf, dt ? 1 - Math.exp(-dt * 5) : 1);
+  } else {
+    /* the camera follows astern and above, swinging round behind the boat's heading like a weight on a spring; it keeps a little to the seaward side,
+       so that it looks across the boat at the shore (the land is to port going west first, to starboard going east first) */
+    Cz.azV += (wrapA(Cz.h + PI - Cz.dir * .4 - cam.az) * w * w - 2 * w * Cz.azV) * sdt; cam.az += Cz.azV * sdt;
+    cam.tx = Cz.x + Math.cos(Cz.h) * S.len * .35; cam.tz = Cz.z + Math.sin(Cz.h) * S.len * .35; cam.ty = S.tgt; cam.dist = lerp(cam.dist, S.camD + Cz.v * .5 + Cz.zoom, e3); cam.pol = lerp(cam.pol, 77 * RAD, e3);
+  }
+  cam.fov = lerp(cam.fov, 50 + u * 12, e3); cam.vaz = cam.vpol = cam.vx = cam.vz = cam.vzoom = 0;
   if ((Cz.hudT += dt) > .25) { Cz.hudT = 0; cruiseHud(); } if (dt && (Cz.mm ^= 1)) cruiseMini();
 }
 function cruiseHud() {
-  const Cz = CRUISE, P = Cz.path, S = P.sights; let best = null, bd = 1e9; for (const q of S) { const d = (((q[3] - Cz.s) * Cz.dir) % P.L + P.L) % P.L; if (d < bd) { bd = d; best = q; } }
-  const ds = bd < 1000 ? Math.max(10, Math.round(bd / 10) * 10) + ' m' : (bd / 1000).toFixed(1) + ' km', txt = best ? (bd < 120 ? 'Passing ' + best[2] : best[2].length > 20 ? ds + ' to ' + best[2] : 'Next: ' + best[2] + ' · ' + ds) : '';   /* (a long name: the distance first, so that it is the name's end that a narrow strip cuts off) */ if (txt !== Cz.shown) { Cz.shown = txt; document.querySelector('#tramS span').textContent = txt; }
-  const kn = Math.round(Cz.v * 1.944), el = document.querySelector('#rideSpd b'); if (el.textContent !== String(kn)) el.textContent = kn;
+  const Cz = CRUISE, P = Cz.path, S = P.sights; let txt = '';
+  if (Cz.free) { cJoyDraw(); const pt = ['east', 'south-east', 'south', 'south-west', 'west', 'north-west', 'north', 'north-east'][((Math.round(Cz.h / (PI / 4)) % 8) + 8) % 8];
+    txt = Cz.edge > 0 ? 'The chart ends here' : Cz.fast > 1.2 ? 'Stuck · pull the pad down to back off' : Cz.v < -.5 ? 'Going astern' : Math.abs(Cz.v) < .5 ? (Math.abs(Cz.lev) < .1 ? 'Stopped · push the pad up to go' : 'Getting under way') : 'Heading ' + pt; }
+  else { let best = null, bd = 1e9; for (const q of S) { const d = (((q[3] - Cz.s) * Cz.dir) % P.L + P.L) % P.L; if (d < bd) { bd = d; best = q; } }
+    /* (a long name: the distance first, so that it is the name's end that a narrow strip cuts off) */
+    const ds = bd < 1000 ? Math.max(10, Math.round(bd / 10) * 10) + ' m' : (bd / 1000).toFixed(1) + ' km'; txt = best ? (bd < 120 ? 'Passing ' + best[2] : best[2].length > 20 ? ds + ' to ' + best[2] : 'Next: ' + best[2] + ' · ' + ds) : ''; }
+  if (txt !== Cz.shown) { Cz.shown = txt; document.querySelector('#tramS span').textContent = txt; }
+  const kn = Math.round(Math.abs(Cz.v) * 1.944), el = document.querySelector('#rideSpd b'); if (el.textContent !== String(kn)) el.textContent = kn;
   let near = null, nd = 1500 * 1500; for (const q of S) { const d = (q[0] - Cz.x) ** 2 + (q[1] - Cz.z) ** 2; if (d < nd) { nd = d; near = q; } } const lb = document.getElementById('cmD'), nm = near ? near[2] : 'At sea'; if (lb.textContent !== nm) lb.textContent = nm;
 }
-/* the small chart: the shore, the course ahead and the sights, turned so that the boat always points up */
+/* the small chart: the shore, and on a course the course ahead and its sights (steered: the piers a boat may set out from), turned so that the boat always points up */
 function cruiseMini() {
   const Cz = CRUISE, cv = document.getElementById('cmC'); if (!cv.clientWidth) return; const dpr = Math.min(devicePixelRatio || 1, 2), D = Math.round(cv.clientWidth * dpr); if (cv.width !== D) cv.width = cv.height = D;
   if (!Cz.rings) Cz.rings = G.coast.filter(r => r.length > 2).map(r => { let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9; for (const p of r) { if (p[0] < x0) x0 = p[0]; if (p[0] > x1) x1 = p[0]; if (p[1] < z0) z0 = p[1]; if (p[1] > z1) z1 = p[1]; } return { r, x0, z0, x1, z1 }; });
@@ -6097,8 +6191,8 @@ function cruiseMini() {
   g.translate(R, R * 1.25); g.rotate(-Cz.h - PI / 2); g.scale(k, k); g.translate(-Cz.x, -Cz.z); const reach = RANGE * 1.5;
   g.fillStyle = '#26352d'; g.strokeStyle = 'rgba(255,214,160,.45)'; g.lineWidth = 1.2 / k * dpr;
   for (const o of Cz.rings) { if (o.x1 < Cz.x - reach || o.x0 > Cz.x + reach || o.z1 < Cz.z - reach || o.z0 > Cz.z + reach) continue; const r = o.r; g.beginPath(); g.moveTo(r[0][0], r[0][1]); for (let i = 1; i < r.length; i++) g.lineTo(r[i][0], r[i][1]); g.closePath(); g.fill(); g.stroke(); }
-  g.strokeStyle = '#6fd2ff'; g.lineWidth = 3 / k * dpr; g.lineJoin = g.lineCap = 'round'; g.beginPath(); for (let d = 0; d <= reach; d += 45) { const q = cruiseAt(Cz.s + d * Cz.dir); d ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1]); } g.stroke();
-  g.fillStyle = '#fff4df'; for (const q of P.sights) { if (Math.abs(q[0] - Cz.x) > reach || Math.abs(q[1] - Cz.z) > reach) continue; g.beginPath(); g.arc(q[0], q[1], 3.2 / k * dpr, 0, TAU); g.fill(); }
+  if (!Cz.free) { g.strokeStyle = '#6fd2ff'; g.lineWidth = 3 / k * dpr; g.lineJoin = g.lineCap = 'round'; g.beginPath(); for (let d = 0; d <= reach; d += 45) { const q = cruiseAt(Cz.s + d * Cz.dir); d ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1]); } g.stroke(); }
+  g.fillStyle = '#fff4df'; for (const q of Cz.free ? P.starts : P.sights) { if (Math.abs(q[0] - Cz.x) > reach || Math.abs(q[1] - Cz.z) > reach) continue; g.beginPath(); g.arc(q[0], q[1], 3.2 / k * dpr, 0, TAU); g.fill(); }
   g.restore(); g.save(); g.translate(R, R * 1.25); g.fillStyle = '#ffb054'; g.strokeStyle = '#2a1606'; g.lineWidth = 1.5 * dpr; g.beginPath(); g.moveTo(0, -9 * dpr); g.lineTo(6 * dpr, 7 * dpr); g.lineTo(0, 3.5 * dpr); g.lineTo(-6 * dpr, 7 * dpr); g.closePath(); g.fill(); g.stroke(); g.restore();
   { const th = -Cz.h - PI / 2 - PI / 2, nx = R + Math.cos(th) * (R - 11 * dpr), ny = R + Math.sin(th) * (R - 11 * dpr); g.fillStyle = 'rgba(9,20,28,.85)'; g.beginPath(); g.arc(nx, ny, 8 * dpr, 0, TAU); g.fill(); g.fillStyle = '#ffc46a'; g.font = '700 ' + 9 * dpr + 'px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('N', nx, ny + .5 * dpr); }
 }
@@ -6276,7 +6370,7 @@ async function boot() {
   initClock(); initPlaces();
   document.getElementById('bTour').onclick = () => { if (TOUR.on) { stopTour(); cam.fly = null; cam.tour = null; } else { plClose(); pinClear(); if (FOCUS.label) exitFocus(); startTour(); } };
   document.getElementById('tourS').onclick = e => { e.stopPropagation(); stopTour(); cam.fly = null; cam.tour = null; };
-  initRide(); document.getElementById('tramOff').onclick = e => { e.stopPropagation(); if (CRUISE.on) cruiseExit(); else exitDrive(); }; document.getElementById('rideStopB').onclick = e => { e.stopPropagation(); busStopBtn(); };
+  initRide(); cJoyInit(); document.getElementById('tramOff').onclick = e => { e.stopPropagation(); if (CRUISE.on) cruiseExit(); else exitDrive(); }; document.getElementById('rideStopB').onclick = e => { e.stopPropagation(); busStopBtn(); };
   for (const t of ['pointerdown', 'pointerup', 'touchstart', 'mousedown', 'click']) document.getElementById('tramS').addEventListener(t, e => e.stopPropagation(), { passive: true });
   document.getElementById('bLabels').onclick = e => { LABELS.on = !LABELS.on; e.currentTarget.classList.toggle('on', LABELS.on); };
   document.getElementById('bMore').onclick = () => document.body.classList.toggle('menu');
@@ -6288,7 +6382,7 @@ async function boot() {
   hooks.push(() => { DYN.uTraffic.value = ST.traffic * Q.traffic; DYN.uPx.value = 2 * Math.tan(camera.fov * RAD / 2) / renderer.getDrawingBufferSize(_sz).y; });
   requestAnimationFrame(t => { lastT = t; loop(t); bootDone(); }); setTimeout(bootDone, 1500);   /* (the screen lifts once the first picture is drawn; the timer is for a tab in the background) */
 }
-window.__hk = { CRUISE, sd: (x, z) => sdAt(x, z), cruisePath: () => cruisePath(),
+window.__hk = { CRUISE, BOATS, cruiseWall: (x, z, m) => cruiseWall(x, z, m), sd: (x, z) => sdAt(x, z), cruisePath: () => cruisePath(),
   THREE, TRAMS, TOD, TOUR, LABELS, HAND, GOVX, setTime, startTour, stopTour, viewHash, flyTo, scene, camera, renderer, cam, U, ST, L, ROADS, DAMS, LAKES, LL, SH, STATS, BI, FA, G, SITES, PATHS, CITY, get GEO() { return GEO; },
   get terr() { return terr; }, QUALS, resize, get composer() { return composer; }, get scenePass() { return scenePass; }, NEAR, hooks, hAt: (x, z) => hAt(x, z), pick: (x, y) => pickGround(x, y), GS, FOCUS, DRIVE, keys, HIT, PROPS, TRAFS, B3D, dPlan, navStart, navRoute, navPlaces, dPaths, get TRAF() { return TRAF; }, trafAt, goPreset, setLight, setQuality,
   pose(o) { userInput(); Object.assign(cam, o); cam.vaz = cam.vpol = cam.vx = cam.vz = cam.vzoom = 0; placeCamera(0); },
