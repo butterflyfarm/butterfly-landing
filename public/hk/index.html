@@ -5201,7 +5201,19 @@ function dScore(p, ctx) {
   if (ctx.req) sc += Math.abs(p.rel - ctx.req * 1.35) * 1.2 + (Math.abs(p.rel) < .4 ? 1.2 : 0) + (dead ? 1 : 0);   /* (a dead end that is asked for is taken: it used to lose to going straight on) */
   else sc += Math.abs(p.rel) * .7 + (cur.nm && ex.nm === cur.nm ? 0 : .6) + Math.max(0, ex.c - cur.c) * .2 + (dead ? 3 : 0);
   if (ctx.nav && !ctx.req) { let m = 0; for (let i = 0; i < p.steps.length && i < ctx.nav.length; i++) { if (p.steps[i].c === ctx.nav[i].c) m++; else break; } const full = m === Math.min(p.steps.length, ctx.nav.length); if (m) sc -= full ? 10 + m : 2 * m; }
+  /* (a junction where the plain rule goes wrong has the way straight on written down: see drivePrefs. It counts for less than a route, and not at all against a steer) */
+  else if (ctx.pref && !ctx.req) { let m = 0; for (let i = 0; i < p.steps.length && i < ctx.pref.length; i++) { if (p.steps[i].c === ctx.pref[i]) m++; else break; } const full = m === Math.min(p.steps.length, ctx.pref.length); if (m) sc -= full ? 6 + m : m; }
   return sc;
+}
+/* ---------- junctions where "keep to the road you are on" goes wrong, each with the way straight on written down: the road arrived by, and the roads taken
+   after it. The roads are named by their two ends (the street map's own numbers change when it is made again). So far one place:
+   the top of Garden Road, where the up carriageway ends in a small loop by Robinson Road that leads back down. By its name the way on from the up
+   carriageway is into the loop (and so round and down again, or off along Robinson Road); the way a driver means is up Magazine Gap Road, by the slip to
+   the left. And down Magazine Gap Road the way on is round the loop into Garden Road going down, not off along Robinson Road ---------- */
+function drivePrefs() {
+  const E = DRIVE.E, N = DRIVE.N, M = DRIVE.pref = new Map(), find = q => { for (const e of E) { if (e.dead) continue; const a = N[e.a], b = N[e.b]; if (Math.abs(a.x - q[0]) < 4 && Math.abs(a.z - q[1]) < 4 && Math.abs(b.x - q[2]) < 4 && Math.abs(b.z - q[3]) < 4) return e.i; } return -1; };
+  const up1 = [-3534, -2929, -3599, -2857], up2 = [-3599, -2857, -3603, -2836], slip = [-3603, -2836, -3592, -2819], slip2 = [-3592, -2819, -3538, -2782], loop1 = [-3618, -2815, -3643, -2847], loop2 = [-3643, -2847, -3619, -2859], lk1 = [-3619, -2859, -3613, -2857], lk2 = [-3613, -2857, -3608, -2860], down = [-3608, -2860, -3367, -3015];
+  for (const [from, steps] of [[up1, [up2, slip, slip2]], [up2, [slip, slip2]], [loop1, [loop2]], [loop2, [lk1, lk2, down]], [lk1, [lk2, down]]]) { const f = find(from), st = steps.map(find); if (f >= 0 && st.every(c => c >= 0)) M.set(f, st); }
 }
 /* the decision at the next node ahead of the car */
 function dPlan() {
@@ -5210,7 +5222,7 @@ function dPlan() {
   if (DRIVE.queue.length && DRIVE.queue[0].nd === nd) return { nd, left, path: { steps: DRIVE.queue, rel: DRIVE.queueRel, exit: DRIVE.queue[DRIVE.queue.length - 1].c }, queued: true, opts: 1 };
   if (DRIVE.lock && DRIVE.lock.nd === nd && DRIVE.lock.e === car.e && (!DRIVE.req || DRIVE.req.t <= DRIVE.lock.t)) return DRIVE.lock.plan;
   const ps = dPaths(car.e, nd, h); if (!ps.length) return { nd, left, dead: true, opts: 0 };
-  const ctx = { q: car.e, req: DRIVE.req ? DRIVE.req.s : 0, inCore: DRIVE.N[e.a].core && DRIVE.N[e.b].core, nav: navAhead(nd) };
+  const ctx = { q: car.e, req: DRIVE.req ? DRIVE.req.s : 0, inCore: DRIVE.N[e.a].core && DRIVE.N[e.b].core, nav: navAhead(nd), pref: DRIVE.pref && car.d > 0 ? DRIVE.pref.get(car.e) : null };
   for (const p of ps) p.sc = dScore(p, ctx); ps.sort((a, b) => a.sc - b.sc);
   return { nd, left, path: ps[0], opts: ps.length, choices: ps.filter(p => Math.abs(p.rel) < 2.4).length };
 }
@@ -5884,7 +5896,7 @@ async function enterDrive0() {
     ctlHint.show(['Loading every street…'], 30000);
     /* let the menu close and the message show before the heavy lifting, and breathe between steps */
     const breathe = () => new Promise(r => { let done = false; const go = () => { if (!done) { done = true; setTimeout(r, 0); } }; requestAnimationFrame(go); setTimeout(go, 80); });
-    try { await breathe(); if (!DRIVE.loading) DRIVE.loading = loadHKD('hk-drive.bin'); const H = await DRIVE.loading; await breathe(); buildDriveGraph(H); await breathe(); buildStreetRibbons(); await breathe(); buildMiniBase(); await breathe(); makeSideTraffic(); DRIVE.ready = true; }
+    try { await breathe(); if (!DRIVE.loading) DRIVE.loading = loadHKD('hk-drive.bin'); const H = await DRIVE.loading; await breathe(); buildDriveGraph(H); drivePrefs(); await breathe(); buildStreetRibbons(); await breathe(); buildMiniBase(); await breathe(); makeSideTraffic(); DRIVE.ready = true; }
     catch (err) { ctlHint.show(['Could not load the street map'], 5000); DRIVE.loading = null; return; }
   }
   /* start where you are looking, or in Central when looking at the whole island */
