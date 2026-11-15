@@ -1,0 +1,5 @@
+# The Hong Kong page lives at /hk/. Its earlier address, and the spelling without the dash, go there.
+/hong-kong /hk/ 301
+/hongkong /hk/ 301
+/hong-kong/* /hk/:splat 301
+/hongkong/* /hk/:splat 301

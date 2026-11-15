@@ -719,7 +719,7 @@ function bootStep(p, msg, ms) { bootSet(p, msg, ms); if (!BOOT.el) return Promis
 function bootDone() { const b = BOOT.el; if (!b) return; bootSet(1, 'Ready', 250); BOOT.el = null; setTimeout(() => { b.classList.add('out'); setTimeout(() => b.remove(), 1400); }, 260); }
 function bootFail() { const b = BOOT.el; if (!b) return; b.classList.add('err'); document.getElementById('bootMsg').textContent = 'Could not load. Please reload the page.'; document.getElementById('bootPct').textContent = ''; }
 async function loadGeo() {
-  const rel = /\/$|\.html?$/.test(location.pathname), url = rel ? new URL('hk-data.bin', location.href) : new URL('/hong-kong/hk-data.bin', location.href);
+  const rel = /\/$|\.html?$/.test(location.pathname), url = rel ? new URL('hk-data.bin', location.href) : new URL('/hk/hk-data.bin', location.href);
   const res = await fetch(url); if (!res.ok) throw new Error('hk-data.bin ' + res.status);
   let u8;
   if (res.body && res.body.getReader) {   /* (read in pieces, so the bar can show how much of the map has come) */
@@ -4175,7 +4175,7 @@ function flattenRecs(set) {
    converted offline). Near the camera a sheet's models replace the surveyed outlines they stand on, drawn with the same facade shader (so they
    take the same colour, windows and night lights); hand-built landmarks keep their own models. Sheets far behind are dropped again. ---------- */
 const B3D = { index: null, loading: false, tiles: new Map(), grid: null, mat: null, t: 0, fail: new Set(), slice: 6, sl0: 0, stage: '', steps: [] };   /* (slice: the milliseconds of loading done at a time) */
-const b3dURL = f => (/\/$|\.html?$/.test(location.pathname) ? new URL('b3d/' + f, location.href) : new URL('/hong-kong/b3d/' + f, location.href)).href;
+const b3dURL = f => (/\/$|\.html?$/.test(location.pathname) ? new URL('b3d/' + f, location.href) : new URL('/hk/b3d/' + f, location.href)).href;
 function b3dGrid() { if (B3D.grid) return B3D.grid; const G = new Map(); CITY.recs.forEach((b, i) => { const k = Math.floor(b.cx / 64) * 65536 + Math.floor(b.cz / 64); let a = G.get(k); if (!a) G.set(k, a = []); a.push(i);
     if (!b.bb) { let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9; for (const q of b.rings[0]) { x0 = Math.min(x0, q[0]); x1 = Math.max(x1, q[0]); z0 = Math.min(z0, q[1]); z1 = Math.max(z1, q[1]); } b.bb = [x0, z0, x1, z1]; } }); return (B3D.grid = G); }
 /* lower the surveyed outlines in `set` out of sight (their near-tier facade detail too), remembering how to put them back */
@@ -4496,7 +4496,7 @@ function b3dStep(dt) {
 const DRIVE = { queue: [], lock: null, req: null, nav: null, on: false, ready: false, loading: null, N: null, E: null, names: [], car: null, mesh: null, joy: null, k: { thr: 0, brk: 0, steer: 0 },
   intent: 0, intentT: 0, plan: null, hud: {}, ribbons: null, labelsWas: true, msgT: 0, tun: 0 };
 async function loadHKD(file) {
-  const rel = /\/$|\.html?$/.test(location.pathname), url = rel ? new URL(file, location.href) : new URL('/hong-kong/' + file, location.href);
+  const rel = /\/$|\.html?$/.test(location.pathname), url = rel ? new URL(file, location.href) : new URL('/hk/' + file, location.href);
   const res = await fetch(url); if (!res.ok) throw new Error(file + ' ' + res.status);
   let u8 = new Uint8Array(await res.arrayBuffer());
   if (u8[0] === 0x1f && u8[1] === 0x8b) u8 = new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
@@ -4842,7 +4842,7 @@ function dStart(id) {
    scene's own prop format so they share its sun, shadows, night lamps and fog; the simple model stands in until they arrive */
 let _gltf = null;
 function gltfLoader() { if (_gltf) return _gltf; const d = new DRACOLoader(); d.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/gltf/'); _gltf = new GLTFLoader(); _gltf.setDRACOLoader(d); return _gltf; }
-const vehicleURL = id => (/\/$|\.html?$/.test(location.pathname) ? new URL('vehicles/' + id + '.glb', location.href) : new URL('/hong-kong/vehicles/' + id + '.glb', location.href)).href;
+const vehicleURL = id => (/\/$|\.html?$/.test(location.pathname) ? new URL('vehicles/' + id + '.glb', location.href) : new URL('/hk/vehicles/' + id + '.glb', location.href)).href;
 /* a green minibus (line 1 to the Peak is one): the minibus's red paint is turned green for the ride, and red again after it. Its lamps stay as they are */
 function minibusLivery(green) { DRIVE.gmb = !!green; const i = VEHICLES.findIndex(v => v.id === 'minibus'), m = DRIVE.meshes && DRIVE.meshes[i]; if (!m) return; const g = m.geometry, c = g.attributes.aCol, a = g.attributes.aP; if (!c) return;
   if (!g.userData.col0) g.userData.col0 = c.array.slice(); const o = g.userData.col0, d = c.array;
@@ -5606,7 +5606,7 @@ function dashShare() {
   g.font = '80px ' + ff; g.fillStyle = '#ffc46a'; g.fillText('★'.repeat(R.stars), W / 2 - (3 - R.stars) * 46, 262); g.fillStyle = 'rgba(255,196,106,.25)'; g.fillText('★'.repeat(3 - R.stars), W / 2 + R.stars * 46, 262);
   dashMap(null, R.trace, R.S, R.goal, g, [60, 300, W - 120, 620]);
   let y = 1000; for (const [k, v, hi] of dashRows(R)) { g.textAlign = 'left'; g.fillStyle = 'rgba(243,230,208,.7)'; g.font = '600 30px ' + ff; g.fillText(k.toUpperCase(), 80, y); g.textAlign = 'right'; g.fillStyle = '#fff4df'; g.font = '600 38px ' + ff; g.fillText(v + (hi ? '  ·  ' + hi : ''), W - 80, y); y += 52; }
-  g.textAlign = 'center'; g.fillStyle = 'rgba(243,230,208,.55)'; g.font = '500 24px ' + ff; g.fillText('butterfly.farm/hong-kong', W / 2, H - 28);
+  g.textAlign = 'center'; g.fillStyle = 'rgba(243,230,208,.55)'; g.font = '500 24px ' + ff; g.fillText('butterfly.farm/hk', W / 2, H - 28);
   cv.toBlob(async b => { if (!b) return; const f = new File([b], 'hong-kong-run.png', { type: 'image/png' });
     try { if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: 'Hong Kong: Golden Hour', text: R.S.name + ' to ' + R.T.name + ' in ' + fmtT(R.score) }); return; } } catch (e) { if (e && e.name === 'AbortError') return; /* otherwise: saved below */ }
     const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'hong-kong-run.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }, 'image/png');
