@@ -74,8 +74,11 @@ type Row = { y: number; hMin: number; hMax: number; gap: number; colors: readonl
 type Blade = { x: number; y: number; h: number; w: number; lean: number; phase: number }
 type Flower = Point & { h: number; r: number; color: string; phase: number; after: number; puff: boolean }
 type Mote = Point & { r: number; vx: number; vy: number; phase: number }
-/** `k` is its size (smaller further off); `held` is the way it points while still on its clock */
-type Seed = Point & { vx: number; vy: number; age: number; life: number; phase: number; k: number; held: number | null }
+/**
+ * `k` is its size (smaller further off); `held` is the way it points while still on
+ * its clock; `drift` is the breeze it rides once loose
+ */
+type Seed = Point & { vx: number; vy: number; age: number; life: number; phase: number; k: number; held: number | null; drift: number }
 type Streak = Point & { age: number; life: number; vx: number; vy: number; len: number }
 /** a touch in the grass, pushing the blades aside */
 type Part = Point & { at: number; s: number }
@@ -677,31 +680,40 @@ export function startLife(o: LifeOptions): Life {
       phase: rand() * Math.PI * 2,
       k: 1,
       held: null,
+      drift: 14,
     })
   /**
    * A dandelion clock where the meadow was touched: a ball of seeds that lets go
-   * a few at a time, downwind side first, and drifts off over the farm.
+   * a few at a time, here and there around the head, and drifts off over the farm.
    */
   function clock(p: Point) {
     if (o.still) return
     const k = 0.55 + 0.4 * clamp((p.y - 640) / 150)
     const n = 18 + Math.floor(rand() * 5)
     const ways = Array.from({ length: n }, (_, i) => (i / n) * Math.PI * 2 + (rand() - 0.5) * 0.2)
-    ways.sort((a, b) => Math.cos(b) - Math.cos(a))
+    // each clock catches its own breeze, either way and soft or brisk...
+    const way = rand() < 0.5 ? -1 : 1
+    const drift = way * (5 + rand() * 13)
+    // ...and its seeds let go in no set order: a loose lean to the side the breeze
+    // blows toward, well mixed, so no two clocks come apart the same way
+    const side = (way > 0 ? 0 : Math.PI) + (rand() - 0.5) * 2.4
+    const order = new Map(ways.map((a) => [a, Math.cos(a - side) * 0.5 + rand()]))
+    ways.sort((a, b) => order.get(b)! - order.get(a)!)
     ways.forEach((a, i) => {
       // each lets go at its own pace, so they scatter rather than keep their ring
-      const push = 8 + rand() * 38
+      const push = 12 + rand() * 36
       const off = a + (rand() - 0.5) * 1.4
       seeds.push({
         x: p.x + Math.cos(a) * 5.5 * k,
         y: p.y + Math.sin(a) * 5.5 * k,
-        vx: Math.cos(off) * push + 4 + rand() * 18,
-        vy: Math.sin(off) * push - 12 - rand() * 22,
+        vx: Math.cos(off) * push,
+        vy: Math.sin(off) * push - 10 - rand() * 20,
         age: -(0.35 + i * 0.045 + rand() * 0.12),
         life: 7 + rand() * 4,
         phase: rand() * Math.PI * 2,
         k,
         held: a,
+        drift,
       })
     })
     if (seeds.length > 260) seeds.splice(0, seeds.length - 260)
@@ -1187,7 +1199,7 @@ export function startLife(o: LifeOptions): Life {
       } else {
         // each seed rides its own little current, so a cloud of them spreads as it goes
         const own = sd.held === null ? 0 : 1
-        sd.vx += (14 + wind(sd.x, t) * 70 + own * Math.sin(sd.phase * 3) * 16 - sd.vx) * Math.min(1, dt * 0.8)
+        sd.vx += (sd.drift + wind(sd.x, t) * 70 + own * Math.sin(sd.phase * 3) * 16 - sd.vx) * Math.min(1, dt * 0.8)
         sd.vy += (-12 + Math.sin(t * 1.3 + sd.phase) * 9 + own * Math.cos(sd.phase * 5) * 9 + wet * 60 - sd.vy) * Math.min(1, dt * 0.9)
         sd.x += sd.vx * dt
         sd.y += sd.vy * dt
