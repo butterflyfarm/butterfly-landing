@@ -500,7 +500,7 @@
   <div id="more">
     <div class="mr"><button id="bLabels" class="on" title="Place names on or off">Place names</button><button id="bQ" title="How much detail is drawn">High</button></div>
     <label class="mr">Traffic<input id="sTraf" type="range" min="0" max="100" value="70"></label>
-    <div class="mr"><button id="bMusic" type="button" class="on" aria-pressed="true" title="Background music, on or off">Music on</button></div>
+    <div class="mr"><button id="bMusic" type="button" aria-pressed="false" title="Background music, on or off">Music off</button></div>
     <div class="mr"><button id="bHelp" type="button" title="What each touch does">Controls</button><button id="bInfo" type="button" title="Who made this, and where its data comes from">Information</button></div>
     <div class="mr"><button id="tpSh" type="button" class="on" aria-pressed="true" title="Shadows cast by the sun, on or off">Shadows on</button><button id="bLink" title="Copy a link to this view">Copy link</button></div>
   </div>
@@ -6489,10 +6489,9 @@ function cruiseMini() {
    strums the chords, a bass, and the one that carries the tune, an octave doubled) are not plain electronic tones but modelled strings: a burst of noise
    going round a delay as long as one wave of the note, losing its brightness each time round, as a plucked string does (`mKS`; each note is worked out once
    and kept). Under them strings, a small bell on the tune in the chorus, and drums with handclaps. (The tune is this page's own: no song is quoted, and
-   nothing is sung.) The beat is there in every mode, lighter over the map and at sea, full when driving or riding. It begins with the first touch (a
-   browser lets no page make a sound before one; with a phone's silent switch on there is none at all) and can be put off in More (kept in `hk-music`); it
-   stops while the page is hidden. `musicBar` writes one bar ahead of where the music has got to */
-const MUSIC = { on: true, ctx: null, n: null, ks: {}, t: 0, bar: 0, tm: 0, pulse: 0, seed: 20261116, pat: 0, vol: .6 };
+   nothing is sung.) The beat is there in every mode, lighter over the map and at sea, full when driving or riding. It is off until it is put on in More (the choice is kept in `hk-music`), and then begins with the
+   first touch (a browser lets no page make a sound before one; with a phone's silent switch on there is none at all); it stops while the page is hidden. `musicBar` writes one bar ahead of where the music has got to */
+const MUSIC = { on: false, ctx: null, n: null, ks: {}, t: 0, bar: 0, tm: 0, pulse: 0, seed: 20261116, pat: 0, vol: .6 };
 const mR = M => { M.seed = (M.seed * 16807) % 2147483647; return M.seed / 2147483647; };   /* (its own dice: the scene's are not disturbed, and a test hears the same piece twice) */
 const M_TR = 2, M_BPM = 124, mHz = n => 440 * Math.pow(2, (n + M_TR - 69) / 12);   /* (written in C, played a tone higher) */
 /* the chords: the bass note, and the four strings the guitar plays, low to high */
@@ -6580,7 +6579,7 @@ function musicStart() { const M = MUSIC; if (!M.on) return; try { if (!M.ctx) { 
     const c = M.ctx; if (c.state !== 'running') c.resume(); const g = M.n.out.gain; g.cancelScheduledValues(c.currentTime); g.setValueAtTime(g.value, c.currentTime); g.linearRampToValueAtTime(M.vol, c.currentTime + 3); } catch (e) { /* no sound on this device */ } }
 function musicStop() { const M = MUSIC, c = M.ctx; if (!c) return; try { const g = M.n.out.gain; g.cancelScheduledValues(c.currentTime); g.setValueAtTime(g.value, c.currentTime); g.linearRampToValueAtTime(0, c.currentTime + .6); setTimeout(() => { if (!M.on || document.hidden) c.suspend(); }, 750); } catch (e) { /* no sound */ } }
 function initMusic() {
-  const M = MUSIC, b = document.getElementById('bMusic'); try { M.on = localStorage.getItem('hk-music') !== '0'; } catch (e) { /* storage blocked */ }
+  const M = MUSIC, b = document.getElementById('bMusic'); try { M.on = localStorage.getItem('hk-music') === '1'; } catch (e) { /* storage blocked */ }
   const show = () => { b.classList.toggle('on', M.on); b.setAttribute('aria-pressed', M.on ? 'true' : 'false'); b.textContent = M.on ? 'Music on' : 'Music off'; }; show();
   b.onclick = () => { M.on = !M.on; try { localStorage.setItem('hk-music', M.on ? '1' : '0'); } catch (e) { /* storage blocked */ } show(); M.on ? musicStart() : musicStop(); };
   /* (a phone's Safari lets sound begin when a finger is lifted, on a click or a key, not when the finger goes down; the same touches start it again after a call has stopped it) */
