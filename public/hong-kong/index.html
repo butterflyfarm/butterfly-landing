@@ -20,6 +20,12 @@
   body.photo #ui,body.photo #cr{opacity:0;pointer-events:none}
   #cr{position:fixed;right:8px;bottom:6px;font-size:9px;letter-spacing:.04em;color:rgba(255,236,208,.5);text-shadow:0 0 3px rgba(0,0,0,.6);transition:opacity .5s}
   #cr a{color:inherit}
+  /* Information (under More): who made the page and where its data comes from. The same credits are on the opening screen; they are not on the view itself */
+  #info{position:fixed;inset:0;z-index:9;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(5,12,18,.5)} body.info #info{display:flex}
+  #info .ib{width:min(100%,440px);max-height:100%;overflow-y:auto;box-sizing:border-box;display:flex;flex-direction:column;gap:12px;padding:16px 18px 20px;border-radius:20px;background:rgba(9,20,28,.94);border:1px solid rgba(255,196,128,.32);box-shadow:0 12px 40px rgba(0,0,0,.5);color:#f3e6d0;font-size:13px;line-height:1.45;overscroll-behavior:contain}
+  #info .ibh{display:flex;align-items:center;justify-content:space-between} #info .ibh b{font-size:13px;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:#ffc46a}
+  #infoX{width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,196,128,.4);background:rgba(255,190,110,.1);color:#f3e6d0;font:inherit;font-size:15px;cursor:pointer}
+  #info p{margin:0} #info p b{display:block;font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#fff4df;opacity:.75;margin-bottom:2px} #info a{color:#ffd9a0}
   /* the clock: it shows the hour; a tap opens a small panel with the hours on a bar, a way back to the golden hour, and a switch for shadows */
   #tClock{position:fixed;z-index:6;right:max(12px,env(safe-area-inset-right));top:calc(max(12px,env(safe-area-inset-top)) + 150px);width:64px;height:64px;border-radius:50%;padding:0;border:0;background:none;cursor:pointer;touch-action:manipulation;filter:drop-shadow(0 2px 6px rgba(0,0,0,.45))}
   #tClock svg{display:block;width:100%;height:100%}
@@ -118,7 +124,7 @@
   @keyframes bmP{from{opacity:.72}to{opacity:1}}
   #boot .bs{width:min(420px,78vw);display:flex;justify-content:space-between;gap:12px;margin-top:10px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(243,230,208,.82)} #bootMsg{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} #bootPct{font-variant-numeric:tabular-nums;color:#ffc46a}   /* (one line always: a message that wrapped on a phone pushed the bar up the screen) */
   #boot.err #bootMsg{color:#ffb4a0} #boot.err #bootBar{animation:none;opacity:.5}
-  #boot>em{position:absolute;bottom:max(14px,env(safe-area-inset-bottom));font-style:normal;font-size:10px;letter-spacing:.06em;color:rgba(255,236,208,.6)}
+  #boot>em{position:absolute;bottom:max(14px,env(safe-area-inset-bottom));left:16px;right:16px;text-align:center;line-height:1.5;font-style:normal;font-size:10px;letter-spacing:.06em;color:rgba(255,236,208,.6)}
   @media (max-width:560px){#bootMap{font-size:46px} #bootMap .bd.s text{display:none} #bootMap .bd circle{r:14px} #bootMap .bmS{stroke-width:5}}
   @media (prefers-reduced-motion:reduce){#bootMap,#bootMap .bmS,#bootBar{animation:none} #bootMap .bmS{stroke-dashoffset:0}}
   #brand{position:fixed;z-index:4;left:max(16px,env(safe-area-inset-left));top:max(14px,env(safe-area-inset-top));display:flex;flex-direction:column;gap:3px;pointer-events:none;text-shadow:0 1px 6px rgba(0,0,0,.65);transition:opacity .4s}
@@ -212,7 +218,9 @@
   #hint.show{opacity:1;transform:translate(-50%,0)}
   #hint span{display:inline-block;white-space:nowrap;margin:0 .75em}
   /* the two big buttons, side by side at the foot of the view: Drive, and Places */
-  #bigs{position:fixed;z-index:5;left:max(16px,env(safe-area-inset-left));bottom:calc(max(14px,env(safe-area-inset-bottom)) + 2px);display:flex;align-items:flex-end;gap:12px;transition:opacity .6s}
+  #bigs{position:fixed;z-index:5;left:max(16px,env(safe-area-inset-left));bottom:calc(max(14px,env(safe-area-inset-bottom)) + 2px);display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;max-width:calc(100vw - 32px);transition:opacity .6s}
+  /* (two rows: Drive, Cruise and Ride; under them Tour, Island and Places, small, on the level of More) */
+  #bigs::after{content:"";order:4;flex-basis:100%;height:0} #bigDrive{order:1} #bCruise{order:2} #bRide{order:3} #bTour{order:5} #bReset{order:6} #bPlaces{order:7}
   .big{display:flex;align-items:center;gap:12px;padding:8px 18px 8px 8px;
     border-radius:44px;border:1px solid rgba(255,214,160,.85);background:rgba(9,20,28,.86);color:#fff4df;font-family:inherit;cursor:pointer;
     box-shadow:0 6px 22px rgba(0,0,0,.45);transition:transform .2s,opacity .6s;touch-action:manipulation;text-align:left}
@@ -220,7 +228,7 @@
   #bigDrive.ready{opacity:1;pointer-events:auto}
   .big:hover{transform:translateY(-2px)}
   .big i{position:relative;flex:none;width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#ffb054;color:#2a1606}
-  #bPlaces i{background:#4fc3f2;color:#05243a} #bPlaces{border-color:rgba(160,220,250,.8)} #bCruise i{background:#7fd9c6;color:#06302b} #bCruise{border-color:rgba(150,230,212,.8)}
+  #bCruise i{background:#7fd9c6;color:#06302b} #bCruise{border-color:rgba(150,230,212,.8)}
   .big.sm{padding:6px 16px 6px 6px;gap:10px;border-color:rgba(255,214,160,.5)} .big.sm i{width:44px;height:44px;background:rgba(255,214,160,.2);color:#fff4df} .big.sm b{font-size:15px;letter-spacing:.18em} .big.sm em{font-size:9.5px}
   #bTour.on i{background:#ffb054;color:#2a1606}
   #bigDrive i::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid rgba(255,176,84,.75);animation:bdPulse 2.2s ease-out infinite}
@@ -229,7 +237,7 @@
   .big b{font-size:20px;font-weight:600;letter-spacing:.22em;text-transform:uppercase}
   .big em{font-style:normal;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;opacity:.75}
   body.driving #bigs,body.photo #bigs,body.places #bigs,body.cruising #bigs{opacity:0;pointer-events:none}
-  @media (max-width:1180px) and (min-width:561px){.big em{display:none} .big{padding:6px 14px 6px 6px;gap:9px} .big i{width:46px;height:46px} .big b{font-size:17px}}   /* (six buttons in the row on a narrow window) */
+  @media (max-width:1180px) and (min-width:561px){.big em{display:none} .big{padding:6px 14px 6px 6px;gap:9px} .big i{width:46px;height:46px} .big b{font-size:17px}}   /* (a narrow window) */
   /* a cruise: the ride's strip (no Stop: a boat calls nowhere), a small chart of its own, and nothing else of the page's controls */
   body.cruising #ui,body.cruising #nav,body.cruising #fc,body.cruising #pm,body.cruising #pin,body.cruising #tourS{display:none !important} body.cruising #brand{opacity:0} body.cruising #labels *{pointer-events:none !important}
   body.cruising #tramS{display:flex} body.cruising #rideStopB{display:none} body.cruising canvas#c{cursor:grab}
@@ -270,6 +278,10 @@
   #dNavB.on{background:rgba(64,170,220,.55);border-color:rgba(160,225,255,.9);color:#fff}
   #dGo{display:none;align-items:center;gap:7px;max-width:100%;padding:4px 12px;border-radius:16px;background:rgba(20,70,100,.72);border:1px solid rgba(140,215,255,.6);color:#e6f7ff;font-size:11px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
   #dGo.show{display:flex} #dGo i{display:inline-block}
+  /* the indicator: a turn has been asked for (blinking, at the side it is to), or there is no road that way at the junction ahead (grey, still) */
+  #dInd{position:fixed;z-index:5;top:40%;display:none;font-size:54px;font-weight:700;line-height:1;color:#ffc46a;text-shadow:0 2px 12px rgba(0,0,0,.7);pointer-events:none;animation:dInd .5s steps(2,start) infinite}
+  #dInd.l{display:block;left:max(16px,env(safe-area-inset-left))} #dInd.r{display:block;right:max(16px,env(safe-area-inset-right))} #dInd.no{color:rgba(255,255,255,.5);animation:none} @keyframes dInd{50%{opacity:.2}}
+  body.garage #dInd,body.dashcard #dInd{display:none !important}
   /* the random run: its two cards (the trip that has been drawn, and how it went), and what a run takes away from Drive's controls */
   #dash{display:none;position:fixed;z-index:8;inset:0;align-items:center;justify-content:center;padding:calc(max(10px,env(safe-area-inset-top)) + 6px) 12px calc(max(10px,env(safe-area-inset-bottom)) + 6px);background:rgba(5,12,18,.5)} body.dashcard #dash{display:flex} body.dashcard #garage{display:none !important}
   #dash .dc{width:min(100%,460px);max-height:100%;overflow-y:auto;box-sizing:border-box;display:flex;flex-direction:column;gap:11px;padding:16px 16px 16px;border-radius:20px;background:rgba(9,20,28,.9);border:1px solid rgba(255,196,128,.32);box-shadow:0 12px 40px rgba(0,0,0,.5);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);overscroll-behavior:contain;color:#f3e6d0}
@@ -282,7 +294,7 @@
   #dashStars{text-align:center;font-size:30px;letter-spacing:.18em;color:#ffc46a;line-height:1} #dashStars i{font-style:normal;opacity:.25}
   #dashStats{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;font-size:13.5px;line-height:1.25} #dashStats small{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;opacity:.7;align-self:center} #dashStats b{font-weight:600;color:#fff4df;text-align:right} #dashStats b em{font-style:normal;color:#ffc46a}
   body.dashing #dNavB,body.dashing #dAuto,body.dashing #dSkip,body.dashing #dCar,body.dashing #isleGo{display:none !important} body.dashing #dGo{flex-direction:row-reverse;gap:9px;padding:5px 9px 5px 13px;background:rgba(110,62,10,.82);border-color:rgba(255,206,140,.7);color:#fff4df;font-size:12px} body.dashing #dGo i{color:#ffc46a;font-size:19px;line-height:1;width:20px;text-align:center}   /* (the arrow at the right-hand end: on a phone the small map lies over the left) */
-  #gDash{margin-top:12px}
+  #gA .grow{display:flex;gap:10px;width:min(100%,460px)} #drv #gA .grow .gbtn{flex:1 1 0;min-width:0;padding:15px 6px;font-size:clamp(13px,3.8vw,16px);letter-spacing:.16em;white-space:nowrap}   /* (Select run and Random run: side by side, the same size) */
   #dGo i{font-style:normal;color:#7fdcff}
   #dGo em{font-style:normal;overflow:hidden;text-overflow:ellipsis}
   #navP{display:none;position:fixed;z-index:8;left:50%;top:max(64px,calc(env(safe-area-inset-top) + 58px));transform:translateX(-50%);width:min(380px,calc(100vw - 24px));max-height:min(70vh,560px);flex-direction:column;
@@ -426,10 +438,10 @@
     #mmC{height:118px}
     #mini{top:calc(max(10px,env(safe-area-inset-top)) + 62px)}
     #brand b{font-size:14px;letter-spacing:.16em}
-    #bigs{bottom:calc(max(10px,env(safe-area-inset-bottom)) + 80px);display:grid;grid-template-columns:auto auto auto;justify-content:start;align-items:center;gap:8px}   /* (a phone: two rows of two; Drive and Places below, as Tour and Island are placed first) */
-    #bTour{grid-row:1;grid-column:1} #bReset{grid-row:1;grid-column:2;justify-self:start} #bCruise{grid-row:1;grid-column:3;justify-self:start} #bigDrive{grid-row:2;grid-column:1} #bPlaces{grid-row:2;grid-column:2} #bRide{grid-row:2;grid-column:3}   /* (a phone: Tour and Island above; Drive, Places and Ride below) */
+    /* (a phone: Tour, Island and Places along the bottom with More at their right; above them Drive, Cruise and Ride) */
+    #bigs{left:max(8px,env(safe-area-inset-left));bottom:calc(max(10px,env(safe-area-inset-bottom)) + 2px);gap:7px 6px;max-width:calc(100vw - 16px)}
     #places .pl3{flex-wrap:nowrap;gap:7px} #places .pgo{padding:13px 13px;font-size:12.5px;letter-spacing:.12em}
-    .big em{display:none} .big.sm{padding:5px 11px 5px 5px;gap:7px} .big.sm i{width:32px;height:32px} .big.sm i svg{width:19px;height:19px} .big.sm b{font-size:12.5px;letter-spacing:.12em}
+    .big em{display:none} .big.sm{padding:4px 9px 4px 4px;gap:6px} .big.sm i{width:28px;height:28px} .big.sm i svg{width:17px;height:17px} .big.sm b{font-size:11.5px;letter-spacing:.09em}
     .big{padding:5px 11px 5px 5px;gap:7px}
     .big i{width:38px;height:38px} .big i svg{width:24px;height:24px}
     .big b{font-size:14px;letter-spacing:.13em}
@@ -437,12 +449,12 @@
     #dSt{font-size:12px;letter-spacing:.07em;padding:6px 10px}
     #dTop{gap:8px}
     #hint{bottom:calc(max(12px,env(safe-area-inset-bottom)) + 62px);font-size:10px}
-    body:not(.driving) #hint{bottom:calc(max(10px,env(safe-area-inset-bottom)) + 224px)}   /* above the two big buttons */
-    #ui{right:max(8px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));gap:6px;padding:5px;opacity:.92;flex-wrap:nowrap}
-    #ui>button{padding:9px 13px}
+    body:not(.driving) #hint{bottom:calc(max(10px,env(safe-area-inset-bottom)) + 130px)}   /* above the two rows of buttons */
+    #ui{right:max(8px,env(safe-area-inset-right));bottom:max(10px,env(safe-area-inset-bottom));gap:6px;padding:3px;opacity:.92;flex-wrap:nowrap}
+    #ui>button{padding:8px 11px}
     body.menu #cr{opacity:0}
     #more .mr button{padding:9px 10px}
-    #cr{right:auto;left:max(8px,env(safe-area-inset-left));bottom:max(6px,env(safe-area-inset-bottom));max-width:calc(100vw - 186px);text-align:left;line-height:1.3}   /* (clear of Places and More) */
+    #cr{right:auto;left:max(8px,env(safe-area-inset-left));bottom:max(6px,env(safe-area-inset-bottom));max-width:calc(100vw - 16px);text-align:left;line-height:1.25}   /* (the whole width, under the buttons) */
   }
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
@@ -462,14 +474,15 @@
   <h1>Hong Kong: <span>Golden Hour</span></h1>
   <div class="bb"><i id="bootBar"></i></div>
   <div class="bs"><span id="bootMsg">Opening the map</span><b id="bootPct">0%</b></div>
-</div><em>© 2026 Butterfly Farm Studio Limited</em></div>
+</div><em>© 2026 Butterfly Farm Studio Limited<br>Map data © OpenStreetMap contributors · buildings: Lands Department, HKSAR Government · elevation: NASA SRTM</em></div>
 <canvas id="c"></canvas>
 <div id="ui">
   <button id="bMore" title="Settings and extras" aria-haspopup="true">More</button>
   <div id="more">
     <div class="mr"><button id="bLabels" class="on" title="Place names on or off">Place names</button><button id="bQ" title="How much detail is drawn">High</button></div>
     <label class="mr">Traffic<input id="sTraf" type="range" min="0" max="100" value="70"></label>
-    <div class="mr"><button id="bLink" title="Copy a link to this view">Copy link</button></div>
+    <div class="mr"><button id="bInfo" type="button" title="Who made this, and where its data comes from">Information</button></div>
+    <div class="mr"><button id="tpSh" type="button" class="on" aria-pressed="true" title="Shadows cast by the sun, on or off">Shadows on</button><button id="bLink" title="Copy a link to this view">Copy link</button></div>
   </div>
 </div>
 <div id="places" role="dialog" aria-label="Places"><div class="pc">
@@ -499,26 +512,17 @@
   <text id="cpN">N</text></svg></div>
   <div id="zm"><button id="zIn" title="Zoom in" aria-label="Zoom in">+</button><button id="zOut" title="Zoom out" aria-label="Zoom out">−</button></div></div>
 <div id="brand"><b>Hong Kong: <span>Golden Hour</span></b><em>© 2026 Butterfly Farm Studio Limited</em></div>
-<button id="tClock" type="button" aria-label="Time of day" aria-expanded="false" title="Time of day: tap to set the hour, or to turn shadows off"><svg viewBox="0 0 64 64" aria-hidden="true">
-  <circle cx="32" cy="32" r="30" fill="rgba(9,20,28,.9)" stroke="rgba(255,196,128,.55)" stroke-width="1.5"/><path d="M32 5v5M32 54v5M5 32h5M54 32h5M18.5 8.6l2 3.5M45.5 8.6l-2 3.5M8.6 18.5l3.5 2M8.6 45.5l3.5-2M55.4 18.5l-3.5 2M55.4 45.5l-3.5-2M18.5 55.4l2-3.5M45.5 55.4l-2-3.5" stroke="rgba(243,217,180,.65)" stroke-width="1.6" stroke-linecap="round"/>
-  <line id="tcH" x1="32" y1="32" x2="32" y2="17" stroke="#ffc46a" stroke-width="3.4" stroke-linecap="round"/><line id="tcM" x1="32" y1="32" x2="32" y2="10" stroke="#fff4df" stroke-width="2.2" stroke-linecap="round"/><circle cx="32" cy="32" r="2.6" fill="#fff4df"/></svg></button>
-<div id="tPanel" role="dialog" aria-label="Time of day and shadows">
-  <div class="tp1"><b id="tpT">15:20</b><button id="tpGold" type="button" title="Back to the golden afternoon">Golden hour</button></div>
-  <input id="tpBar" type="range" min="0" max="24" step="0.0833333" value="15.3" aria-label="Hour of the day">
-  <div class="tpH"><span>0</span><span>6</span><span>12</span><span>18</span><span>24</span></div>
-  <button id="tpSh" type="button" class="on" aria-pressed="true" title="Shadows cast by the sun, on or off">Shadows on</button>
-</div>
 <button id="tourS" type="button" title="End the tour" aria-live="polite"><span></span><i>✕</i></button>
 <div id="cmini" aria-hidden="true"><canvas id="cmC"></canvas><span id="cmD"></span></div>
 <button id="cBoost" type="button" aria-pressed="false" title="Boost: full speed, on or off (Space)"><b>Boost</b></button>
 <div id="tramS" aria-live="polite"><b id="rideTag">Tram</b><span></span><i id="rideSpd" title="Speed"><b>0</b><small>km/h</small></i><button id="rideStopB" type="button" title="Stop at the next stop (it does not stop unless asked)">Stop</button><button id="tramOff" type="button" title="Get off (Esc)">Get off ✕</button></div>
 <div id="pin"><div class="pb"><div class="pt"><b></b><em></em></div><button type="button" aria-label="Remove this label">✕</button></div><i></i><u></u></div>
 <div id="hint" aria-live="polite"></div>
-<div id="bigs"><button id="bigDrive" class="big" type="button" aria-label="Drive around Hong Kong Island"><i><svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="24" cy="24" r="4.5" fill="currentColor"/><path d="M8 21.5c5-2.6 10.4-3.6 16-3.6s11 1 16 3.6M24 28.5v11.5M20 26l-9.5 9M28 26l9.5 9" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg></i><span><b>Drive</b><em>Every street on the island</em></span></button><button id="bPlaces" class="big" type="button" aria-label="Places: search, fly or ride anywhere on the island"><i><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 4.2a2.8 2.8 0 1 1 0 5.6 2.8 2.8 0 0 1 0-5.6Z"/></svg></i><span><b>Places</b><em>Search, fly or ride there</em></span></button><button id="bRide" class="big" type="button" aria-label="Ride: the tram or a bus along its real route"><i><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" d="M6.5 4.5h11a2 2 0 0 1 2 2v9.5a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2V6.500a2 2 0 0 1 2-2ZM4.500 11.500h15M4.500 8h15M8 18l-1 2.500M16 18l1 2.500M8 15h.010M16 15h.010"/></svg></i><span><b>Ride</b><em>The tram, five buses, a minibus</em></span></button><button id="bCruise" class="big" type="button" aria-label="Cruise: a junk or a yacht round the island's shore"><i><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" d="M2.500 17.500h19l-2.300 3.500H4.800L2.500 17.500ZM12 3v12M12 4.500l6.500 10H12M10 7.500l-4.800 7H10"/></svg></i><span><b>Cruise</b><em>A junk or a yacht round the shore</em></span></button><button id="bTour" class="big sm" type="button" aria-label="Tour: a flight round the island, golden afternoon into dusk"><i><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l11-6.5-11-6.5Z"/></svg></i><span><b>Tour</b><em>Sit back and watch</em></span></button><button id="bReset" class="big sm" type="button" aria-label="Whole island: back to the full view"><i><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></i><span><b>Island</b><em>The whole view</em></span></button></div>
+<div id="bigs"><button id="bigDrive" class="big" type="button" aria-label="Drive around Hong Kong Island"><i><svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="24" cy="24" r="4.5" fill="currentColor"/><path d="M8 21.5c5-2.6 10.4-3.6 16-3.6s11 1 16 3.6M24 28.5v11.5M20 26l-9.5 9M28 26l9.5 9" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg></i><span><b>Drive</b><em>Every street on the island</em></span></button><button id="bPlaces" class="big sm" type="button" aria-label="Places: search, fly or ride anywhere on the island"><i><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 4.2a2.8 2.8 0 1 1 0 5.6 2.8 2.8 0 0 1 0-5.6Z"/></svg></i><span><b>Places</b><em>Search, fly or ride there</em></span></button><button id="bRide" class="big" type="button" aria-label="Ride: the tram or a bus along its real route"><i><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" d="M6.5 4.5h11a2 2 0 0 1 2 2v9.5a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2V6.500a2 2 0 0 1 2-2ZM4.500 11.500h15M4.500 8h15M8 18l-1 2.500M16 18l1 2.500M8 15h.010M16 15h.010"/></svg></i><span><b>Ride</b><em>The tram, five buses, a minibus</em></span></button><button id="bCruise" class="big" type="button" aria-label="Cruise: a junk or a yacht round the island's shore"><i><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" d="M2.500 17.500h19l-2.300 3.500H4.800L2.500 17.500ZM12 3v12M12 4.500l6.500 10H12M10 7.500l-4.800 7H10"/></svg></i><span><b>Cruise</b><em>A junk or a yacht round the shore</em></span></button><button id="bTour" class="big sm" type="button" aria-label="Tour: a flight round the island"><i><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l11-6.5-11-6.5Z"/></svg></i><span><b>Tour</b><em>Sit back and watch</em></span></button><button id="bReset" class="big sm" type="button" aria-label="Whole island: back to the full view"><i><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></i><span><b>Island</b><em>The whole view</em></span></button></div>
 <div id="drv"><div id="dTop"><button id="dExit" title="Stop driving (Esc)" aria-label="Stop driving">✕</button><button id="dNavB" title="Go somewhere" aria-label="Navigate"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 1 7 7c0 4.9-5.6 11.2-6.3 12a1 1 0 0 1-1.4 0C10.6 20.2 5 13.9 5 9a7 7 0 0 1 7-7zm0 4.2A2.8 2.8 0 1 0 12 11.8 2.8 2.8 0 0 0 12 6.2z"/></svg></button><button id="dCar" title="Change vehicle (G)" aria-label="Change vehicle"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M5 11l1.5-4.2A2 2 0 0 1 8.4 5.5h7.2a2 2 0 0 1 1.9 1.3L19 11h.5A1.5 1.5 0 0 1 21 12.5V17h-2v1.5a1 1 0 0 1-2 0V17H7v1.5a1 1 0 0 1-2 0V17H3v-4.5A1.5 1.5 0 0 1 4.5 11zm2.2 0h9.6l-1.1-3.2a.5.5 0 0 0-.5-.3H8.8a.5.5 0 0 0-.5.3zM6.5 15a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6zm11 0a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6z"/></svg></button>
   <div id="dInfo"><span id="dSt"></span><span id="dNx"><i id="dArr">↑</i><b id="dNxD"></b><em id="dNxN"></em></span><span id="dGo"><i>➤</i><em></em></span></div>
   <div id="dSide"><div id="dSpdBox"><b id="dSpd">0</b><small>km/h</small></div><button id="dU" title="Turn round (U)">U-turn</button><button id="dAuto" title="Self-driving on or off">Auto</button><button id="dSkip" type="button" title="Skip the journey: the car is put down at the destination">Skip ▸▸</button></div></div>
-  <canvas id="dFx" aria-hidden="true"></canvas><button id="dBoost" title="Boost: a burst of speed. Three charges; they come back with time, and faster from drifts, jumps and knocks (Space)" aria-label="Boost"><svg viewBox="0 0 84 84" aria-hidden="true"><circle class="bt" cx="42" cy="42" r="37" stroke-dasharray="71.5 6"/><circle class="bn" id="dBoostN" cx="42" cy="42" r="37" stroke-dasharray="0 232.5"/><circle class="bf" id="dBoostF" cx="42" cy="42" r="37" stroke-dasharray="0 232.5"/></svg><b>Boost</b></button><button id="dHorn" title="Horn: traffic ahead jumps aside (H)" aria-label="Horn"><b>Horn</b></button><div id="dCombo" aria-live="off"><b id="dComboN"></b><em>combo</em></div>
+  <canvas id="dFx" aria-hidden="true"></canvas><div id="dInd" aria-hidden="true"></div><button id="dBoost" title="Boost: a burst of speed. Three charges; they come back with time, and faster from drifts, jumps and knocks (Space)" aria-label="Boost"><svg viewBox="0 0 84 84" aria-hidden="true"><circle class="bt" cx="42" cy="42" r="37" stroke-dasharray="71.5 6"/><circle class="bn" id="dBoostN" cx="42" cy="42" r="37" stroke-dasharray="0 232.5"/><circle class="bf" id="dBoostF" cx="42" cy="42" r="37" stroke-dasharray="0 232.5"/></svg><b>Boost</b></button><button id="dHorn" title="Horn: traffic ahead jumps aside (H)" aria-label="Horn"><b>Horn</b></button><div id="dCombo" aria-live="off"><b id="dComboN"></b><em>combo</em></div>
   <div id="mini" title="Tap for the whole island"><canvas id="mmC"></canvas><span id="mmD"></span></div><div id="isle"><div class="ic"><div class="ih"><b>Hong Kong Island</b><button id="isleGo" type="button">Choose destination</button><button id="isleX" type="button" aria-label="Close the map">✕</button></div><canvas id="isleC" aria-label="Map of Hong Kong Island: where you are, your route, and the places to drive to"></canvas></div></div><div id="dJoy"><i></i></div><div id="dTun"></div><div id="dMsg"></div>
   <div id="dash" data-step="a" role="dialog" aria-label="Random run"><div class="dc">
     <div id="dashA" class="ds"><b class="dh">Random run</b>
@@ -537,7 +541,7 @@
     <div id="gA" class="gp"><b class="gh">Choose your ride</b>
       <div class="gmid"><button id="gPrev" class="garr" aria-label="Previous vehicle">‹</button><button id="gNext" class="garr" aria-label="Next vehicle">›</button></div>
       <div class="gnm"><b id="gName"></b><em id="gBlurb"></em><div id="gDots" role="tablist" aria-label="Vehicles"></div></div>
-      <button id="gGo" class="gbtn">Next</button><button id="gDash" class="glink" type="button" title="You are put down at one place and must drive to another, against the clock">Random run · a timed trip, no route</button></div>
+      <div class="grow"><button id="gGo" class="gbtn" type="button" title="Choose where to start and where to go">Select run</button><button id="gDash" class="gbtn" type="button" title="You are put down at one place and must drive to another, against the clock, with no route shown">Random run</button></div></div>
     <div id="gB" class="gp"><div class="gcard gpick">
       <div class="ghd"><button id="gBack" aria-label="Back to vehicles">‹</button><b>Where to start</b></div>
       <input id="gSQ" class="gq" type="search" placeholder="Search a place, street, building or address" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search where to start"><div id="gSRes" class="gres"></div>
@@ -560,7 +564,14 @@
       <div class="gto"><em>To</em><b id="gToName"></b><i id="gToDist"></i></div>
       <div class="gmodes"><button id="gAuto" class="gmode auto"><b>Drive me</b><em>Sit back: the car drives itself there, fast</em><i id="gAutoBest"></i></button><button id="gFree" class="gmode"><b>I'll drive</b><em>You steer, following the route on the road</em><i id="gFreeBest"></i></button></div>
       <button id="gBack3" class="glink">‹ Pick another place</button></div></div></div>
-<div id="cr">© 2026 Butterfly Farm Studio Limited · Buildings and 3D building models: Lands Department, HKSAR Government, via <a href="https://data.gov.hk/en-data/dataset/hk-landsd-openmap-landsd-building" target="_blank" rel="noopener">DATA.GOV.HK</a> and <a href="https://3d.map.gov.hk/" target="_blank" rel="noopener">Open3Dhk</a> · map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors · addresses: <a href="https://data.gov.hk/en-data/dataset/hk-dpo-als_01-als" target="_blank" rel="noopener">Address Lookup Service</a>, HKSAR Government · elevation NASA SRTM</div>
+<div id="info" role="dialog" aria-label="Information: who made this and where its data comes from"><div class="ib">
+  <div class="ibh"><b>Information</b><button id="infoX" type="button" aria-label="Close">✕</button></div>
+  <p>Hong Kong: Golden Hour<br>© 2026 Butterfly Farm Studio Limited</p>
+  <p><b>Buildings and 3D building models</b>Lands Department, the Government of the Hong Kong SAR, which owns the intellectual property rights in them; from <a href="https://data.gov.hk/en-data/dataset/hk-landsd-openmap-landsd-building" target="_blank" rel="noopener">DATA.GOV.HK</a> and <a href="https://3d.map.gov.hk/" target="_blank" rel="noopener">Open3Dhk</a>.</p>
+  <p><b>Map data</b>Streets, the shore, piers, and the tram, bus and minibus lines: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors, available under the Open Database Licence.</p>
+  <p><b>Addresses</b><a href="https://data.gov.hk/en-data/dataset/hk-dpo-als_01-als" target="_blank" rel="noopener">Address Lookup Service</a>, the Government of the Hong Kong SAR, from DATA.GOV.HK.</p>
+  <p><b>Elevation</b>NASA SRTM.</p>
+</div></div>
 <script>window.__errs=[];addEventListener("error",function(e){window.__errs.push(String(e.message).slice(0,300)+" @"+e.lineno);var b=document.getElementById("boot");if(b&&e.message&&!window.__hk){b.className="err";var m=document.getElementById("bootMsg"),p=document.getElementById("bootPct");if(m)m.textContent="Could not start. Please reload the page.";if(p)p.textContent=""}});(function(){var ce=console.error;console.error=function(){try{window.__errs.push(Array.prototype.join.call(arguments," ").slice(0,900))}catch(e){}ce.apply(console,arguments)}})();</script>
 <script type="module">
 import * as THREE from 'three';
@@ -3699,7 +3710,10 @@ function clockSet(h) { const q = Math.round(h * 12); if (clockSet.q === q) retur
   hh.setAttribute('transform', 'rotate(' + ((hq % 12) * 30).toFixed(1) + ' 32 32)'); document.getElementById('tcM').setAttribute('transform', 'rotate(' + (((hq * 60) % 60) * 6).toFixed(1) + ' 32 32)');
   document.getElementById('tpT').textContent = fmtH(hq); const bar = document.getElementById('tpBar'); if (bar && document.activeElement !== bar) bar.value = hq; document.getElementById('tClock').setAttribute('aria-label', 'Time of day: ' + fmtH(hq)); }
 function initClock() {
-  const q = id => document.getElementById(id), c = q('tClock'), pn = q('tPanel'); if (!c) return; const open = on => { document.body.classList.toggle('tp', on); c.setAttribute('aria-expanded', on ? 'true' : 'false'); };
+  const q = id => document.getElementById(id), c = q('tClock'), pn = q('tPanel');
+  /* (the clock and its panel are gone: the hour is the golden afternoon, always. What is left of them is the shadows' switch, in More) */
+  if (q('tpSh')) q('tpSh').onclick = e => { TOD.noSh = !TOD.noSh; const b = e.currentTarget; b.classList.toggle('on', !TOD.noSh); b.setAttribute('aria-pressed', TOD.noSh ? 'false' : 'true'); b.textContent = TOD.noSh ? 'Shadows off' : 'Shadows on'; if (!TOD.noSh) SH.farDirty = SH.nearDirty = true; };
+  if (!c) return; const open = on => { document.body.classList.toggle('tp', on); c.setAttribute('aria-expanded', on ? 'true' : 'false'); };
   for (const el of [c, pn]) for (const t of ['pointerdown', 'pointermove', 'pointerup', 'touchstart', 'mousedown', 'click', 'wheel']) el.addEventListener(t, e => e.stopPropagation(), { passive: true });
   c.onclick = () => { document.body.classList.remove('menu'); open(!document.body.classList.contains('tp')); };
   addEventListener('pointerdown', e => { if (document.body.classList.contains('tp') && !(e.target.closest && e.target.closest('#tPanel,#tClock'))) open(false); }, true);
@@ -4056,11 +4070,11 @@ function tourLegs() {
 }
 /* the tour says what it is doing: a strip at the top names the stop and counts them, and a tap on it (or any touch of the view) ends the tour.
    It starts at the first real stop when the view is already the whole island, so that pressing it does something at once */
-const TOUR_NAMES = ['The whole island', 'Victoria Harbour', 'Central: the Bank of China', 'Victoria Peak', 'Happy Valley racecourse', 'Victoria Park and Causeway Bay', 'Taikoo and Quarry Bay', 'Chai Wan, into dusk', 'Shek O', 'Stanley', 'Repulse Bay', 'Aberdeen', 'The harbour by night', 'The whole island'];
+const TOUR_NAMES = ['The whole island', 'Victoria Harbour', 'Central: the Bank of China', 'Victoria Peak', 'Happy Valley racecourse', 'Victoria Park and Causeway Bay', 'Taikoo and Quarry Bay', 'Chai Wan', 'Shek O', 'Stanley', 'Repulse Bay', 'Aberdeen', 'The harbour', 'The whole island'];
 function tourStrip(text) { const el = document.getElementById('tourS'); if (!el) return; el.classList.toggle('on', !!text); if (text) el.firstChild.textContent = text; }
 function startTour() {
   const legs = tourLegs(), n = legs.length - 1; TOUR.on = true; TOUR.i = cam.dist > 9000 ? 1 : 0; document.getElementById('bTour').classList.add('on'); setTime(presetTime('golden'), false); let first = true;
-  const next = () => { if (!TOUR.on) return; const k = TOUR.i, L1 = legs[TOUR.i++]; if (!L1) { stopTour(); return; } if (L1.time) setTime(presetTime(L1.time), false);
+  const next = () => { if (!TOUR.on) return; const k = TOUR.i, L1 = legs[TOUR.i++]; if (!L1) { stopTour(); return; } 
     tourStrip(k >= n ? 'Tour · back to the whole island' : 'Tour · ' + (TOUR_NAMES[k] || '') + ' · ' + Math.max(1, k) + ' / ' + (n - 1));
     flyTo({ ...L1.p, dur: first ? 2.5 : 4.5 }, () => { let t = 0; return dt => { t += dt; cam.az += dt * .025; if (t > L1.dwell) next(); }; }); first = false; };
   next();
@@ -4951,10 +4965,10 @@ function openGarage() {
 function closeGarage(dest, auto = true) {
   DRIVE.garage = false; DRIVE.started = true; DRIVE.gNext = false; DRIVE.gMid = null; DRIVE.ride = false; document.body.classList.remove('garage');
   DRIVE.run = dest && dest.id && DRIVE.start && DRIVE.start !== 'here' ? { key: runEnd(DRIVE.start) + '>' + runEnd(dest.id) + (auto ? '|a' : '|m'), dest: dest.id, t0: ST.t } : null;
-  if (dest && !auto) { setAuto(false); navStart(dest); ctlHint.first = true; ctlHint.show(['Follow the arrows to ' + dest.name].concat(COARSE ? ['Hold anywhere to drive', 'Slide to steer'] : ['↑ drive', '← → steer']), 9000); return; }
+  if (dest && !auto) { setAuto(false); navStart(dest); ctlHint.first = true; ctlHint.show(['Follow the arrows to ' + dest.name].concat(COARSE ? ['Hold anywhere to drive', 'Slide sideways to turn at the next junction'] : ['↑ drive', '← → steer']), 9000); return; }
   if (dest) { setAuto(true); navStart(dest); ctlHint.first = false; ctlHint.show(['Driving you to ' + dest.name, COARSE ? 'Steer to turn off' : '← → to turn off', 'Auto to take over'], 7000); return; }
   setAuto(false); navStop();
-  ctlHint.first = true; ctlHint.show(COARSE ? ['Hold anywhere to drive', 'Slide to steer', 'Pull back to brake', 'Boost: tap for a burst of speed', 'Horn clears traffic ahead'] : ['↑ drive', '↓ brake', '← → steer', 'Space boost (a burst of speed)', 'H horn', 'U turn round', 'Esc leave'], 9000);
+  ctlHint.first = true; ctlHint.show(COARSE ? ['Hold anywhere to drive', 'Slide sideways to turn at the next junction', 'Pull back to brake', 'Boost: tap for a burst of speed', 'Horn clears traffic ahead'] : ['↑ drive', '↓ brake', '← → steer', 'Space boost (a burst of speed)', 'H horn', 'U turn round', 'Esc leave'], 9000);
 }
 /* ---------- the place pickers: the island map with every place on it; swipe (or the arrows, or tap a dot) to go from one to the next ---------- */
 const PICK = { start: { i: 0 }, dest: { i: 0 }, box: null };
@@ -5116,7 +5130,7 @@ function dScore(p, ctx) {
   const E = DRIVE.E, ex = E[p.exit], cur = E[ctx.q], dead = ctx.inCore && !DRIVE.N[p.far].core, out = !ctx.inCore && DRIVE.N[p.far].core, ut = Math.abs(p.rel) > 2.4;
   /* the wrong way up a one-way street: only on a long, deliberate steer; otherwise anything else, even turning round, comes first */
   let sc = (p.against ? (ctx.req && (DRIVE.reqHold || 0) > .9 ? 6 : 40) : 0) + (ut ? 8 : 0) + p.steps.length * .12 - (out ? .5 : 0);
-  if (ctx.req) sc += Math.abs(p.rel - ctx.req * 1.35) * 1.2 + (Math.abs(p.rel) < .4 ? 1.2 : 0) + (dead ? 3.5 : 0);
+  if (ctx.req) sc += Math.abs(p.rel - ctx.req * 1.35) * 1.2 + (Math.abs(p.rel) < .4 ? 1.2 : 0) + (dead ? 1 : 0);   /* (a dead end that is asked for is taken: it used to lose to going straight on) */
   else sc += Math.abs(p.rel) * .7 + (cur.nm && ex.nm === cur.nm ? 0 : .6) + Math.max(0, ex.c - cur.c) * .2 + (dead ? 3 : 0);
   if (ctx.nav && !ctx.req) { let m = 0; for (let i = 0; i < p.steps.length && i < ctx.nav.length; i++) { if (p.steps[i].c === ctx.nav[i].c) m++; else break; } const full = m === Math.min(p.steps.length, ctx.nav.length); if (m) sc -= full ? 10 + m : 2 * m; }
   return sc;
@@ -5132,17 +5146,25 @@ function dPlan() {
   for (const p of ps) p.sc = dScore(p, ctx); ps.sort((a, b) => a.sc - b.sc);
   return { nd, left, path: ps[0], opts: ps.length, choices: ps.filter(p => Math.abs(p.rel) < 2.4).length };
 }
-/* turn requests: a firm steer near a junction (within 70 m, or inside an intersection); it lasts until used or for 5 s */
+/* turn requests. A firm steer asks for a turn, and one steer is one turn:
+   - it may be made early: within four seconds' driving of the junction (90 m at the least), and a steer that is held is kept until the junction comes;
+   - it lasts 6 s after the steer is let go, and is used up only by a junction that has a road that way (one that has none passes it on, for 2.5 s more);
+   - after a turn the stick must come back towards the middle before it can ask again: a thumb left over to one side does not turn at every corner;
+   - a thumb that has crept across slowly, as thumbs do while they hold the accelerator, asks for nothing: it takes a move of the stick */
 function dRequest(steer, dt, plan) {
-  if (DRIVE.req && (ST.t - DRIVE.req.t > 5)) DRIVE.req = null;
-  if (Math.abs(steer) > .7) DRIVE.reqHold = (DRIVE.reqHold || 0) + dt; else DRIVE.reqHold = 0;
-  if (DRIVE.reqHold > .18 && plan && (plan.left < 70 || DRIVE.queue.length)) { const s = Math.sign(steer); if (!DRIVE.req || DRIVE.req.s !== s) DRIVE.req = { s, t: ST.t }; }
+  const a = Math.abs(steer), s = Math.sign(steer), now = ST.t, sp = Math.abs(DRIVE.car.v), was = DRIVE.reqHold || 0, lag = DRIVE.reqLag || 0;
+  if (DRIVE.req && now > DRIVE.req.x) DRIVE.req = null;
+  if (a < .3 || (DRIVE.reqSign && s !== DRIVE.reqSign)) DRIVE.reqArm = true;
+  if (a > .55) { if (!was && Math.abs(steer - lag) < .15) DRIVE.reqArm = false; DRIVE.reqHold = was + dt; DRIVE.reqSign = s; } else DRIVE.reqHold = 0;
+  DRIVE.reqLag = lerp(lag, steer, Math.min(1, dt / .3));   /* (where the stick was a third of a second ago: a move is told from a creep by it) */
+  if (DRIVE.reqHold > .1 && DRIVE.reqArm !== false && plan && (plan.left < Math.max(90, sp * 4) || DRIVE.queue.length)) { if (!DRIVE.req || DRIVE.req.s !== s) DRIVE.req = { s, t: now, x: now + 6 }; else DRIVE.req.x = now + 6; }
 }
 /* crossing node nd: take the planned way; any further steps through the cluster are queued */
 function dCross(nd, plan) {
   if (DRIVE.queue.length && DRIVE.queue[0].nd === nd) { const s = DRIVE.queue.shift(); return s; }
   const p = plan && plan.nd === nd && plan.path ? plan.path : null; if (!p) return null;
-  DRIVE.queue = p.steps.slice(1); DRIVE.queueRel = p.rel; DRIVE.lock = null; if (DRIVE.req) DRIVE.req = null;
+  DRIVE.queue = p.steps.slice(1); DRIVE.queueRel = p.rel; DRIVE.lock = null;
+  if (DRIVE.req) { if (Math.sign(p.rel) === DRIVE.req.s && Math.abs(p.rel) > .3) { DRIVE.req = null; DRIVE.reqArm = false; } else DRIVE.req.x = Math.min(DRIVE.req.x, ST.t + 2.5); }   /* (the turn made: the steer is spent. No road that way here: it is kept a little longer, for the junction just beyond) */
   return p.steps[0];
 }
 /* ---------- navigation: the quickest way along the streets (one-ways respected, main roads preferred), re-planned whenever you
@@ -5766,6 +5788,8 @@ function dHud(e, sp) {
       H.bN.setAttribute('stroke-dasharray', ((bp % 100) / 12 * S).toFixed(1) + ' ' + C); H.bN.setAttribute('stroke-dashoffset', (-n * (S + 6)).toFixed(1)); H.boost.classList.toggle('ready', n > 0); }
     H.boost.classList.toggle('on', DRIVE.burst > 0);
     if (DRIVE.boostFx) { const c = DRIVE.boostFx; DRIVE.boostFx = null; H.boost.classList.remove('pop', 'no'); void H.boost.offsetWidth; H.boost.classList.add(c); } }
+  { const rq = DRIVE.bus ? null : DRIVE.req, P = DRIVE.plan, k = rq ? (rq.s < 0 ? 'l' : 'r') + (P && DRIVE.planLeft < 120 && !(Math.sign(P.rel) === rq.s && Math.abs(P.rel) > .3) ? ' no' : '') : '';
+    if (k !== H.ind) { H.ind = k; const el = H.indEl || (H.indEl = document.getElementById('dInd')); el.className = k; el.textContent = rq ? (rq.s < 0 ? '‹‹' : '››') : ''; } }
   const cb = DRIVE.combo || 0; if (cb !== H.cb) { H.cb = cb; H.combo.classList.toggle('show', cb >= 2); if (cb >= 2) { H.comboN.textContent = '×' + cb; H.combo.classList.remove('pop'); void H.combo.offsetWidth; H.combo.classList.add('pop'); } }
 }
 /* touch / mouse: a floating stick wherever the thumb lands */
@@ -6063,7 +6087,7 @@ addEventListener('gesturechange', e => { if (e.target !== canvas) return; e.prev
 const keys = {};
 addEventListener('keydown', e => { keys[e.code] = 1; if (CRUISE.on) { if (e.code === 'Escape') cruiseExit(); if (e.code === 'Space' && !e.repeat) cruiseBoost(); if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault(); return; } if (DRIVE.on && e.code !== 'KeyL') { if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault(); return; } if (e.code.startsWith('Digit')) { const i = +e.code.slice(5) - 1; if (i >= 0 && i < 6) goPreset(i); }
   if (e.code === 'KeyR') goPreset(0); if (e.code === 'Escape' && FOCUS.label) exitFocus();
-  if (e.code === 'KeyF' && FOCUS.label) FOCUS.active ? exitFocus() : enterFocus(FOCUS.label); if (e.code === 'KeyI' && FOCUS.active) setFocusMode(!FOCUS.iso); if (e.code === 'KeyC' && FOCUS.active) setFocusClay(!FOCUS.clay); if (e.code === 'KeyB' && FOCUS.active) focusBestView(); if (e.code === 'KeyL') setLight({ golden: 'noon', noon: 'dusk', dusk: 'golden' }[L.name]); if (e.code === 'KeyT') TOUR.on ? stopTour() : startTour(); });
+  if (e.code === 'KeyF' && FOCUS.label) FOCUS.active ? exitFocus() : enterFocus(FOCUS.label); if (e.code === 'KeyI' && FOCUS.active) setFocusMode(!FOCUS.iso); if (e.code === 'KeyC' && FOCUS.active) setFocusClay(!FOCUS.clay); if (e.code === 'KeyB' && FOCUS.active) focusBestView(); if (e.code === 'KeyT') TOUR.on ? stopTour() : startTour(); });
 addEventListener('keyup', e => { keys[e.code] = 0; });
 function stepCamera(dt) {
   if (CRUISE.on) { cruiseStep(dt); placeCamera(dt); return; }
@@ -6192,14 +6216,14 @@ function cruiseBoat(kind) {
 }
 /* the view as a cruise begins, and as two quick taps leave it: from the seaward quarter, a little above, so that the boat is in front and the shore behind
    it (the land is to port going west first, to starboard going east first) */
-function cruiseView() { const Cz = CRUISE; Cz.caz = -Cz.dir * 1.15; Cz.cpol = 79 * RAD; Cz.zf = 1.2; }
+function cruiseView() { const Cz = CRUISE; Cz.caz = -Cz.dir * 1.15; Cz.cpol = 78 * RAD; Cz.zf = 2.5; }
 function cruiseBoost(on) { const Cz = CRUISE, el = document.getElementById('cBoost'); Cz.boost = on === undefined ? !Cz.boost : !!on; el.classList.toggle('on', Cz.boost); el.setAttribute('aria-pressed', Cz.boost ? 'true' : 'false'); ctlHint.done(); }
 function cruiseStart(ln, si) {
   if (DRIVE.on || DRIVE.entering || CRUISE.on) return; if (TOUR.on) stopTour(); if (FOCUS.label) exitFocus(); pinClear(); cam.fly = null; cam.tour = null;
   const Cz = CRUISE; cruisePath(); Cz.ln = ln; Cz.spec = BOATSPEC[ln.veh]; Cz.dir = ln.cdir; Cz.s = ln.stops[si][3]; Cz.v = 0; Cz.azV = 0; Cz.turn = 0; Cz.hudT = 9; Cz.shown = ''; Cz.ptr.clear(); Cz.tap = null; cruiseBoost(false); cruiseView();
   const q = cruiseAt(Cz.s), a = cruiseAt(Cz.s + 30 * Cz.dir); Cz.x = q[0]; Cz.z = q[1]; Cz.h = Cz.hc = Math.atan2(a[1] - q[1], a[0] - q[0]);
   for (const k in Cz.mesh) Cz.mesh[k].visible = false; (Cz.mesh[ln.veh] || (Cz.mesh[ln.veh] = cruiseBoat(ln.veh))).visible = true; cruiseModel(ln.veh); Cz.on = true;
-  cam.az = Cz.hc + PI + Cz.caz; cam.dist = (Cz.spec.camD + 40) * Cz.zf; cam.pol = 72 * RAD; cam.tx = Cz.x; cam.tz = Cz.z; cam.ty = Cz.spec.tgt; cam.vaz = cam.vpol = cam.vx = cam.vz = cam.vzoom = 0;
+  cam.az = Cz.hc + PI + Cz.caz; cam.dist = Cz.spec.camD * .8; cam.pol = 80 * RAD; Cz.t0 = ST.t;   /* (close on the boat: the view draws back from it over the first seconds) */ cam.tx = Cz.x; cam.tz = Cz.z; cam.ty = Cz.spec.tgt; cam.vaz = cam.vpol = cam.vx = cam.vz = cam.vzoom = 0;
   document.body.classList.remove('menu', 'tp'); document.body.classList.add('cruising'); document.getElementById('rideTag').textContent = Cz.spec.tag; document.querySelector('#rideSpd small').textContent = 'knots'; document.querySelector('#tramS span').textContent = 'From ' + ln.stops[si][2];
   ctlHint.first = false; ctlHint.show(COARSE ? ['Boost: full speed', 'Drag to look round', 'Pinch to zoom'] : ['Boost or Space: full speed', 'Drag to look round', 'Scroll to zoom'], 10000); cruiseStep(0); placeCamera(0);
 }
@@ -6231,7 +6255,7 @@ function cruiseStep(dt) {
   /* the camera turns with the boat (behind its heading like a weight on a spring), at the angle and the distance the view has been given */
   { const w = 1.9, sdt = Math.min(dt, .05); Cz.azV += (wrapA(Cz.h - Cz.hc) * w * w - 2 * w * Cz.azV) * sdt; Cz.hc += Cz.azV * sdt; }
   const e3 = dt ? 1 - Math.exp(-dt * 2.2) : 1; cam.az = Cz.hc + PI + Cz.caz; cam.pol = lerp(cam.pol, Cz.cpol, dt ? 1 - Math.exp(-dt * 12) : 1); cam.tx = Cz.x + Math.cos(Cz.h) * S.len * .15; cam.tz = Cz.z + Math.sin(Cz.h) * S.len * .15; cam.ty = S.tgt;
-  cam.dist = lerp(cam.dist, (S.camD + Cz.v * .5) * Cz.zf, dt ? 1 - Math.exp(-dt * 4) : 1); cam.fov = lerp(cam.fov, 50 + u * 12, e3); cam.vaz = cam.vpol = cam.vx = cam.vz = cam.vzoom = 0;
+  cam.dist = lerp(cam.dist, (S.camD + Cz.v * .5) * Cz.zf, dt ? 1 - Math.exp(-dt * (ST.t - Cz.t0 < 7 && !Cz.ptr.size ? .55 : 4)) : 0); cam.fov = lerp(cam.fov, 50 + u * 12, e3); cam.vaz = cam.vpol = cam.vx = cam.vz = cam.vzoom = 0;
   if ((Cz.hudT += dt) > .25) { Cz.hudT = 0; cruiseHud(); } if (dt && (Cz.mm ^= 1)) cruiseMini();
 }
 function cruiseHud() {
@@ -6431,6 +6455,8 @@ async function boot() {
   for (const t of ['pointerdown', 'pointerup', 'touchstart', 'mousedown', 'click']) document.getElementById('tramS').addEventListener(t, e => e.stopPropagation(), { passive: true });
   document.getElementById('bLabels').onclick = e => { LABELS.on = !LABELS.on; e.currentTarget.classList.toggle('on', LABELS.on); };
   document.getElementById('bMore').onclick = () => document.body.classList.toggle('menu');
+  { const box = document.getElementById('info'), shut = () => document.body.classList.remove('info'); document.getElementById('bInfo').onclick = () => { document.body.classList.remove('menu'); document.body.classList.add('info'); }; document.getElementById('infoX').onclick = shut; box.addEventListener('click', e => { if (e.target === box) shut(); });
+    for (const t of ['pointerdown', 'pointerup', 'pointermove', 'touchstart', 'mousedown', 'wheel']) box.addEventListener(t, e => e.stopPropagation(), { passive: true }); addEventListener('keydown', e => { if (e.code === 'Escape' && document.body.classList.contains('info')) { shut(); e.stopPropagation(); } }, true); }
   addEventListener('pointerdown', e => { if (document.body.classList.contains('menu') && !e.target.closest('#ui')) document.body.classList.remove('menu'); }, true);   /* a tap anywhere else puts More away */
   document.getElementById('bLink').onclick = async e => { const b = e.currentTarget, url = location.href.split('#')[0] + viewHash(); try { history.replaceState(null, '', viewHash()); await navigator.clipboard.writeText(url); b.textContent = 'Copied'; } catch (err) { b.textContent = 'In URL'; } setTimeout(() => { b.textContent = 'Copy link'; }, 1600); };
   document.getElementById('bReset').onclick = () => { stopTour(); pinClear(); if (FOCUS.label) exitFocus(); document.body.classList.remove('menu'); goPreset(0); };
