@@ -5553,7 +5553,12 @@ function camGuard(dt) {
   /* a flyover between the camera and the car (the car beneath it, or the camera brushing past its side): the camera comes in along its own
      line of sight until it is clear, which puts it under the deck with the car */
   if (!DRIVE.garage) { const tx = cam.tx, ty = cam.tyS, tz = cam.tz, cy = car.yD ?? car.y; let t0 = 1; for (let i = 3; i <= 24; i++) { const t = i / 24; if (inDeck(tx + (p.x - tx) * t, ty + (p.y - ty) * t, tz + (p.z - tz) * t, cy)) { t0 = (i - 1) / 24; break; } }
-    const was = DRIVE.deckK ?? 1, to = t0 < 1 ? Math.max(.28, t0 - .03) : 1, K = DRIVE.deckK = lerp(was, to, 1 - Math.exp(-dt * (to < was ? 16 : 2.2)));
+    /* (only where the car is under the deck and will still be 20 m on, which is so where the road runs on beneath a flyover. A deck that merely crosses the road (a footbridge,
+       a flyover overhead) is between the camera and the car for well under a second, after the car has come out from under it: the camera used to lunge
+       down on to the roof for that and creep back out, a jolt at every bridge in the middle of town. Now it holds its place and the deck passes beneath it.
+       Once it has come in it stays in until the way is clear, and it comes in a little less sharply) */
+    const was = DRIVE.deckK ?? 1; if (t0 < 1 && was > .97) { const over = (x, z) => { for (let y = cy + 3; y < cy + 18; y += 1.5) if (inDeck(x, y, z, cy)) return true; return false; }, h = car.h ?? car.yaw; if (!(over(car.x, car.z) && over(car.x + Math.cos(h) * 20, car.z + Math.sin(h) * 20))) t0 = 1; }   /* (under it here and still under it 20 m on) */
+    const to = t0 < 1 ? Math.max(.28, t0 - .03) : 1, K = DRIVE.deckK = lerp(was, to, 1 - Math.exp(-dt * (to < was ? 9 : 2.2)));
     if (K < .995) { p.set(tx + (p.x - tx) * K, ty + (p.y - ty) * K, tz + (p.z - tz) * K); if (DRIVE.camY !== undefined) DRIVE.camY = Math.min(DRIVE.camY, p.y + .2); camera.updateMatrixWorld(true); } }
   else DRIVE.deckK = 1;
   for (let i = 1; i <= 24 && !hit; i++) { const t = i / 24; if (f(hx + (p.x - hx) * t, hy + (p.y - hy) * t, hz + (p.z - hz) * t)) hit = 1; }
