@@ -2798,7 +2798,7 @@ function updateShadows(focus, radius) {
   const sun = U.uSunDir.value; if (U.uShOn.value < .01 || sun.y < .02) return;
   if (SH.farDirty) {
     const pts = []; for (const x of [X0, X1]) for (const z of [Z0, Z1]) for (const y of [-5, 620]) pts.push([x, y, z]);
-    fitShadowCam(SH.farCam, sun, pts, 0); renderShadow(SH.farRT, SH.farCam, U.uShFarM); SH.farDirty = false; SH.nearDirty = true;
+    fitShadowCam(SH.farCam, sun, pts, 0); renderShadow(SH.farRT, SH.farCam, U.uShFarM); SH.farDirty = false; SH.nearDirty = true; if (DRIVE.on) return;   /* (while driving the near one waits for the next frame: two drawings of the scene are not added to one frame) */
   }
   const R = clamp(radius, 260, 2600);
   if (SH.nearDirty || focus.distanceTo(SH.nc) > SH.nr * (DRIVE.on ? .3 : .22) || Math.abs(R - SH.nr) > SH.nr * .3) {
@@ -4112,7 +4112,7 @@ function flattenRecs(set) {
 /* ---------- real building shapes: the Lands Department's 3D Visualisation Map, one small file per 1:1000 map sheet (b3d/<sheet>.bin, shapes only,
    converted offline). Near the camera a sheet's models replace the surveyed outlines they stand on, drawn with the same facade shader (so they
    take the same colour, windows and night lights); hand-built landmarks keep their own models. Sheets far behind are dropped again. ---------- */
-const B3D = { index: null, loading: false, tiles: new Map(), grid: null, mat: null, t: 0, fail: new Set(), slice: 6 };   /* (slice: the milliseconds of loading done at a time) */
+const B3D = { index: null, loading: false, tiles: new Map(), grid: null, mat: null, t: 0, fail: new Set(), slice: 6, sl0: 0, stage: '', steps: [] };   /* (slice: the milliseconds of loading done at a time) */
 const b3dURL = f => (/\/$|\.html?$/.test(location.pathname) ? new URL('b3d/' + f, location.href) : new URL('/hong-kong/b3d/' + f, location.href)).href;
 function b3dGrid() { if (B3D.grid) return B3D.grid; const G = new Map(); CITY.recs.forEach((b, i) => { const k = Math.floor(b.cx / 64) * 65536 + Math.floor(b.cz / 64); let a = G.get(k); if (!a) G.set(k, a = []); a.push(i);
     if (!b.bb) { let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9; for (const q of b.rings[0]) { x0 = Math.min(x0, q[0]); x1 = Math.max(x1, q[0]); z0 = Math.min(z0, q[1]); z1 = Math.max(z1, q[1]); } b.bb = [x0, z0, x1, z1]; } }); return (B3D.grid = G); }
@@ -4226,11 +4226,13 @@ async function gpuWarm(g, gone) {
     if (g.index && !(gone && gone())) { d.setAttribute('position', GPUW.tiny); d.setIndex(g.index); await shown(); } }
   finally { d.setAttribute('position', GPUW.tiny); d.setIndex(null); scene.remove(w); d.dispose(); }
 }
-const b3dBreath = () => new Promise(r => { let d = 0; const go = () => { if (!d) { d = 1; r(); } }; requestAnimationFrame(go); setTimeout(go, 34); });
+/* (for the ?perf readout: how long the loading ran between two breaths, and at what; a wait for a file in between is not counted) */
+const b3dBreath = () => { const now = performance.now(); if (B3D.sl0) { const d = now - B3D.sl0; if (d > 12) { B3D.steps.push([now, d, B3D.stage || '']); if (B3D.steps.length > 40) B3D.steps.shift(); } } B3D.sl0 = 0;
+  return new Promise(r => { let d = 0; const go = () => { if (!d) { d = 1; B3D.sl0 = performance.now(); r(); } }; requestAnimationFrame(go); setTimeout(go, 34); }); };
 /* shadows after a sheet has come or gone. The near shadow (round the eye) is redrawn at once. The far one is of the whole island, on a sheet with a texel
    every few metres: a new sheet's buildings throw much the same shadow there as the blocks they replace, and redrawing it is most of a frame. So while
    driving it waits a moment and is done once for a run of sheets (b3dStep) */
-function b3dShade() { SH.nearDirty = true; if (DRIVE.on) B3D.shDue = B3D.shDue || ST.t + 1.5; else SH.farDirty = true; }
+function b3dShade() { if (DRIVE.on) B3D.shDue = B3D.shDue || ST.t + 1.5; else SH.farDirty = SH.nearDirty = true; }   /* (while driving not even the near one at once: each is a second drawing of the whole scene, and the blocks the new models replace are in the old shadow already) */
 /* whether all that b3dStep would fetch round a place is in: its sheets, and their street level. A ride waits at its first stop for this (for a few
    seconds at most), so that the heaviest loading of the journey, which is at its start in the middle of town, is over before it moves */
 const b3dRush = () => !!(DRIVE.on && DRIVE.bus && DRIVE.bus.board);
@@ -4242,8 +4244,8 @@ function b3dSettled(x, z) {
   return true;
 }
 async function b3dLoad(T) {
-  B3D.loading = true; const t0 = performance.now(); let tk = performance.now(), work = 0, slow = 0, stage = 'read', slowAt = ''; const pace = async () => { const n = performance.now(); if (n - tk < B3D.slice) return; work += n - tk; if (n - tk > slow) { slow = n - tk; slowAt = stage; } await b3dBreath(); tk = performance.now(); };
-  try { const res = await fetch(b3dURL(T.id + '.bin')); if (!res.ok) throw new Error(res.status); let u8 = new Uint8Array(await res.arrayBuffer());
+  B3D.loading = true; const t0 = performance.now(); let tk = performance.now(), work = 0, slow = 0, stage = 'read', slowAt = ''; const pace = async () => { const n = performance.now(); if (n - tk < B3D.slice) return; work += n - tk; if (n - tk > slow) { slow = n - tk; slowAt = stage; } B3D.stage = 'buildings: ' + stage; await b3dBreath(); tk = performance.now(); };
+  try { B3D.sl0 = 0; const res = await fetch(b3dURL(T.id + '.bin')); if (!res.ok) throw new Error(res.status); let u8 = new Uint8Array(await res.arrayBuffer());
     if (u8[0] === 0x1f && u8[1] === 0x8b) u8 = new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
     const t1 = tk = performance.now();   /* (the wait for the file is not work) */
     const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength), nb = dv.getUint32(4, true), G = b3dGrid(), recs = CITY.recs, td = CITY.tex.image.data; let o = 8, nv = 0, ni = 0; const list = [], hand = []; const LMAT = new Set(); for (const e of B3D.index || []) if (e.lm && GOVK.has(e.lm)) for (const q of e.at) LMAT.add(Math.round(q[0] * 10) + '_' + Math.round(q[1] * 10));
@@ -4300,7 +4302,7 @@ async function b3dLoad(T) {
     let ylo = 1e9, yhi = -1e9; for (const b of list) { ylo = Math.min(ylo, b.y - 35); yhi = Math.max(yhi, b.y + b.top + 5); } if (!list.length) ylo = yhi = 0;
     g.boundingSphere = new THREE.Sphere(new THREE.Vector3((T.box[0] + T.box[2]) / 2, (ylo + yhi) / 2, (T.box[1] + T.box[3]) / 2), Math.hypot(T.box[2] - T.box[0], yhi - ylo, T.box[3] - T.box[1]) / 2 + 30);
     stage = 'hide'; const hp = await b3dHidePlan(hide, pace); stage = 'end';
-    const tW = performance.now(); if (DRIVE.on && !b3dRush()) { work += tW - tk; await gpuWarm(g); tk = performance.now(); }   /* (while driving, its lists are sent to the graphics card over a few frames first) */
+    const tW = performance.now(); if (DRIVE.on && !b3dRush()) { work += tW - tk; B3D.stage = 'buildings: lists'; await gpuWarm(g); tk = performance.now(); } B3D.stage = 'buildings: showing';   /* (while driving, its lists are sent to the graphics card over a few frames first) */
     const tEnd = performance.now(), mesh = new THREE.Mesh(g, mat); mesh.layers.enable(1); scene.add(mesh);   /* casts shadows; left out of the water's reflection pass */
     T.mesh = mesh; if (T.st) T.stl = list.concat(hand).map(b => ({ x: b.x, z: b.z, y: b.y, top: b.top, bb: b.bb, at: b.at })); T.undo = b3dHide(hp); T.hide = hide; T.tris = i0 / 3; T.cut = cut; T.endMs = Math.round(performance.now() - tEnd); T.slow = Math.round(slow) + ' ' + slowAt; T.ms = Math.round(performance.now() - t0); T.sync = Math.round(work + performance.now() - tk);   /* (sync: the work itself, without the waits between its slices) */ B3D.tiles.set(T.id, T); b3dShade(); NEAR.fx = NEAR.fz = 1e9;
   } catch (err) { B3D.fail.add(T.id); console.warn('b3d ' + T.id + ': ' + (err && err.message)); }
@@ -4322,8 +4324,8 @@ async function b3dStreet(T) {
     const wantInf = !!(DRIVE.SG && T.inf), gone = () => B3D.tiles.get(T.id) !== T || !T.mesh;
     /* (the picture is decoded off the main thread where the browser can: decoding a 2048 px sheet on it is a visible hitch on a phone) */
     const pic = async f => { try { if (typeof createImageBitmap === 'function') { const res = await fetch(b3dURL(f)); if (!res.ok) throw new Error(f + ' ' + res.status); const bl = await res.blob(); let bm; try { bm = await createImageBitmap(bl, { premultiplyAlpha: 'none', colorSpaceConversion: 'none' }); } catch (e) { bm = await createImageBitmap(bl); } return new THREE.Texture(bm); }   /* (decoded as the graphics card is to have it, so that sending it there is a plain copy) */ } catch (e) { /* fall through to the plain loader */ } return new THREE.TextureLoader().loadAsync(b3dURL(f)); };
-    const [u8, sh, tex, inf] = await Promise.all([gun(T.id + '.st2.bin'), gun(T.id + '.bin'), pic(T.id + '.dr.png'), wantInf ? gun(T.id + '.inf.bin').catch(() => null) : null]);
-    tex.flipY = false; tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy()); tex.needsUpdate = true;
+    B3D.sl0 = 0; const [u8, sh, tex, inf] = await Promise.all([gun(T.id + '.st2.bin'), gun(T.id + '.bin'), pic(T.id + '.dr.png'), wantInf ? gun(T.id + '.inf.bin').catch(() => null) : null]);
+    B3D.sl0 = 0; B3D.stage = 'street level'; tex.flipY = false; tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy()); tex.needsUpdate = true;
     if (gone()) { tex.dispose(); return; }
     /* the sheet's own models, by their origin: where each one's points and triangles lie in the file */
     const sv = new DataView(sh.buffer, sh.byteOffset, sh.byteLength), raw = new Map();
@@ -4365,7 +4367,7 @@ async function b3dStreet(T) {
       if (DRIVE.on && !b3dRush()) { const off = () => gone() || T.stm !== S; await b3dBreath(); if (!off()) { const tT = performance.now(); try { renderer.initTexture(tex); } catch (e) { /* sent when first drawn */ } S.texMs = Math.round(performance.now() - tT); await b3dBreath(); } if (!off()) await gpuWarm(g, off); if (off()) { if (T.stm === S) { tex.dispose(); T.stm = null; } g.dispose(); return; } tA = performance.now(); }
       S.mat = new THREE.ShaderMaterial({ uniforms: Object.assign({}, U, { uAtlas: { value: tex }, uAtlasPx: { value: (tex.image && tex.image.width) || W } }), vertexShader: BLD_VS, fragmentShader: BLD_FS(), defines: { FOC_SINK: 1, FLATN: 1, STREET: 1, DRAWN: 1 }, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4 });
       S.mesh = new THREE.Mesh(g, S.mat); scene.add(S.mesh); S.endMs = Math.round(Math.max(worst, performance.now() - tA)); }
-    if (inf) { const dv = new DataView(inf.buffer, inf.byteOffset, inf.byteLength), cut = (a, n) => inf.buffer.slice(inf.byteOffset + a, inf.byteOffset + a + n); let o = 4;
+    if (inf) { B3D.stage = 'footbridges'; const dv = new DataView(inf.buffer, inf.byteOffset, inf.byteLength), cut = (a, n) => inf.buffer.slice(inf.byteOffset + a, inf.byteOffset + a + n); let o = 4;
     /* footbridges and walkways: only once the streets are known, so that models of the roads themselves can be told apart and left out */
     const ni = dv.getUint32(o, true); o += 4;
     if (DRIVE.SG && ni) { const P2 = [], C2 = [], A2 = [], Q2 = [], O2 = [], I2 = []; let w0 = 0, kept = 0;
@@ -5650,7 +5652,7 @@ async function enterDrive0() {
   { const far = cam.dist > 2600; let saved = null; try { saved = localStorage.getItem('hk-start'); } catch (e) { /* storage blocked */ }
     DRIVE.hereXZ = far ? null : [cam.tx, cam.tz]; DRIVE.started = false; dSpawn(cam.tx, cam.tz); DRIVE.on = true; DRIVE.pendingStart = far ? (STARTS.some(q => q.id === saved) ? saved : 'pier') : 'here'; } DRIVE.zoom = 0; DRIVE.labelsWas = LABELS.on; LABELS.on = false; cam.fly = null; cam.tour = null;
 
-  document.body.classList.add('driving'); DYN.uNoNear.value = 12; trafDetail(true); U.uDrv.value = 1; cam.dist = 30; openGarage(); dStart(DRIVE.pendingStart);
+  document.body.classList.add('driving'); DYN.uNoNear.value = 12; trafDetail(qi > 0); U.uDrv.value = 1;   /* (at the lowest quality the traffic keeps its plain shapes: half the triangles of 27,000 vehicles) */ cam.dist = 30; openGarage(); dStart(DRIVE.pendingStart);
 }
 function exitDrive() {
   if (!DRIVE.on) return; DRIVE.on = false; DRIVE.joy = null; dJoyDraw(); LABELS.on = DRIVE.labelsWas; document.body.classList.remove('driving', 'garage', 'riding', 'busride'); DRIVE.ridingCls = false; DRIVE.garage = false; if (DRIVE.bus) { if (DRIVE.bus.prevVi !== undefined) DRIVE.vi = DRIVE.bus.prevVi; DRIVE.bus = null; DRIVE.autoStop = false; DRIVE.auto = false; } if (DRIVE.ghost) DRIVE.ghost.visible = false; if (DRIVE.roadGhost) DRIVE.roadGhost.visible = false; if (DRIVE.veil) DRIVE.veil.visible = false; if (DRIVE.mesh) DRIVE.mesh.visible = false; DYN.uNoNear.value = 0; trafDetail(false); U.uDrv.value = 0; for (let i = 0; i < HITN; i++) hitFree(i); for (const k of [...PROPS.spots.keys()]) propDrop(k); if (TRL.mesh) { TRL.hist.length = 0; TRL.mesh.visible = false; } dFx(0, 0, 0); DRIVE.boosting = false; DRIVE.combo = 0; DRIVE.run = null; if (DRIVE.car) DRIVE.car.fly = null; navStop(); navClose(); setAuto(false); DRIVE.autoStop = false;
@@ -6019,20 +6021,20 @@ function buildComposer() {
   const s = renderer.getDrawingBufferSize(new THREE.Vector2());
   composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(s.x, s.y, { type: THREE.HalfFloatType }));
   /* above ~3.7 Mpx (full-screen Retina) both MSAA and AO are dropped: the pixels themselves are the anti-aliasing, and the extra targets cost more than they give */
-  const big = s.x * s.y > 3.7e6; scenePass = new ScenePass(Q.ao && !big); scenePass.samples = big ? 0 : Q.msaa; composer.addPass(scenePass);
+  const big = s.x * s.y > 3.7e6; scenePass = new ScenePass(Q.ao && !big); scenePass.samples = big ? 0 : Q.msaa; composer.addPass(scenePass); scenePass.setSize(s.x, s.y);   /* (addPass sizes a pass at the composer's size times the pixel ratio, and the composer was made at the picture's size, which has the ratio in it already: the scene was being drawn on a sheet twice as wide and twice as high as the picture, four times the pixels, and then shrunk) */
   bloomPass = null; if (Q.bloom) { bloomPass = new UnrealBloomPass(new THREE.Vector2(s.x / 2, s.y / 2), .3, .5, 1.15); composer.addPass(bloomPass); bloomPass.setSize(s.x / 2, s.y / 2); if (L.cur) bloomPass.strength = L.cur.bloom; }
   composer.addPass(new OutputPass());
   sizeReflection(s.x, s.y);
 }
 let forced = null, drs = 1, drsUp = 0;
 function resize() {
-  const w = forced ? forced.w : innerWidth, h = forced ? forced.h : innerHeight, dpr = forced ? forced.dpr : Math.max(Math.min(devicePixelRatio || 1, 2, Q.dpr) * drs, .6);
+  const w = forced ? forced.w : innerWidth, h = forced ? forced.h : innerHeight, dpr = forced ? forced.dpr : Math.max(Math.min(devicePixelRatio || 1, 2, Q.dpr) * drs, Math.min(devicePixelRatio || 1, .9));   /* (never under 0.9 of a screen point: below that the picture is plainly blocky) */
   renderer.setPixelRatio(dpr); renderer.setSize(w, h, !forced); camera.aspect = w / h; camera.updateProjectionMatrix(); buildComposer();
 }
 addEventListener('resize', resize);
 function setQuality(i, manual) { qi = clamp(i, 0, 2); Q = QUALS[qi]; U.uDetail.value = Q.detail;
-  if (SH.nearRT && SH.nearRT.width !== Q.sh) { SH.nearRT.dispose(); SH.nearRT = SH.mk(Q.sh, Q.sh, THREE.UnsignedIntType); U.uShNear.value = SH.nearRT.depthTexture; U.uShRes.value.z = U.uShRes.value.w = Q.sh; SH.nearDirty = true; } document.getElementById('bQ').textContent = Q.name; if (manual) { drs = 1; drsUp = 0; } resize(); }
-let autoQ = true;
+  if (SH.nearRT && SH.nearRT.width !== Q.sh) { SH.nearRT.dispose(); SH.nearRT = SH.mk(Q.sh, Q.sh, THREE.UnsignedIntType); U.uShNear.value = SH.nearRT.depthTexture; U.uShRes.value.z = U.uShRes.value.w = Q.sh; SH.nearDirty = true; } document.getElementById('bQ').textContent = Q.name; if (manual) { drs = 1; drsUp = 0; userQ = true; } if (DRIVE.on) trafDetail(qi > 0); resize(); }
+let autoQ = true, userQ = false, lowQ = 0;   /* (userQ: the quality was chosen by hand, and is left alone; lowQ: half-seconds in a row well under 30 a second at the smallest picture) */
 
 const ST = { t: 0, frame: 0, fps: 60, paused: false, ft: [], traffic: .7 };
 const hooks = [], _sz = new THREE.Vector2();   // per-frame updaters added by later sections
@@ -6058,8 +6060,8 @@ let lastT = 0, slowAcc = 0, fastAcc = 0, fpsAcc = 0, fpsN = 0, wAcc = 0;
 const CAP = { on: false, tried: false, probe: 0, n: 0, low: 0 };
 /* The readout (add ?perf to the address): how many pictures a second, how much of each frame is the page's own work, how small the picture has been made,
    the longest gap between pictures lately and what was going on then, and what that says is the limit. ?perf=30 also holds the page to 30 a second, to
-   see what a phone in Low Power Mode does */
-const PERF = { on: /[?&]perf\b/.test(location.search), half: /[?&]perf=30\b/.test(location.search), k: 0, el: null, f: [], st: [], t: 0 };
+   see what a phone in Low Power Mode does (any number: ?perf=20 shows what a device too slow for the scene gets) */
+const PERF = { on: /[?&]perf\b/.test(location.search), cap: +(/[?&]perf=(\d+)/.exec(location.search) || [])[1] || 0, el: null, f: [], st: [], t: 0 };
 function perfNote(now, gap, work) {
   const tag = B3D.loading || B3D.stBusy ? 'loading buildings' : NEAR.job ? 'street detail' : ''; PERF.f.push([now, gap, work, tag]); while (PERF.f.length && now - PERF.f[0][0] > 5000) PERF.f.shift();
   if (gap > 80 && gap < 5000) PERF.st.push([now, tag || (work > gap * .5 ? 'page work' : 'drawing')]); while (PERF.st.length && now - PERF.st[0][0] > 30000) PERF.st.shift();
@@ -6067,12 +6069,13 @@ function perfNote(now, gap, work) {
   if (!PERF.el) { const d = PERF.el = document.createElement('div'); d.id = 'perf'; d.style.cssText = 'position:fixed;z-index:9;left:max(10px,env(safe-area-inset-left));top:calc(max(10px,env(safe-area-inset-top)) + 250px);max-width:74vw;padding:6px 9px;border-radius:9px;background:rgba(6,14,20,.82);border:1px solid rgba(255,196,128,.4);color:#fff4df;font:11px/1.45 ui-monospace,Menlo,monospace;white-space:pre-line;pointer-events:none'; document.body.appendChild(d); }
   const F = PERF.f, gaps = F.map(q => q[1]).sort((x, y) => x - y), med = gaps[gaps.length >> 1], avgW = F.reduce((q, r) => q + r[2], 0) / F.length; let worst = F[0]; for (const q of F) if (q[1] > worst[1]) worst = q;
   const by = {}; for (const q of PERF.st) by[q[1]] = (by[q[1]] || 0) + 1; const bl = Object.entries(by).map(([k, v]) => v + ' ' + k).join(', ');
+  const now2 = now; while (B3D.steps.length && now2 - B3D.steps[0][0] > 30000) B3D.steps.shift(); let ls = null; for (const q of B3D.steps) if (!ls || q[1] > ls[1]) ls = q;
   const verdict = CAP.on || (med > 30.5 && med < 36.5 && avgW < 15) ? (CAP.on ? 'Held at 30 a second by the phone, not by this page (Low Power Mode does this)' : 'At 30 a second: the phone\'s own limit, or the graphics chip (being tested)') : med > 21 && avgW < med * .5 ? 'The graphics chip is the limit here' : med > 21 ? 'The processor is the limit here' : 'Keeping up';
-  PERF.el.textContent = Math.round(1000 / med) + ' pictures a second · picture size ' + Math.round(drs * 100) + '%\npage work ' + avgW.toFixed(1) + ' ms of each ' + med.toFixed(0) + ' ms\nlongest gap, last 5 s: ' + Math.round(worst[1]) + ' ms' + (worst[3] ? ' (' + worst[3] + ')' : '') + '\ngaps over 80 ms, last 30 s: ' + PERF.st.length + (bl ? ' (' + bl + ')' : '') + '\n' + verdict;
+  PERF.el.textContent = Math.round(1000 / med) + ' pictures a second · picture size ' + Math.round(drs * 100) + '% · ' + Q.name + '\npage work ' + avgW.toFixed(1) + ' ms of each ' + med.toFixed(0) + ' ms\nlongest gap, last 5 s: ' + Math.round(worst[1]) + ' ms' + (worst[3] ? ' (' + worst[3] + ')' : '') + '\ngaps over 80 ms, last 30 s: ' + PERF.st.length + (bl ? ' (' + bl + ')' : '') + (ls ? '\nslowest loading step, last 30 s: ' + Math.round(ls[1]) + ' ms (' + ls[2] + ')' : '') + '\n' + verdict;
 }
 function loop(now) {
   requestAnimationFrame(loop);
-  if (PERF.half && (PERF.k ^= 1)) return;
+  if (PERF.cap && now - lastT < 1000 / PERF.cap - 3) return;
   const gap = now - lastT, dt = Math.min(gap / 1000, .1); lastT = now; if (ST.paused) return;
   const w0 = performance.now(); frame(dt); const work = performance.now() - w0; if (PERF.on) perfNote(now, gap, work);
   /* dynamic resolution inside the DPR clamp: shed pixels before anything else when the frame rate sags */
@@ -6083,7 +6086,10 @@ function loop(now) {
       if (CAP.probe) { if (!--CAP.probe && at30) { CAP.on = true; drs = 1; resize(); frame(0); } }   /* (still 30 with the smaller picture: the phone's limit. Otherwise the smaller picture did help, and stays) */
       else if (CAP.on) { if (ST.fps < 24) { if (++CAP.low >= 3) { CAP.on = false; CAP.low = 0; } } else CAP.low = 0; }   /* (the full picture is kept unless the rate falls well under 30) */
       else if (at30 && !CAP.tried) { if (++CAP.n >= 2) { CAP.tried = true; CAP.n = 0; if (drs > .62) { CAP.probe = 3; drs = .6; resize(); frame(0); } else { CAP.on = true; drs = 1; resize(); frame(0); } } }
-      else if (ST.fps < 53) { CAP.n = 0; fastAcc = 0; if (++slowAcc >= 3 && drs > .62) { drs = Math.max(.6, drs - (ST.fps < 40 ? .2 : .1)); slowAcc = 0; resize(); frame(0); } }   /* (a resize empties the picture: it is drawn again at once, or the empty one is shown for a frame, a flash of the whole screen) */
+      else if (ST.fps < 53) { CAP.n = 0; fastAcc = 0; if (++slowAcc >= 3 && drs > .62) { drs = Math.max(.6, drs - (ST.fps < 40 ? .2 : .1)); slowAcc = 0; lowQ = 0; resize(); frame(0); }
+        /* (the smallest picture, and still under 26 a second for two seconds: the graphics chip cannot draw this at this quality. Down one level, which
+           takes away whole passes over the scene (the water's reflection, the soft shadows, the glow), and some of the picture's size is given back) */
+        else if (drs <= .62 && ST.fps < 26 && qi > 0 && !userQ) { if (++lowQ >= 4) { lowQ = 0; slowAcc = 0; drs = .8; drsUp = 0; setQuality(qi - 1); frame(0); } } else lowQ = 0; }   /* (a resize empties the picture: it is drawn again at once, or the empty one is shown for a frame, a flash of the whole screen) */
       else { CAP.n = 0; slowAcc = 0; if (ST.fps > 58.5 && drs < 1 && drsUp < 2 && ++fastAcc > 40) { drs = Math.min(1, drs + .1); drsUp++; fastAcc = 0; resize(); frame(0); } } } }
 }
 
