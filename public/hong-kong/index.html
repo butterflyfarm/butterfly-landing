@@ -104,7 +104,6 @@
   #bootMap .bmL{fill:url(#bmG);filter:drop-shadow(0 0 16px rgba(255,170,80,.55))} #bootMap .bmL.r{fill:#e0a258;filter:none}
   #bootMap .bmS{fill:none;stroke:#ffd9a0;stroke-width:3.2;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;animation:bmDraw 1.4s ease-in-out forwards}   /* (drawn quickly, while the page is still being fetched: once the heavy work starts nothing but the bar can move smoothly) */
   @keyframes bmDraw{to{stroke-dashoffset:0}}
-  #bmCR{transition:transform .6s ease-out}
   #bootMap .bd circle{fill:#0d2438;stroke:rgba(255,224,176,.55);stroke-width:3;transition:fill .5s,stroke .5s}
   #bootMap .bd text{fill:rgba(243,230,208,.5);font-weight:700;letter-spacing:.14em;text-transform:uppercase;transition:fill .5s;paint-order:stroke;stroke:rgba(8,26,44,.55);stroke-width:5}
   #bootMap .bd.on circle{fill:#fff4df;stroke:#5a3a12} #bootMap .bd.on text{fill:#fff4df}
@@ -113,9 +112,9 @@
   /* one bar for all of the loading, and it only ever grows. (A highlight used to sweep the whole length of the track every 1.6 s to show that the page was
      alive: on a phone, where the bar stands at each step for seconds, that read as a bar running from nothing to full over and over. Now the filled part
      glows a little brighter and dimmer where it stands, and nothing travels along the track) */
-  #bootBar{position:absolute;inset:0;border-radius:3px;background:linear-gradient(90deg,#e9a455,#ffe0a0);transform-origin:0 50%;transform:scaleX(0);transition:transform .6s ease-out;animation:bmP 1.1s ease-in-out infinite alternate}
+  #bootBar{position:absolute;inset:0;border-radius:3px;background:linear-gradient(90deg,#e9a455,#ffe0a0);transform-origin:0 50%;transform:scaleX(0);animation:bmP 1.1s ease-in-out infinite alternate}
   @keyframes bmP{from{opacity:.72}to{opacity:1}}
-  #boot .bs{width:min(420px,78vw);display:flex;justify-content:space-between;gap:12px;margin-top:10px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(243,230,208,.82)} #bootPct{font-variant-numeric:tabular-nums;color:#ffc46a}
+  #boot .bs{width:min(420px,78vw);display:flex;justify-content:space-between;gap:12px;margin-top:10px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(243,230,208,.82)} #bootMsg{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} #bootPct{font-variant-numeric:tabular-nums;color:#ffc46a}   /* (one line always: a message that wrapped on a phone pushed the bar up the screen) */
   #boot.err #bootMsg{color:#ffb4a0} #boot.err #bootBar{animation:none;opacity:.5}
   #boot>em{position:absolute;bottom:max(14px,env(safe-area-inset-bottom));font-style:normal;font-size:10px;letter-spacing:.06em;color:rgba(255,236,208,.6)}
   @media (max-width:560px){#bootMap{font-size:46px} #bootMap .bd.s text{display:none} #bootMap .bd circle{r:14px} #bootMap .bmS{stroke-width:5}}
@@ -649,10 +648,18 @@ let GEO = null;
 /* the loading screen. bootStep(share, what): the bar and the gold on the map go to `share` (0..1) and the line under the bar says what is being done; it resolves
    once that has been painted, so the heavy step that follows does not hold an old picture on the screen. `ms` is about how long the step takes: the bar glides
    that long (it keeps moving while the script is busy). */
-const BOOT = { p: 0, el: document.getElementById('boot') };
-function bootSet(p, msg, ms) { if (!BOOT.el) return; p = Math.max(0, Math.min(1, p)); BOOT.p = p; const q = id => document.getElementById(id);
-  if (ms) { q('bootBar').style.transitionDuration = q('bmCR').style.transitionDuration = Math.round(ms * (matchMedia('(pointer: coarse)').matches ? 2.5 : 1)) + 'ms'; }
-  q('bootBar').style.transform = 'scaleX(' + p.toFixed(3) + ')'; q('bmCR').style.transform = 'translateX(' + (1860 * p).toFixed(0) + 'px)'; q('bootPct').textContent = Math.round(p * 100) + '%'; if (msg) q('bootMsg').textContent = msg;
+const BOOT = { p: 0, el: document.getElementById('boot'), from: 0, to: 0, t0: 0, dur: 0, an: null };
+/* (The bar glides to each new share; the glide is run by the browser, so it goes on while the script is busy. It is given both ends of the glide outright:
+   where the bar stands now, worked out from this page's own clock, and where it is going. Left to work out the start by itself (a CSS transition), Safari
+   on a phone began every glide from nothing, because the script had been busy since the last one began: the bar fell back to zero at each step and grew
+   again. The bar never goes back: a share smaller than the last is not taken, and a glide never starts behind where the last one had got to.) */
+function bootSet(p, msg, ms) { if (!BOOT.el) return; p = Math.max(BOOT.p, Math.min(1, p)); const q = id => document.getElementById(id), bar = q('bootBar'), now = performance.now();
+  const k = BOOT.dur > 0 ? Math.min(1, (now - BOOT.t0) / BOOT.dur) : 1, cur = BOOT.from + (BOOT.to - BOOT.from) * k, dur = Math.max(1, Math.round((ms || 600) * (matchMedia('(pointer: coarse)').matches ? 2.5 : 1)));
+  BOOT.from = Math.min(cur, p); BOOT.to = p; BOOT.t0 = now; BOOT.dur = dur; BOOT.p = p;
+  bar.style.transform = 'scaleX(' + p.toFixed(4) + ')';
+  if (bar.animate) try { const a = bar.animate([{ transform: 'scaleX(' + BOOT.from.toFixed(4) + ')' }, { transform: 'scaleX(' + p.toFixed(4) + ')' }], { duration: dur, easing: 'linear', fill: 'both' }); if (BOOT.an) BOOT.an.cancel(); BOOT.an = a; } catch (e) { /* the bar steps and does not glide */ }
+  q('bmCR').setAttribute('x', (-2740 + 1860 * p).toFixed(0));   /* (the gold on the map is put where it belongs at each step, not glided: a glide of a mask cannot run while the script is busy) */
+  q('bootPct').textContent = Math.round(p * 100) + '%'; if (msg) q('bootMsg').textContent = msg;
   for (const d of BOOT.el.querySelectorAll('.bd')) d.classList.toggle('on', (+d.dataset.x + 880) / 1680 < p * 1.1 - .1); }
 function bootStep(p, msg, ms) { bootSet(p, msg, ms); if (!BOOT.el) return Promise.resolve(); const t0 = performance.now(); return new Promise(r => { let d = 0; const go = () => { if (!d) { d = 1; BOOT.wait = (BOOT.wait || 0) + performance.now() - t0; r(); } }; requestAnimationFrame(() => setTimeout(go, 0)); setTimeout(go, 50); }); }   /* (the timer: a tab in the background gets no frames, and a machine that is busy gets them slowly; neither should hold the loading up. Three such waits in all: about 30 ms on a desk, measured in ST.timing.wait) */
 function bootDone() { const b = BOOT.el; if (!b) return; bootSet(1, 'Ready', 250); BOOT.el = null; setTimeout(() => { b.classList.add('out'); setTimeout(() => b.remove(), 1400); }, 260); }
@@ -6017,7 +6024,7 @@ function loop(now) {
 async function boot() {
   const t0 = performance.now(), T = {};
   bootSet(.06, 'Fetching the map');
-  await loadGeo(); T.load = performance.now() - t0; await bootStep(.44, 'Raising the hills, laying the roads', 500); decodeGeo(); bakeIsland(); T.bake = performance.now() - t0;
+  await loadGeo(); T.load = performance.now() - t0; await bootStep(.44, 'Raising the hills', 500); decodeGeo(); bakeIsland(); T.bake = performance.now() - t0;
   buildRoads(); T.roads = performance.now() - t0;
   finalizeTerrain(); T.ctx = performance.now() - t0; await bootStep(.82, 'Building the city', 900);
   U.uNoise.value = tileNoiseTex(); U.uH.value = TEX.h; U.uGeo.value = TEX.geo;
@@ -6025,7 +6032,7 @@ async function boot() {
   else {
     const blank = new THREE.DataTexture(new Uint8Array(4), 1, 1); blank.needsUpdate = true; TEX.land = blank; TEX.mask = blank;
   }
-  U.uLand.value = TEX.land; U.uMask.value = TEX.mask; await bootStep(.97, 'Filling the harbour, lighting the golden hour', 500);
+  U.uLand.value = TEX.land; U.uMask.value = TEX.mask; await bootStep(.97, 'Lighting the golden hour', 500);
   makeTerrain(); makeStaticTerrains(); makeWaterSky(); makeShadows();
   makeRibbons(); makeTraffic(); makeHarbour(); makeTrams(); makeAir(); makeNear(); makePresets(); T.life = performance.now() - t0;
   initTod(); setQuality(2);
