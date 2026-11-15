@@ -85,6 +85,7 @@
     background:rgba(9,20,28,.88);border:1px solid rgba(255,196,128,.45);color:#fff4df;font-size:13px;letter-spacing:.06em;box-shadow:0 6px 20px rgba(0,0,0,.4)}
   #rideStopB.on{background:rgba(255,176,84,.38);border-color:rgba(255,206,140,.85)} #rideStopB.held{background:#ffb054;color:#2a1606;border-color:#ffd9a0}
   #tramS b{color:#ffc46a;font-size:11px;letter-spacing:.2em;text-transform:uppercase} #tramS span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #rideSpd{display:flex;align-items:baseline;gap:4px;font-style:normal;white-space:nowrap;padding:0 4px 0 2px} #rideSpd b{min-width:2.4ch;text-align:right;color:#fff4df;font-size:19px;font-weight:600;letter-spacing:0;font-variant-numeric:tabular-nums} #rideSpd small{font-size:9px;letter-spacing:.14em;text-transform:uppercase;opacity:.7}
   #tramS button{font:inherit;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:8px 11px;border-radius:16px;border:1px solid rgba(255,196,128,.45);background:rgba(255,190,110,.12);color:#fff4df;cursor:pointer;white-space:nowrap;touch-action:manipulation}
   @media (max-width:560px){#tramS{flex-wrap:wrap;justify-content:center;width:calc(100vw - 24px);border-radius:18px;padding:8px 10px} #tramS span{flex-basis:calc(100% - 60px);text-align:left}}
   /* on a touch screen nothing blurs what is behind it: a blur over the moving picture has to be redone every frame for every button, which slows
@@ -478,7 +479,7 @@
   <button id="tpSh" type="button" class="on" aria-pressed="true" title="Shadows cast by the sun, on or off">Shadows on</button>
 </div>
 <button id="tourS" type="button" title="End the tour" aria-live="polite"><span></span><i>✕</i></button>
-<div id="tramS" aria-live="polite"><b id="rideTag">Tram</b><span></span><button id="rideStopB" type="button" title="Stop at the next stop (it does not stop unless asked)">Stop</button><button id="tramOff" type="button" title="Get off (Esc)">Get off ✕</button></div>
+<div id="tramS" aria-live="polite"><b id="rideTag">Tram</b><span></span><i id="rideSpd" title="Speed"><b>0</b><small>km/h</small></i><button id="rideStopB" type="button" title="Stop at the next stop (it does not stop unless asked)">Stop</button><button id="tramOff" type="button" title="Get off (Esc)">Get off ✕</button></div>
 <div id="pin"><div class="pb"><div class="pt"><b></b><em></em></div><button type="button" aria-label="Remove this label">✕</button></div><i></i><u></u></div>
 <div id="hint" aria-live="polite"></div>
 <div id="bigs"><button id="bigDrive" class="big" type="button" aria-label="Drive around Hong Kong Island"><i><svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="24" cy="24" r="4.5" fill="currentColor"/><path d="M8 21.5c5-2.6 10.4-3.6 16-3.6s11 1 16 3.6M24 28.5v11.5M20 26l-9.5 9M28 26l9.5 9" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg></i><span><b>Drive</b><em>Every street on the island</em></span></button><button id="bPlaces" class="big" type="button" aria-label="Places: search, fly or ride anywhere on the island"><i><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 4.2a2.8 2.8 0 1 1 0 5.6 2.8 2.8 0 0 1 0-5.6Z"/></svg></i><span><b>Places</b><em>Search, fly or ride there</em></span></button><button id="bRide" class="big" type="button" aria-label="Ride: the tram, or bus 6 between Central and Stanley, from the front seat upstairs"><i><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" d="M6.5 4.5h11a2 2 0 0 1 2 2v9.5a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2V6.500a2 2 0 0 1 2-2ZM4.500 11.500h15M4.500 8h15M8 18l-1 2.500M16 18l1 2.500M8 15h.010M16 15h.010"/></svg></i><span><b>Ride</b><em>Tram, or bus 6 to Stanley</em></span></button><button id="bTour" class="big sm" type="button" aria-label="Tour: a flight round the island, golden afternoon into dusk"><i><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l11-6.5-11-6.5Z"/></svg></i><span><b>Tour</b><em>Sit back and watch</em></span></button><button id="bReset" class="big sm" type="button" aria-label="Whole island: back to the full view"><i><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></i><span><b>Island</b><em>The whole view</em></span></button></div>
@@ -3335,7 +3336,10 @@ attribute vec3 aCol;attribute vec4 aP,aQ;uniform vec2 uNearFade;uniform float uT
 const DC = { ac: C(.62, .63, .62), tank: [C(.50, .52, .55), C(.30, .40, .50), C(.55, .50, .44), C(.66, .66, .64)], steel: C(.25, .26, .27), wall: C(.44, .41, .37), pole: C(.36, .37, .38), root: C(.30, .24, .17),
   cloth: [C(.85, .85, .82), C(.75, .2, .2), C(.2, .35, .7), C(.9, .75, .3), C(.3, .6, .5), C(.85, .5, .6), C(.15, .15, .2)], awn: [C(.70, .12, .10), C(.10, .40, .24), C(.12, .25, .55), C(.85, .70, .20), C(.80, .80, .76), C(.55, .25, .10)],
   neon: [[1, .12, .1], [1, .75, .1], [.1, 1, .5], [.2, .6, 1], [1, .3, .8], [1, 1, .9]], cage: [C(.12, .25, .18), C(.35, .2, .12), C(.3, .32, .34)] };
-function regenNear(fx, fz) {
+/* (made by a generator: while driving it is made a little each frame and shown when whole, as making it in one go is a hitch every 60 m of road, and
+   on a phone a long one. Its lists are only sent to the graphics card at the end, so what is drawn meanwhile is the detail as it was) */
+function regenNear(fx, fz) { NEAR.job = null; NEAR.sync = true; try { for (const _ of regenNearG(fx, fz)); } finally { NEAR.sync = false; } }
+function* regenNearG(fx, fz) {
   const t0 = performance.now(), D = NEAR.det, R = 440, R2 = R * R, IN2 = 190 * 190, m = D.m, cc = D.c, pp = D.p, CAP = D.cap, lanes = !!DRIVE.SG; let n = 0; NEAR.cut = 0;
   /* nothing is put where a car drives (awnings, signs, sheds, poles or walls that would stand in a lane): see laneIn */
   const put = (x, y, z, w, h, d, yaw, col, em, gl, fl) => { if (n >= CAP) return; if (lanes && boxInLane(x, y, z, w, h, d, yaw, 0)) { NEAR.cut++; return; } const c = Math.cos(yaw), s = Math.sin(yaw), o = n * 16;
@@ -3343,8 +3347,8 @@ function regenNear(fx, fz) {
     cc[n * 3] = col[0]; cc[n * 3 + 1] = col[1]; cc[n * 3 + 2] = col[2]; pp[n * 4] = em || 0; pp[n * 4 + 1] = gl || 0; pp[n * 4 + 2] = 0; pp[n * 4 + 3] = fl || 0; n++; };
   const i0 = Math.max(Math.floor((fx - R - X0) / NEAR.cell), 0), i1 = Math.min(Math.floor((fx + R - X0) / NEAR.cell), NEAR.gw - 1), j0 = Math.max(Math.floor((fz - R - Z0) / NEAR.cell), 0), j1 = Math.min(Math.floor((fz + R - Z0) / NEAR.cell), NEAR.gh - 1);
   const steam = [];
-  for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) { const lst = NEAR.lists[j * NEAR.gw + i]; if (!lst) continue;
-    for (const k of lst) { const a = FA.a, o = k * 10, x = a[o], z = a[o + 1], d2 = (x - fx) * (x - fx) + (z - fz) * (z - fz); if (d2 > R2) continue;
+  for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) { const lst = NEAR.lists[j * NEAR.gw + i]; if (!lst) continue; if (!NEAR.sync && performance.now() - NEAR.tk > 2.5) yield; 
+    for (const k of lst) { const a = FA.a, o = k * 10, x = a[o], z = a[o + 1], d2 = (x - fx) * (x - fx) + (z - fz) * (z - fz); if (d2 > R2) continue; if (!NEAR.sync && performance.now() - NEAR.tk > 2.5) yield; 
       if (a[o + 6] <= 0) continue;
       const yaw = a[o + 2], w = a[o + 3], d = a[o + 4], base = a[o + 5], h = a[o + 6], type = a[o + 7], seed = a[o + 8], kind = a[o + 9], top = base + h, c = Math.cos(yaw), s = Math.sin(yaw), rnd = mulberry((seed * 4e9) | 0);
       const LX = (lx, lz) => x + lx * c - lz * s, LZ = (lx, lz) => z + lx * s + lz * c;
@@ -3378,8 +3382,8 @@ function regenNear(fx, fz) {
   /* street furniture, retaining walls, trees along roads */
   const T = NEAR.tree, ta = T.a, tb = T.b; let nt = 0;
   const tree = (x, y, z, sc, sq, hue, dry) => { if (nt >= T.cap) return; ta[nt * 4] = x; ta[nt * 4 + 1] = y; ta[nt * 4 + 2] = z; ta[nt * 4 + 3] = sc; tb[nt * 4] = hue; tb[nt * 4 + 1] = sq; tb[nt * 4 + 2] = (x * .37 + z * .73) % 1; tb[nt * 4 + 3] = dry; nt++; };
-  for (let ri = 0; ri < ROADS.length; ri++) { const r = ROADS[ri]; if (r.tram) continue; const streetTrees = r.cls === 'hill' || (r.cls !== 'trunk' && !r.ow && hash2(ri, 5) < .4);
-    for (let i = 2; i < r.n - 2; i += 2) { const x = r.pts[i * 3], z = r.pts[i * 3 + 2]; if ((x - fx) * (x - fx) + (z - fz) * (z - fz) > R2) continue; const y = r.pts[i * 3 + 1], dx = r.pts[i * 3 + 3] - x, dz = r.pts[i * 3 + 5] - z, l = Math.hypot(dx, dz) || 1, nx = dz / l, nz = -dx / l, yaw = Math.atan2(dz, dx), hw = r.w / 2, el = r.el[i] > 2.5;
+  for (let ri = 0; ri < ROADS.length; ri++) { const r = ROADS[ri]; if (r.tram) continue; if (!NEAR.sync && performance.now() - NEAR.tk > 2.5) yield; const streetTrees = r.cls === 'hill' || (r.cls !== 'trunk' && !r.ow && hash2(ri, 5) < .4);
+    for (let i = 2; i < r.n - 2; i += 2) { const x = r.pts[i * 3], z = r.pts[i * 3 + 2]; if ((x - fx) * (x - fx) + (z - fz) * (z - fz) > R2) continue; if (!NEAR.sync && performance.now() - NEAR.tk > 2.5) yield; const y = r.pts[i * 3 + 1], dx = r.pts[i * 3 + 3] - x, dz = r.pts[i * 3 + 5] - z, l = Math.hypot(dx, dz) || 1, nx = dz / l, nz = -dx / l, yaw = Math.atan2(dz, dx), hw = r.w / 2, el = r.el[i] > 2.5;
       /* street lamps on the kerb; where the drivable street is wider than the drawn one, step the lamp back until it is clear of the lanes */
       if (i % 4 === 0) { const sd = (i % 8 === 0) ? 1 : -1; let off = hw + (el ? -.3 : .5); if (lanes) { let k = 0; while (k < 6 && laneIn(x + nx * off * sd, z + nz * off * sd, y, y + 9, .5) > 0) { off += 1; k++; } if (k === 6) off = -1; }
         if (off > 0) { const px = x + nx * off * sd, pz = z + nz * off * sd; put(px, y, pz, .16, 9, .16, yaw, DC.pole); put(px - nx * 1.1 * sd, y + 8.8, pz - nz * 1.1 * sd, .14, .14, 2.3, yaw, DC.pole); put(px - nx * 2 * sd, y + 8.6, pz - nz * 2 * sd, .45, .18, .95, yaw, [1, .78, .45], 10); } }
@@ -3394,10 +3398,10 @@ function regenNear(fx, fz) {
     } }
   /* forest, parks and podium planting as instanced crowns over the canopy shader */
   const G = 10.5, gi0 = Math.floor((fx - R) / G), gi1 = Math.ceil((fx + R) / G), gj0 = Math.floor((fz - R) / G), gj1 = Math.ceil((fz + R) / G);
-  for (let gj = gj0; gj <= gj1; gj++) for (let gi = gi0; gi <= gi1; gi++) { const h1 = hash2(gi, gj), h2 = hash2(gj * 3 + 1, gi * 5 + 2), x = (gi + h1) * G, z = (gj + h2) * G; if ((x - fx) * (x - fx) + (z - fz) * (z - fz) > R2 || !inDom(x, z) || sdAt(x, z) < 5) continue;
+  for (let gj = gj0; gj <= gj1; gj++) { if (!NEAR.sync && performance.now() - NEAR.tk > 2.5) yield; for (let gi = gi0; gi <= gi1; gi++) { const h1 = hash2(gi, gj), h2 = hash2(gj * 3 + 1, gi * 5 + 2), x = (gi + h1) * G, z = (gj + h2) * G; if ((x - fx) * (x - fx) + (z - fz) * (z - fz) > R2 || !inDom(x, z) || sdAt(x, z) < 5) continue;
     const oc = occAt(x, z), cv = coverAt(x, z), nat = !(oc & 31) && cv < 128, dens = cv === 64 ? .3 : .72; if (!(nat && h1 * h2 < dens) && !((oc & 8) && !(oc & 3) && hash2(gi + 9, gj) < .34)) continue; if (LAKE[Math.round((z - Z0) / CELL) * GW + Math.round((x - X0) / CELL)]) continue;
     const gy = hAt(x, z); let sc = (oc & 8) ? 2.4 + hash2(gi * 7, gj * 3) * 2.2 : 3.4 + hash2(gi * 7, gj * 3) * 4; if (oc & 32) sc = Math.min(sc, 2.3); sc = crownFit(x, z, sc); if (!sc) continue;   /* beside a street: a small tree, not a canopy over it */
-    tree(x, gy + sc * .75, z, sc, .8 + h2 * .5, hash2(gi, gj * 9), gy > 380 ? .6 : 0); }
+    tree(x, gy + sc * .75, z, sc, .8 + h2 * .5, hash2(gi, gj * 9), gy > 380 ? .6 : 0); } }
   D.mesh.count = n; for (const [a, k] of [[D.am, 16], [D.ac, 3], [D.ap, 4]]) { a.updateRange.offset = 0; a.updateRange.count = Math.max(n, 1) * k; a.needsUpdate = true; }
   T.geo.instanceCount = nt; for (const a of [T.aa, T.ab]) { a.updateRange.offset = 0; a.updateRange.count = Math.max(nt, 1) * 4; a.needsUpdate = true; }
   /* kitchen steam */
@@ -3407,8 +3411,14 @@ function regenNear(fx, fz) {
 function updateNear() {
   const cx = camera.position.x, cz = camera.position.z, hg = camera.position.y - groundY(cx, cz);
   if (hg > 520 || !inDom(cx, cz)) return;
-  camera.getWorldDirection(_v); const a = clamp(110 * (1 - Math.abs(_v.y)), 0, 110), l = Math.hypot(_v.x, _v.z) || 1, fx = cx + _v.x / l * a, fz = cz + _v.z / l * a;
-  if ((fx - NEAR.fx) ** 2 + (fz - NEAR.fz) ** 2 > 60 * 60) regenNear(fx, fz);
+  const drv = DRIVE.on && DRIVE.car && !DRIVE.garage;
+  if (NEAR.job) { NEAR.tk = performance.now(); NEAR.sync = !drv; let done = true; try { done = NEAR.job.next().done; } finally { NEAR.sync = false; if (done) NEAR.job = null; } return; }
+  let fx, fz;
+  /* on the road the detail is centred a little ahead of the car, along its way: centred before the camera, it was made again every time the chase
+     camera swung round a bend (a turn of 30 degrees moves that point 60 m) */
+  if (drv) { const c = DRIVE.car; fx = c.x + Math.cos(c.h) * 50; fz = c.z + Math.sin(c.h) * 50; }
+  else { camera.getWorldDirection(_v); const a = clamp(110 * (1 - Math.abs(_v.y)), 0, 110), l = Math.hypot(_v.x, _v.z) || 1; fx = cx + _v.x / l * a; fz = cz + _v.z / l * a; }
+  if ((fx - NEAR.fx) ** 2 + (fz - NEAR.fz) ** 2 > 60 * 60) { if (drv && NEAR.n) { NEAR.job = regenNearG(fx, fz); NEAR.tk = performance.now(); if (NEAR.job.next().done) NEAR.job = null; } else regenNear(fx, fz); }
 }
 /* ---------- camera presets ---------- */
 function lookFrom(cx, cy, cz, tx, tz, fov, ty = 0) { const gy = groundY(tx, tz) + ty, dx = cx - tx, dy = cy - gy, dz = cz - tz, dist = Math.hypot(dx, dy, dz); return { tx, tz, ty, dist, az: Math.atan2(dz, dx), pol: Math.acos(clamp(dy / dist, -1, 1)), fov }; }
@@ -4069,13 +4079,22 @@ const b3dURL = f => (/\/$|\.html?$/.test(location.pathname) ? new URL('b3d/' + f
 function b3dGrid() { if (B3D.grid) return B3D.grid; const G = new Map(); CITY.recs.forEach((b, i) => { const k = Math.floor(b.cx / 64) * 65536 + Math.floor(b.cz / 64); let a = G.get(k); if (!a) G.set(k, a = []); a.push(i);
     if (!b.bb) { let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9; for (const q of b.rings[0]) { x0 = Math.min(x0, q[0]); x1 = Math.max(x1, q[0]); z0 = Math.min(z0, q[1]); z1 = Math.max(z1, q[1]); } b.bb = [x0, z0, x1, z1]; } }); return (B3D.grid = G); }
 /* lower the surveyed outlines in `set` out of sight (their near-tier facade detail too), remembering how to put them back */
-function b3dHide(set) {
-  const undo = { v: [], fa: [] }; if (!set.size) return undo; const recs = CITY.recs, mask = new Uint8Array(recs.length); for (const ri of set) mask[ri] = 1; let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9; for (const ri of set) { const b = recs[ri].bb; x0 = Math.min(x0, b[0]); z0 = Math.min(z0, b[1]); x1 = Math.max(x1, b[2]); z1 = Math.max(z1, b[3]); }
+/* the survey's blocks that a sheet's models replace are put out of sight (and b3dShow brings them back). Finding them means reading every point of the
+   city blocks round the sheet, which is tens of milliseconds: that is done a little at a time (b3dHidePlan), and only the putting away, which is quick,
+   is done in the frame the sheet's own model appears (b3dHide) */
+async function b3dHidePlan(set, pace) {
+  const plan = { v: [], fa: [] }; if (!set.size) return plan; const recs = CITY.recs, mask = new Uint8Array(recs.length); for (const ri of set) mask[ri] = 1; let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9; for (const ri of set) { const b = recs[ri].bb; x0 = Math.min(x0, b[0]); z0 = Math.min(z0, b[1]); x1 = Math.max(x1, b[2]); z1 = Math.max(z1, b[3]); }
   for (const ch of CITY.chunks) { if (Math.hypot(Math.max(x0 - ch.c.x, 0, ch.c.x - x1), Math.max(z0 - ch.c.z, 0, ch.c.z - z1)) > ch.r + 1) continue;
-    for (const m of ch.lods) { if (!m) continue; const g = m.geometry, pos = g.attributes.position, Bv = g.attributes.aB; if (!Bv) continue; const idx = [], ys = [];
-      for (let v = 0; v < pos.count; v++) { const ri = Math.round(Bv.array[v * 2]); if (mask[ri]) { idx.push(v); ys.push(pos.array[v * 3 + 1]); pos.array[v * 3 + 1] = Math.min(pos.array[v * 3 + 1], recs[ri].base - 400); } }
-      if (idx.length) { pos.needsUpdate = true; undo.v.push([pos, idx, ys]); } } }
-  for (let k = 0; k < FA.n; k++) { const o = k * 10, h = FA.a[o + 6]; if (h <= 0) continue; const x = FA.a[o], z = FA.a[o + 1]; if (x < x0 || x > x1 || z < z0 || z > z1) continue; for (const ri of set) { const b = recs[ri]; if (x >= b.bb[0] && x <= b.bb[2] && z >= b.bb[1] && z <= b.bb[3] && inPoly(x, z, b.rings[0])) { undo.fa.push([o, h]); FA.a[o + 6] = 0; break; } } }
+    for (const m of ch.lods) { if (!m) continue; const g = m.geometry, pos = g.attributes.position, Bv = g.attributes.aB; if (!Bv) continue; const idx = [], B = Bv.array;
+      for (let v = 0, n = pos.count; v < n; v++) { if ((v & 16383) === 16383 && pace) await pace(); if (mask[Math.round(B[v * 2])]) idx.push(v); }
+      if (idx.length) plan.v.push([pos, idx, Bv]); } }
+  for (let k = 0; k < FA.n; k++) { if ((k & 1023) === 1023 && pace) await pace(); const o = k * 10, h = FA.a[o + 6]; if (h <= 0) continue; const x = FA.a[o], z = FA.a[o + 1]; if (x < x0 || x > x1 || z < z0 || z > z1) continue; for (const ri of set) { const b = recs[ri]; if (x >= b.bb[0] && x <= b.bb[2] && z >= b.bb[1] && z <= b.bb[3] && inPoly(x, z, b.rings[0])) { plan.fa.push(o); break; } } }
+  return plan;
+}
+function b3dHide(plan) {
+  const undo = { v: [], fa: [] }, recs = CITY.recs;
+  for (const [pos, idx, Bv] of plan.v) { const ys = [], A = pos.array, B = Bv.array; for (const v of idx) { const y = A[v * 3 + 1]; ys.push(y); A[v * 3 + 1] = Math.min(y, recs[Math.round(B[v * 2])].base - 400); } pos.needsUpdate = true; undo.v.push([pos, idx, ys]); }
+  for (const o of plan.fa) { const h = FA.a[o + 6]; if (h > 0) { undo.fa.push([o, h]); FA.a[o + 6] = 0; } }
   return undo;
 }
 /* the carriageway stretches near a box [x0, z0, x1, z1], each as [ax, az, bx, bz, ya, yb, half width]; null when there are none */
@@ -4157,12 +4176,28 @@ async function b3dFeet(list, hand, pace) {
 /* a breath between slices of long work: the next frame (or, where no frames are drawn, a short wait). Loading a sheet while driving used to stop the
    picture for most of a second in one go (every wall triangle tried against the carriageways, every wall foot against the ground); now it is done a few
    milliseconds a frame, with the survey's plain blocks standing in until it is ready */
+/* A mesh's lists (a dense sheet has 40 MB of them) go to the graphics card when it is first drawn, all in that one frame, which is a stall. gpuWarm sends
+   them ahead, one list a frame: each is hung in turn on a mesh that draws nothing, which is enough for the renderer to send it; when the real mesh is
+   added they are all there already. (The warm-up geometry is never disposed with a list on it: that would take the list off the card again) */
+const GPUW = { mat: null, tiny: null };
+async function gpuWarm(g, gone) {
+  if (!GPUW.mat) { GPUW.mat = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false, depthTest: false }); GPUW.tiny = new THREE.BufferAttribute(new Float32Array(9), 3); }
+  const d = new THREE.BufferGeometry(); d.boundingSphere = new THREE.Sphere(); d.setDrawRange(0, 0); d.setAttribute('position', GPUW.tiny); const w = new THREE.Mesh(d, GPUW.mat); w.frustumCulled = false; w.renderOrder = -999; scene.add(w);
+  const shown = async () => { const f = ST.frame; for (let k = 0; k < 6 && ST.frame === f; k++) await b3dBreath(); };
+  try { for (const a of Object.values(g.attributes)) { if (gone && gone()) return; d.setAttribute('position', a); await shown(); }
+    if (g.index && !(gone && gone())) { d.setAttribute('position', GPUW.tiny); d.setIndex(g.index); await shown(); } }
+  finally { d.setAttribute('position', GPUW.tiny); d.setIndex(null); scene.remove(w); d.dispose(); }
+}
 const b3dBreath = () => new Promise(r => { let d = 0; const go = () => { if (!d) { d = 1; r(); } }; requestAnimationFrame(go); setTimeout(go, 34); });
+/* shadows after a sheet has come or gone. The near shadow (round the eye) is redrawn at once. The far one is of the whole island, on a sheet with a texel
+   every few metres: a new sheet's buildings throw much the same shadow there as the blocks they replace, and redrawing it is most of a frame. So while
+   driving it waits a moment and is done once for a run of sheets (b3dStep) */
+function b3dShade() { SH.nearDirty = true; if (DRIVE.on) B3D.shDue = B3D.shDue || ST.t + 1.5; else SH.farDirty = true; }
 async function b3dLoad(T) {
   B3D.loading = true; const t0 = performance.now(); let tk = performance.now(), work = 0, slow = 0, stage = 'read', slowAt = ''; const pace = async () => { const n = performance.now(); if (n - tk < 6) return; work += n - tk; if (n - tk > slow) { slow = n - tk; slowAt = stage; } await b3dBreath(); tk = performance.now(); };
   try { const res = await fetch(b3dURL(T.id + '.bin')); if (!res.ok) throw new Error(res.status); let u8 = new Uint8Array(await res.arrayBuffer());
     if (u8[0] === 0x1f && u8[1] === 0x8b) u8 = new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
-    const t1 = performance.now();
+    const t1 = tk = performance.now();   /* (the wait for the file is not work) */
     const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength), nb = dv.getUint32(4, true), G = b3dGrid(), recs = CITY.recs, td = CITY.tex.image.data; let o = 8, nv = 0, ni = 0; const list = [], hand = []; const LMAT = new Set(); for (const e of B3D.index || []) if (e.lm && GOVK.has(e.lm)) for (const q of e.at) LMAT.add(Math.round(q[0] * 10) + '_' + Math.round(q[1] * 10));
     for (let b = 0; b < nb; b++) { await pace(); const x = dv.getFloat32(o, true), z = dv.getFloat32(o + 4, true), y = dv.getFloat32(o + 8, true), top = dv.getFloat32(o + 12, true), n = dv.getUint32(o + 16, true), nt = dv.getUint32(o + 20, true), wide = dv.getUint8(o + 24), nc = dv.getUint8(o + 25); o += 26; const po = o; o += nc * 6; const vo = o; o += n * 6; const co = o; o += n; const io = o; o += nt * 3 * (wide ? 4 : 2);
       /* its outline box, and the surveyed buildings it stands for: those with their centre inside it and at least half their own box under it */
@@ -4210,14 +4245,16 @@ async function b3dLoad(T) {
         AP[w] = sd; AP[w + 1] = 4; AP[w + 2] = 0; AP[w + 3] = b.y; AQ[w] = b.y + b.top; AQ[w + 1] = 0; AQ[w + 2] = hue; AQ[w + 3] = 0; I[i0++] = vq; }   /* (the belts: plain dark wall, no windows) */
       { const th = Math.atan2(S4, C4) / 4; for (let k = 0; k < b.n + (b.xn || 0); k++) NRM[(v0 + k) * 3 + 1] = th; }
       v0 += b.n + (b.xn || 0); }
-    await b3dBreath(); const tEnd = performance.now();   /* (what follows is done in one go, in a frame of its own: the model shown and the survey's blocks it replaces put away) */
+    work += performance.now() - tk; await b3dBreath(); tk = performance.now();   /* (what follows is done in one go, in a frame of its own: the model shown and the survey's blocks it replaces put away) */
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setAttribute('aCol', new THREE.BufferAttribute(Cc, 3)); g.setAttribute('aP', new THREE.BufferAttribute(AP, 4)); g.setAttribute('aQ', new THREE.BufferAttribute(AQ, 4));
     g.setAttribute('aF', new THREE.BufferAttribute(new Float32Array(nv), 1)); g.setAttribute('normal', new THREE.BufferAttribute(NRM, 3)); g.setIndex(new THREE.BufferAttribute(I.subarray(0, i0), 1));
     const mat = B3D.mat || (B3D.mat = new THREE.ShaderMaterial({ uniforms: U, vertexShader: BLD_VS, fragmentShader: BLD_FS(), defines: { FOC_SINK: 1, FLATN: 1 } }));
     let ylo = 1e9, yhi = -1e9; for (const b of list) { ylo = Math.min(ylo, b.y - 35); yhi = Math.max(yhi, b.y + b.top + 5); } if (!list.length) ylo = yhi = 0;
     g.boundingSphere = new THREE.Sphere(new THREE.Vector3((T.box[0] + T.box[2]) / 2, (ylo + yhi) / 2, (T.box[1] + T.box[3]) / 2), Math.hypot(T.box[2] - T.box[0], yhi - ylo, T.box[3] - T.box[1]) / 2 + 30);
-    const mesh = new THREE.Mesh(g, mat); mesh.layers.enable(1); scene.add(mesh);   /* casts shadows; left out of the water's reflection pass */
-    T.mesh = mesh; if (T.st) T.stl = list.concat(hand).map(b => ({ x: b.x, z: b.z, y: b.y, top: b.top, bb: b.bb, at: b.at })); T.undo = b3dHide(hide); T.hide = hide; T.tris = i0 / 3; T.cut = cut; T.endMs = Math.round(performance.now() - tEnd); T.slow = Math.round(slow) + ' ' + slowAt; T.ms = Math.round(performance.now() - t0); T.sync = Math.round(work + performance.now() - tk);   /* (sync: the work itself, without the waits between its slices) */ B3D.tiles.set(T.id, T); SH.farDirty = SH.nearDirty = true; NEAR.fx = NEAR.fz = 1e9;
+    stage = 'hide'; const hp = await b3dHidePlan(hide, pace); stage = 'end';
+    const tW = performance.now(); if (DRIVE.on) { work += tW - tk; await gpuWarm(g); tk = performance.now(); }   /* (while driving, its lists are sent to the graphics card over a few frames first) */
+    const tEnd = performance.now(), mesh = new THREE.Mesh(g, mat); mesh.layers.enable(1); scene.add(mesh);   /* casts shadows; left out of the water's reflection pass */
+    T.mesh = mesh; if (T.st) T.stl = list.concat(hand).map(b => ({ x: b.x, z: b.z, y: b.y, top: b.top, bb: b.bb, at: b.at })); T.undo = b3dHide(hp); T.hide = hide; T.tris = i0 / 3; T.cut = cut; T.endMs = Math.round(performance.now() - tEnd); T.slow = Math.round(slow) + ' ' + slowAt; T.ms = Math.round(performance.now() - t0); T.sync = Math.round(work + performance.now() - tk);   /* (sync: the work itself, without the waits between its slices) */ B3D.tiles.set(T.id, T); b3dShade(); NEAR.fx = NEAR.fz = 1e9;
   } catch (err) { B3D.fail.add(T.id); console.warn('b3d ' + T.id + ': ' + (err && err.message)); }
   B3D.loading = false;
 }
@@ -4236,7 +4273,7 @@ async function b3dStreet(T) {
       if (u[0] === 0x1f && u[1] === 0x8b) u = new Uint8Array(await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer()); return u; };
     const wantInf = !!(DRIVE.SG && T.inf), gone = () => B3D.tiles.get(T.id) !== T || !T.mesh;
     /* (the picture is decoded off the main thread where the browser can: decoding a 2048 px sheet on it is a visible hitch on a phone) */
-    const pic = async f => { try { if (typeof createImageBitmap === 'function') { const res = await fetch(b3dURL(f)); if (!res.ok) throw new Error(f + ' ' + res.status); return new THREE.Texture(await createImageBitmap(await res.blob())); } } catch (e) { /* fall through to the plain loader */ } return new THREE.TextureLoader().loadAsync(b3dURL(f)); };
+    const pic = async f => { try { if (typeof createImageBitmap === 'function') { const res = await fetch(b3dURL(f)); if (!res.ok) throw new Error(f + ' ' + res.status); const bl = await res.blob(); let bm; try { bm = await createImageBitmap(bl, { premultiplyAlpha: 'none', colorSpaceConversion: 'none' }); } catch (e) { bm = await createImageBitmap(bl); } return new THREE.Texture(bm); }   /* (decoded as the graphics card is to have it, so that sending it there is a plain copy) */ } catch (e) { /* fall through to the plain loader */ } return new THREE.TextureLoader().loadAsync(b3dURL(f)); };
     const [u8, sh, tex, inf] = await Promise.all([gun(T.id + '.st2.bin'), gun(T.id + '.bin'), pic(T.id + '.dr.png'), wantInf ? gun(T.id + '.inf.bin').catch(() => null) : null]);
     tex.flipY = false; tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy()); tex.needsUpdate = true;
     if (gone()) { tex.dispose(); return; }
@@ -4276,7 +4313,9 @@ async function b3dStreet(T) {
       for (const [nm, arr, n] of parts) { g.setAttribute(nm, new THREE.BufferAttribute(new Float32Array(arr), n)); arr.length = 0; worst = Math.max(worst, performance.now() - tA); await b3dBreath(); tA = performance.now(); if (gone() || T.stm !== S) { if (T.stm === S) { tex.dispose(); T.stm = null; } g.dispose(); return; } }   /* (put away while it was being made) */
       g.setAttribute('aCol', new THREE.BufferAttribute(new Float32Array(nv * 3).fill(1), 3)); g.setAttribute('aF', new THREE.BufferAttribute(new Float32Array(nv), 1));
       g.setIndex(new THREE.BufferAttribute(new Uint32Array(I), 1)); g.boundingSphere = T.mesh.geometry.boundingSphere;
-      S.mat = new THREE.ShaderMaterial({ uniforms: Object.assign({}, U, { uAtlas: { value: tex }, uAtlasPx: { value: W } }), vertexShader: BLD_VS, fragmentShader: BLD_FS(), defines: { FOC_SINK: 1, FLATN: 1, STREET: 1, DRAWN: 1 }, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4 });
+      /* (the picture and then each list sent to the graphics card in a frame of its own, before anything is drawn with them) */
+      if (DRIVE.on) { const off = () => gone() || T.stm !== S; await b3dBreath(); if (!off()) { const tT = performance.now(); try { renderer.initTexture(tex); } catch (e) { /* sent when first drawn */ } S.texMs = Math.round(performance.now() - tT); await b3dBreath(); } if (!off()) await gpuWarm(g, off); if (off()) { if (T.stm === S) { tex.dispose(); T.stm = null; } g.dispose(); return; } tA = performance.now(); }
+      S.mat = new THREE.ShaderMaterial({ uniforms: Object.assign({}, U, { uAtlas: { value: tex }, uAtlasPx: { value: (tex.image && tex.image.width) || W } }), vertexShader: BLD_VS, fragmentShader: BLD_FS(), defines: { FOC_SINK: 1, FLATN: 1, STREET: 1, DRAWN: 1 }, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4 });
       S.mesh = new THREE.Mesh(g, S.mat); scene.add(S.mesh); S.endMs = Math.round(Math.max(worst, performance.now() - tA)); }
     if (inf) { const dv = new DataView(inf.buffer, inf.byteOffset, inf.byteLength), cut = (a, n) => inf.buffer.slice(inf.byteOffset + a, inf.byteOffset + a + n); let o = 4;
     /* footbridges and walkways: only once the streets are known, so that models of the roads themselves can be told apart and left out */
@@ -4305,12 +4344,12 @@ async function b3dStreet(T) {
   finally { T.stBusy = B3D.stBusy = false; }
 }
 function b3dDrop(T) { if (T.undo) b3dShow(T.undo);
-  b3dStreetDrop(T); T.stl = null; for (const ri of T.hide || []) CITY.recs[ri].gov = null; if (T.mesh) { scene.remove(T.mesh); T.mesh.geometry.dispose(); } T.mesh = T.undo = T.hide = null; B3D.tiles.delete(T.id); SH.farDirty = SH.nearDirty = true; NEAR.fx = NEAR.fz = 1e9; }
+  b3dStreetDrop(T); T.stl = null; for (const ri of T.hide || []) CITY.recs[ri].gov = null; if (T.mesh) { scene.remove(T.mesh); T.mesh.geometry.dispose(); } T.mesh = T.undo = T.hide = null; B3D.tiles.delete(T.id); b3dShade(); NEAR.fx = NEAR.fz = 1e9; }
 B3D.drop = b3dDrop;
 /* a few times a second: bring in the nearest sheet not yet loaded, drop the farthest when too many are held */
 function b3dStep(dt) {
   /* shadows are redrawn once after a run of loads, not after each: each redraw of the whole island's shadow costs most of a frame */
-  if (B3D.shDue && ST.t >= B3D.shDue && !B3D.loading) { B3D.shDue = 0; SH.farDirty = SH.nearDirty = true; }
+  if (B3D.shDue && ST.t >= B3D.shDue && (!B3D.loading || ST.t > B3D.shDue + 6)) { B3D.shDue = 0; SH.farDirty = SH.nearDirty = true; }
   if ((B3D.t -= dt) > 0 || !CITY.recs || !CITY.tex) return; B3D.t = .35;
   if (B3D.index === null) { B3D.index = false; fetch(b3dURL('index.json')).then(r => r.ok ? r.json() : []).then(j => { B3D.index = j; }).catch(() => { B3D.index = []; }); return; }
   if (!B3D.index || !B3D.index.length || B3D.loading) return;
@@ -5059,7 +5098,11 @@ function navLeft() { const R = DRIVE.nav, car = DRIVE.car, E = DRIVE.E; if (!R) 
 function navMesh() {
   const R = DRIVE.nav, E = DRIVE.E; if (!R) return; const P = [], S = [], I = [], pts = []; let s0 = 0;
   const car = DRIVE.car, seq = [{ c: car.e, d: car.d, from: car.u }].concat(R.steps.slice(R.k));
+  /* (the chevrons fade out 420 m from the eye: the ribbon is made for the next 1.2 km and made again every 600 m and at every junction; beyond that, and
+     for the whole of a ride, which shows no ribbon, only the line for the maps is kept. A ride's route is 18 km of it: made whole at each junction it was a hitch) */
+  const FAR = DRIVE.bus ? 0 : 1200;
   for (const st of seq) { const e = E[st.c], lane = e.ow || e.c >= 7 || e.lanes < 2 && e.c >= 6 ? 0 : e.hw * .5, base = P.length / 3;
+    if (s0 >= FAR && st.from === undefined) { if (st.d > 0) for (let i = 0; i <= e.n; i += 3) pts.push(e.xs[i], e.zs[i]); else for (let i = e.n; i >= 0; i -= 3) pts.push(e.xs[i], e.zs[i]); s0 += e.L; continue; }
     const idx = []; for (let i = 0; i <= e.n; i++) idx.push(st.d > 0 ? i : e.n - i);
     let first = 0; if (st.from !== undefined) first = st.d > 0 ? Math.floor(st.from / e.st) : Math.floor((e.L - st.from) / e.st);
     let cnt = 0;
@@ -5074,7 +5117,7 @@ function navMesh() {
       fragmentShader: 'uniform float uTime;varying vec2 vS;varying float vD;void main(){float t=fract((vS.x-uTime*9.)/7.);float chev=smoothstep(.0,.08,t-abs(vS.y)*.35)*smoothstep(.42,.34,t-abs(vS.y)*.35);float a=(.22+.6*chev)*(1.-smoothstep(260.,420.,vD))*(1.-smoothstep(.7,1.,abs(vS.y)));gl_FragColor=vec4(vec3(.35,.86,1.)*(1.+chev),a);}' }));
     DRIVE.navMesh.frustumCulled = false; DRIVE.navMesh.renderOrder = 22; scene.add(DRIVE.navMesh); }
   else { DRIVE.navMesh.geometry.dispose(); DRIVE.navMesh.geometry = g; }
-  DRIVE.navMesh.visible = !DRIVE.bus; R.meshK = R.k;
+  DRIVE.navMesh.visible = !DRIVE.bus; R.meshK = R.k; R.meshAt = [car.x, car.z];
 }
 /* places to go: the landmarks, the districts and the start points, nearest first */
 function navPlaces() {
@@ -5223,7 +5266,7 @@ function driveStep(dt) {
   if (!G0) { dTrails(dt, car, V, sp, yD); dFx(dt, sp, BK); }
   /* the next junction, as a nav app would show it */
   { const P = plan || dPlan(); DRIVE.plan = P && P.path && P.left < 120 && (P.choices > 1 || P.queued || Math.abs(P.path.rel) > .5 || DRIVE.nav) ? { c: P.path.exit, rel: P.path.rel } : null; DRIVE.planLeft = P ? P.left : 0; }
-  if (DRIVE.nav) { navCheck(); if (DRIVE.nav && DRIVE.nav.meshK !== DRIVE.nav.k) navMesh(); if ((DRIVE.navT = (DRIVE.navT || 0) + dt) > .3) { DRIVE.navT = 0; dHudNav(); } }
+  if (DRIVE.nav) { navCheck(); if (DRIVE.nav && (DRIVE.nav.meshK !== DRIVE.nav.k || (!DRIVE.bus && DRIVE.nav.meshAt && Math.hypot(car.x - DRIVE.nav.meshAt[0], car.z - DRIVE.nav.meshAt[1]) > 600))) navMesh(); if ((DRIVE.navT = (DRIVE.navT || 0) + dt) > .3) { DRIVE.navT = 0; dHudNav(); } }
   /* the tunnel veil: while the car (or the camera trailing it) is below the hillside */
   const under = Math.max(e.tun && car.u > 6 && car.u < e.L - 6 ? 1 : 0, e.cov && e.cov[clamp(Math.round(car.u / e.st), 0, e.n)] ? 1 : 0, clamp((dGround(car.x, car.z) - car.y - 3) / 2.5, 0, 1), clamp((groundY(camera.position.x, camera.position.z) - car.y - 4) / 4, 0, 1) * (e.tun ? 1 : 0));
   DRIVE.tun = lerp(DRIVE.tun, under, 1 - Math.exp(-dt * 6));
@@ -5496,7 +5539,7 @@ function camGuard(dt) {
 function dMsg(t, hold) { if (!hold && ST.t < (DRIVE.msgHold || 0)) return; DRIVE.hud.msg.textContent = t; DRIVE.hud.msg.classList.add('show'); DRIVE.msgT = hold || 2.2; DRIVE.msgHold = hold ? ST.t + hold : 0; }
 function dHud(e, sp) {
   const H = DRIVE.hud, nm = DRIVE.names[e.nm] || (e.rail ? 'Tramway' : '') || ['Motorway', 'Trunk road', 'Main road', 'Main road', 'Road', 'Slip road', 'Street', 'Lane', 'Service road'][e.c] || 'Road';
-  H.spd.textContent = Math.round(sp * 3.6); if (H.st.textContent !== nm) H.st.textContent = nm;
+  { const v = Math.round(sp * 3.6); if (v !== H.spdV) { H.spdV = v; H.spd.textContent = v; if (H.rs) H.rs.textContent = v; } } if (H.st.textContent !== nm) H.st.textContent = nm;
   const P = DRIVE.plan; if (P) { const ne = DRIVE.E[P.c], nn = DRIVE.names[ne.nm] || ''; H.nx.classList.add('show'); H.arr.style.transform = 'rotate(' + (P.rel / RAD).toFixed(0) + 'deg)'; H.nxd.textContent = Math.max(0, Math.round(DRIVE.planLeft / 5) * 5) + ' m'; if (H.nxn.textContent !== nn) H.nxn.textContent = nn; }
   else H.nx.classList.remove('show');
   H.tun.style.opacity = DRIVE.tun.toFixed(3); H.tun.textContent = DRIVE.tun > .5 ? (DRIVE.names[e.nm] || 'Tunnel') : '';
@@ -5626,7 +5669,7 @@ function initMini() {
   hooks.push(dt => { if (DRIVE.on && cv.width < 8) size(); drawMini(dt); });
 }
 function initDrive() {
-  const H = DRIVE.hud, q = id => document.getElementById(id); Object.assign(H, { spd: q('dSpd'), st: q('dSt'), nx: q('dNx'), arr: q('dArr'), nxd: q('dNxD'), nxn: q('dNxN'), tun: q('dTun'), msg: q('dMsg'), joy: q('dJoy'), boost: q('dBoost'), bF: q('dBoostF'), bN: q('dBoostN'), combo: q('dCombo'), comboN: q('dComboN') });
+  const H = DRIVE.hud, q = id => document.getElementById(id); Object.assign(H, { rs: document.querySelector('#rideSpd b'), spd: q('dSpd'), st: q('dSt'), nx: q('dNx'), arr: q('dArr'), nxd: q('dNxD'), nxn: q('dNxN'), tun: q('dTun'), msg: q('dMsg'), joy: q('dJoy'), boost: q('dBoost'), bF: q('dBoostF'), bN: q('dBoostN'), combo: q('dCombo'), comboN: q('dComboN') });
   { const b = q('dBoost'), on = e => { e.preventDefault(); DRIVE.boostBtn = true; DRIVE.boostTap = true; }, off = () => { DRIVE.boostBtn = false; }; b.addEventListener('pointerdown', on); for (const t of ['pointerup', 'pointercancel', 'pointerleave']) b.addEventListener(t, off); { const hb = q('dHorn'); hb.addEventListener('pointerdown', e => { e.preventDefault(); dHorn(); }); hb.addEventListener('keydown', e => { if (e.code === 'Enter' || e.code === 'Space') { e.preventDefault(); if (!e.repeat) dHorn(); } }); } }
   q('dNavB').onclick = () => openDest(); q('navX').onclick = navClose;
   q('bigDrive').onclick = () => enterDrive(); q('bigDrive').classList.add('ready'); q('dExit').onclick = exitDrive; q('dU').onclick = dUturn; q('dSkip').onclick = navSkip;
