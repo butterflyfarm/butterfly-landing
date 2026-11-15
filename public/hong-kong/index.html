@@ -110,14 +110,16 @@
   #bootMap .bd.on circle{fill:#fff4df;stroke:#5a3a12} #bootMap .bd.on text{fill:#fff4df}
   #boot h1{margin:2.2vh 0 0;font-size:clamp(20px,3.6vw,34px);font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:#fff4df;white-space:nowrap;text-shadow:0 2px 14px rgba(0,0,0,.45)} #boot h1 span{color:#ffc46a}
   #boot .bb{width:min(420px,78vw);height:6px;margin-top:2.6vh;border-radius:3px;background:rgba(255,224,176,.16);overflow:hidden;position:relative}
-  #bootBar{position:absolute;inset:0;border-radius:3px;background:linear-gradient(90deg,#e9a455,#ffe0a0);transform-origin:0 50%;transform:scaleX(0);transition:transform .6s ease-out}
-  #boot .bb::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);transform:translateX(-100%);animation:bmSh 1.6s linear infinite}
-  @keyframes bmSh{to{transform:translateX(100%)}}
+  /* one bar for all of the loading, and it only ever grows. (A highlight used to sweep the whole length of the track every 1.6 s to show that the page was
+     alive: on a phone, where the bar stands at each step for seconds, that read as a bar running from nothing to full over and over. Now the filled part
+     glows a little brighter and dimmer where it stands, and nothing travels along the track) */
+  #bootBar{position:absolute;inset:0;border-radius:3px;background:linear-gradient(90deg,#e9a455,#ffe0a0);transform-origin:0 50%;transform:scaleX(0);transition:transform .6s ease-out;animation:bmP 1.1s ease-in-out infinite alternate}
+  @keyframes bmP{from{opacity:.72}to{opacity:1}}
   #boot .bs{width:min(420px,78vw);display:flex;justify-content:space-between;gap:12px;margin-top:10px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(243,230,208,.82)} #bootPct{font-variant-numeric:tabular-nums;color:#ffc46a}
-  #boot.err #bootMsg{color:#ffb4a0} #boot.err .bb::after{animation:none;opacity:0}
+  #boot.err #bootMsg{color:#ffb4a0} #boot.err #bootBar{animation:none;opacity:.5}
   #boot>em{position:absolute;bottom:max(14px,env(safe-area-inset-bottom));font-style:normal;font-size:10px;letter-spacing:.06em;color:rgba(255,236,208,.6)}
   @media (max-width:560px){#bootMap{font-size:46px} #bootMap .bd.s text{display:none} #bootMap .bd circle{r:14px} #bootMap .bmS{stroke-width:5}}
-  @media (prefers-reduced-motion:reduce){#bootMap,#bootMap .bmS,#boot .bb::after{animation:none} #bootMap .bmS{stroke-dashoffset:0}}
+  @media (prefers-reduced-motion:reduce){#bootMap,#bootMap .bmS,#bootBar{animation:none} #bootMap .bmS{stroke-dashoffset:0}}
   #brand{position:fixed;z-index:4;left:max(16px,env(safe-area-inset-left));top:max(14px,env(safe-area-inset-top));display:flex;flex-direction:column;gap:3px;pointer-events:none;text-shadow:0 1px 6px rgba(0,0,0,.65);transition:opacity .4s}
   #brand b{font-size:17px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#fff4df;white-space:nowrap} #brand b span{color:#ffc46a}
   #brand em{font-style:normal;font-size:10px;letter-spacing:.06em;color:rgba(255,236,208,.72)}
@@ -3854,7 +3856,7 @@ async function busRideStart(ln, from) {
   document.body.classList.add('busride'); document.getElementById('rideTag').textContent = ln.tag; document.querySelector('#tramS span').textContent = 'At ' + ln.stops[from][2]; dSelect(Math.max(0, VEHICLES.findIndex(v => v.id === ln.veh)));
   const s0 = ln.stops[from]; DRIVE.hereXZ = [s0[0], s0[1]]; dStart('here'); closeGarage(null, false); ctlHint.hide();
   const ok = await busPlan(B); if (DRIVE.bus !== B) return; if (!ok) { dMsg('No road found for this line from here', 5); return; }
-  setAuto(true); B.wait = ST.t + 2.5; ctlHint.first = false; ctlHint.show([COARSE ? 'Hold anywhere to go faster' : 'Hold the mouse, ↑ or Space to go faster', 'Stop asks for the next stop'], 9000);
+  setAuto(true); B.wait = ST.t + 2.5; B.board = ST.t; ctlHint.first = false; ctlHint.show([COARSE ? 'Hold anywhere to go faster' : 'Hold the mouse, ↑ or Space to go faster', 'Stop asks for the next stop'], 9000);
 }
 async function busPlan(B) {
   const E = DRIVE.E, N = DRIVE.N, P = B.ln.path, np = P.length / 2, cum = new Float64Array(np); for (let i = 1; i < np; i++) cum[i] = cum[i - 1] + Math.hypot(P[i * 2] - P[i * 2 - 2], P[i * 2 + 1] - P[i * 2 - 1]);
@@ -3928,7 +3930,7 @@ function busStopBtn() { const B = DRIVE.bus; if (!B || !B.legs) return; if (B.he
   if (B.req) { B.req = false; busAim(B, B.run.i0 + B.run.ends.length - 1); } else { const j = busAhead(B); if (j >= 0) { B.req = true; busAim(B, j); } } busHud(); }
 function busArrive() { const B = DRIVE.bus, L = B.legs[B.aim]; if (L.stop >= 0) B.at = L.stop; B.turning = L.stop < 0; B.turn = !!L.turn; B.li = B.aim + 1; B.held = !!B.req && B.li < B.legs.length; B.req = false; B.run = null; navStop(); DRIVE.autoStop = true; }
 function busHud() { const B = DRIVE.bus, car = DRIVE.car, R = DRIVE.nav; let txt; rideBtn(B.req, B.held); if (!B.legs) txt = 'At ' + B.ln.stops[B.from][2]; else if (R) { const j = busAhead(B), q = j >= 0 ? B.ln.stops[B.legs[j].stop] : null, d = q ? Math.hypot(q[0] - car.x, q[1] - car.z) : 0; txt = q ? (B.req ? 'Stopping at ' : 'Next: ') + (q[2] || 'the next stop') + ' · ' + (d < 1000 ? Math.max(10, Math.round(d / 10) * 10) + ' m' : (d / 1000).toFixed(1) + ' km') : 'Turning round ahead'; }
-  else txt = B.turning && B.li < B.legs.length ? 'Turning round' : (B.li >= B.legs.length ? 'End of the line: ' : 'At ') + (B.ln.stops[B.at][2] || 'the stop'); if (txt !== B.shown) { B.shown = txt; document.querySelector('#tramS span').textContent = txt; } }
+  else txt = B.turning && B.li < B.legs.length ? 'Turning round' : B.board && ST.t > B.wait ? 'Loading the streets round the stop…' : (B.li >= B.legs.length ? 'End of the line: ' : 'At ') + (B.ln.stops[B.at][2] || 'the stop'); if (txt !== B.shown) { B.shown = txt; document.querySelector('#tramS span').textContent = txt; } }
 function rideBtn(req, held) { const b = document.getElementById('rideStopB'), tx = held ? 'Go on' : req ? 'Stopping' : 'Stop'; if (b.textContent !== tx) b.textContent = tx; b.classList.toggle('on', !!req && !held); b.classList.toggle('held', !!held); }
 function flyArc(a, b) { const move = Math.hypot(b.tx - a.tx, b.tz - a.tz); return clamp(Math.log(Math.max(move * .85, 1) / Math.max(Math.sqrt(a.dist * b.dist), 1)), 0, 5); }
 function flyTo(b, then) {
@@ -4074,7 +4076,7 @@ function flattenRecs(set) {
 /* ---------- real building shapes: the Lands Department's 3D Visualisation Map, one small file per 1:1000 map sheet (b3d/<sheet>.bin, shapes only,
    converted offline). Near the camera a sheet's models replace the surveyed outlines they stand on, drawn with the same facade shader (so they
    take the same colour, windows and night lights); hand-built landmarks keep their own models. Sheets far behind are dropped again. ---------- */
-const B3D = { index: null, loading: false, tiles: new Map(), grid: null, mat: null, t: 0, fail: new Set() };
+const B3D = { index: null, loading: false, tiles: new Map(), grid: null, mat: null, t: 0, fail: new Set(), slice: 6 };   /* (slice: the milliseconds of loading done at a time) */
 const b3dURL = f => (/\/$|\.html?$/.test(location.pathname) ? new URL('b3d/' + f, location.href) : new URL('/hong-kong/b3d/' + f, location.href)).href;
 function b3dGrid() { if (B3D.grid) return B3D.grid; const G = new Map(); CITY.recs.forEach((b, i) => { const k = Math.floor(b.cx / 64) * 65536 + Math.floor(b.cz / 64); let a = G.get(k); if (!a) G.set(k, a = []); a.push(i);
     if (!b.bb) { let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9; for (const q of b.rings[0]) { x0 = Math.min(x0, q[0]); x1 = Math.max(x1, q[0]); z0 = Math.min(z0, q[1]); z1 = Math.max(z1, q[1]); } b.bb = [x0, z0, x1, z1]; } }); return (B3D.grid = G); }
@@ -4193,8 +4195,18 @@ const b3dBreath = () => new Promise(r => { let d = 0; const go = () => { if (!d)
    every few metres: a new sheet's buildings throw much the same shadow there as the blocks they replace, and redrawing it is most of a frame. So while
    driving it waits a moment and is done once for a run of sheets (b3dStep) */
 function b3dShade() { SH.nearDirty = true; if (DRIVE.on) B3D.shDue = B3D.shDue || ST.t + 1.5; else SH.farDirty = true; }
+/* whether all that b3dStep would fetch round a place is in: its sheets, and their street level. A ride waits at its first stop for this (for a few
+   seconds at most), so that the heaviest loading of the journey, which is at its start in the middle of town, is over before it moves */
+const b3dRush = () => !!(DRIVE.on && DRIVE.bus && DRIVE.bus.board);
+function b3dSettled(x, z) {
+  if (!Array.isArray(B3D.index)) return false; if (!B3D.index.length) return true; if (B3D.loading || B3D.stBusy) return false;
+  const R = COARSE ? 380 : 700, MAX = COARSE ? 4 : 10, RS = COARSE ? 320 : 600, MAXS = COARSE ? 3 : 8, nost = /[?&]nost\b/.test(location.search), dOf = T => Math.hypot(Math.max(T.box[0] - x, 0, x - T.box[2]), Math.max(T.box[1] - z, 0, z - T.box[3]));
+  let held = 0, have = 0, far = 0; for (const T of B3D.tiles.values()) if (!T.lm) { held++; if (T.stm) have++; far = Math.max(far, dOf(T)); }
+  for (const T of B3D.index) { if (T.lm) continue; const L = B3D.tiles.get(T.id), d = dOf(T); if (!L) { if (d < R && !B3D.fail.has(T.id) && (held < MAX || far > d)) return false; } else if (!nost && L.st && !L.stm && !L.stFail && d < RS && have < MAXS) return false; }
+  return true;
+}
 async function b3dLoad(T) {
-  B3D.loading = true; const t0 = performance.now(); let tk = performance.now(), work = 0, slow = 0, stage = 'read', slowAt = ''; const pace = async () => { const n = performance.now(); if (n - tk < 6) return; work += n - tk; if (n - tk > slow) { slow = n - tk; slowAt = stage; } await b3dBreath(); tk = performance.now(); };
+  B3D.loading = true; const t0 = performance.now(); let tk = performance.now(), work = 0, slow = 0, stage = 'read', slowAt = ''; const pace = async () => { const n = performance.now(); if (n - tk < B3D.slice) return; work += n - tk; if (n - tk > slow) { slow = n - tk; slowAt = stage; } await b3dBreath(); tk = performance.now(); };
   try { const res = await fetch(b3dURL(T.id + '.bin')); if (!res.ok) throw new Error(res.status); let u8 = new Uint8Array(await res.arrayBuffer());
     if (u8[0] === 0x1f && u8[1] === 0x8b) u8 = new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
     const t1 = tk = performance.now();   /* (the wait for the file is not work) */
@@ -4235,7 +4247,7 @@ async function b3dLoad(T) {
         NRM[q] = b.x; NRM[q + 2] = b.z; const pc = pal[u8[b.co + k]] || col; Cc[q] = pc[0]; Cc[q + 1] = pc[1]; Cc[q + 2] = pc[2]; AP[w] = sd; AP[w + 1] = type; AP[w + 2] = roof; AP[w + 3] = b.y; AQ[w] = b.y + b.top; AQ[w + 1] = lit; AQ[w + 2] = hue; AQ[w + 3] = flags; }
       const nI = b.nt * 3, src = u8.buffer.slice(u8.byteOffset + b.io, u8.byteOffset + b.io + nI * (b.wide ? 4 : 2)), J = b.wide ? new Uint32Array(src) : new Uint16Array(src); /* a few of the models hold triangles with no area (three points in a line): left out, as they have no facing */
       const LN = b3dLanes(b.bb); let C4 = 0, S4 = 0;   /* the building's main wall direction: its walls' facings, folded four times round */   /* once the streets are known, parts of a model standing in a carriageway are left out too */
-      for (let k = 0, V = b.V; k < nI; k += 3) { if (k % 192 === 0 && performance.now() - tk > 6) await pace();   /* (a mall standing over several roads has tens of thousands of triangles, each tried against every lane under it: a breath within it too, looked for every 64 triangles) */
+      for (let k = 0, V = b.V; k < nI; k += 3) { if (k % 192 === 0 && performance.now() - tk > B3D.slice) await pace();   /* (a mall standing over several roads has tens of thousands of triangles, each tried against every lane under it: a breath within it too, looked for every 64 triangles) */
         const a = J[k] * 3, e = J[k + 1] * 3, c = J[k + 2] * 3, ux = V[e] - V[a], uy = V[e + 1] - V[a + 1], uz = V[e + 2] - V[a + 2], wx = V[c] - V[a], wy = V[c + 1] - V[a + 1], wz = V[c + 2] - V[a + 2];
         if (uy * wz === uz * wy && uz * wx === ux * wz && ux * wy === uy * wx) continue;
         { const nx = uy * wz - uz * wy, ny = uz * wx - ux * wz, nz = ux * wy - uy * wx, l2 = nx * nx + nz * nz; if (l2 > 4 * ny * ny) { const c2 = (nx * nx - nz * nz) / l2, s2 = 2 * nx * nz / l2, ar = Math.sqrt(l2); C4 += (c2 * c2 - s2 * s2) * ar; S4 += 2 * c2 * s2 * ar; } }
@@ -4252,7 +4264,7 @@ async function b3dLoad(T) {
     let ylo = 1e9, yhi = -1e9; for (const b of list) { ylo = Math.min(ylo, b.y - 35); yhi = Math.max(yhi, b.y + b.top + 5); } if (!list.length) ylo = yhi = 0;
     g.boundingSphere = new THREE.Sphere(new THREE.Vector3((T.box[0] + T.box[2]) / 2, (ylo + yhi) / 2, (T.box[1] + T.box[3]) / 2), Math.hypot(T.box[2] - T.box[0], yhi - ylo, T.box[3] - T.box[1]) / 2 + 30);
     stage = 'hide'; const hp = await b3dHidePlan(hide, pace); stage = 'end';
-    const tW = performance.now(); if (DRIVE.on) { work += tW - tk; await gpuWarm(g); tk = performance.now(); }   /* (while driving, its lists are sent to the graphics card over a few frames first) */
+    const tW = performance.now(); if (DRIVE.on && !b3dRush()) { work += tW - tk; await gpuWarm(g); tk = performance.now(); }   /* (while driving, its lists are sent to the graphics card over a few frames first) */
     const tEnd = performance.now(), mesh = new THREE.Mesh(g, mat); mesh.layers.enable(1); scene.add(mesh);   /* casts shadows; left out of the water's reflection pass */
     T.mesh = mesh; if (T.st) T.stl = list.concat(hand).map(b => ({ x: b.x, z: b.z, y: b.y, top: b.top, bb: b.bb, at: b.at })); T.undo = b3dHide(hp); T.hide = hide; T.tris = i0 / 3; T.cut = cut; T.endMs = Math.round(performance.now() - tEnd); T.slow = Math.round(slow) + ' ' + slowAt; T.ms = Math.round(performance.now() - t0); T.sync = Math.round(work + performance.now() - tk);   /* (sync: the work itself, without the waits between its slices) */ B3D.tiles.set(T.id, T); b3dShade(); NEAR.fx = NEAR.fz = 1e9;
   } catch (err) { B3D.fail.add(T.id); console.warn('b3d ' + T.id + ': ' + (err && err.message)); }
@@ -4300,13 +4312,13 @@ async function b3dStreet(T) {
       const emit = (poly, ci) => { if (!ci || poly.length < 3) return; const c = CH[ci - 1]; if (!c) return; const id = poly.map(p => vert(p, c));
         for (let i = 1; i < id.length - 1; i++) { const a = id[0], e = id[i], f = id[i + 1]; if (a === e || e === f || a === f) continue;
           if (LN && b3dBlocked(LN, P[a * 3], P[a * 3 + 1], P[a * 3 + 2], P[e * 3], P[e * 3 + 1], P[e * 3 + 2], P[f * 3], P[f * 3 + 1], P[f * 3 + 2])) continue; I.push(a, e, f); } };
-      for (let i = 0; i < ntr; i++) { if ((i & 63) === 63 && performance.now() - tick > 5) { await b3dBreath(); tick = performance.now(); if (gone()) { tex.dispose(); return; } }
+      for (let i = 0; i < ntr; i++) { if ((i & 63) === 63 && performance.now() - tick > B3D.slice - 1) { await b3dBreath(); tick = performance.now(); if (gone()) { tex.dispose(); return; } }
         const od = ords[i]; if (od >= R.nt) continue; const lo = wide ? dv.getUint16(to + i * 4, true) : u8[to + i * 2], hi = wide ? dv.getUint16(to + i * 4 + 2, true) : u8[to + i * 2 + 1];
         let poly = [0, 1, 2].map(q => { const vi = J[od * 3 + q]; return [V[vi * 3] / 10, V[vi * 3 + 1] / 10, V[vi * 3 + 2] / 10, vi]; }); const y0 = Math.min(poly[0][1], poly[1][1], poly[2][1]); let y1 = Math.max(poly[0][1], poly[1][1], poly[2][1]);
         if (y1 > yb) { poly = clipY(poly, yb, true); if (poly.length < 3) continue; y1 = yb; }
         if (y1 <= ys) emit(poly, lo); else if (y0 >= ys) emit(poly, hi); else { emit(clipY(poly, ys, true), lo); emit(clipY(poly, ys, false), hi); } }
       /* a little at a time: a sheet has tens of thousands of these, and the view must not stop for them */
-      if (performance.now() - tick > 5) { await b3dBreath(); tick = performance.now(); if (gone()) { tex.dispose(); return; } } }
+      if (performance.now() - tick > B3D.slice - 1) { await b3dBreath(); tick = performance.now(); if (gone()) { tex.dispose(); return; } } }
     const S = T.stm = { tex, tris: I.length / 3, noInfra: !!T.inf && !inf, ms: Math.round(performance.now() - t0) };
     if (I.length) { const g = new THREE.BufferGeometry(), nv = P.length / 3, parts = [['position', P, 3], ['aUv', UV, 2], ['aP', AP, 4], ['aQ', AQ, 4], ['normal', OR, 3]]; let tA = performance.now(), worst = 0;
       /* (a dense sheet has a quarter of a million points here: each list is made into its buffer in a frame of its own) */
@@ -4314,7 +4326,7 @@ async function b3dStreet(T) {
       g.setAttribute('aCol', new THREE.BufferAttribute(new Float32Array(nv * 3).fill(1), 3)); g.setAttribute('aF', new THREE.BufferAttribute(new Float32Array(nv), 1));
       g.setIndex(new THREE.BufferAttribute(new Uint32Array(I), 1)); g.boundingSphere = T.mesh.geometry.boundingSphere;
       /* (the picture and then each list sent to the graphics card in a frame of its own, before anything is drawn with them) */
-      if (DRIVE.on) { const off = () => gone() || T.stm !== S; await b3dBreath(); if (!off()) { const tT = performance.now(); try { renderer.initTexture(tex); } catch (e) { /* sent when first drawn */ } S.texMs = Math.round(performance.now() - tT); await b3dBreath(); } if (!off()) await gpuWarm(g, off); if (off()) { if (T.stm === S) { tex.dispose(); T.stm = null; } g.dispose(); return; } tA = performance.now(); }
+      if (DRIVE.on && !b3dRush()) { const off = () => gone() || T.stm !== S; await b3dBreath(); if (!off()) { const tT = performance.now(); try { renderer.initTexture(tex); } catch (e) { /* sent when first drawn */ } S.texMs = Math.round(performance.now() - tT); await b3dBreath(); } if (!off()) await gpuWarm(g, off); if (off()) { if (T.stm === S) { tex.dispose(); T.stm = null; } g.dispose(); return; } tA = performance.now(); }
       S.mat = new THREE.ShaderMaterial({ uniforms: Object.assign({}, U, { uAtlas: { value: tex }, uAtlasPx: { value: (tex.image && tex.image.width) || W } }), vertexShader: BLD_VS, fragmentShader: BLD_FS(), defines: { FOC_SINK: 1, FLATN: 1, STREET: 1, DRAWN: 1 }, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4 });
       S.mesh = new THREE.Mesh(g, S.mat); scene.add(S.mesh); S.endMs = Math.round(Math.max(worst, performance.now() - tA)); }
     if (inf) { const dv = new DataView(inf.buffer, inf.byteOffset, inf.byteLength), cut = (a, n) => inf.buffer.slice(inf.byteOffset + a, inf.byteOffset + a + n); let o = 4;
@@ -4350,7 +4362,10 @@ B3D.drop = b3dDrop;
 function b3dStep(dt) {
   /* shadows are redrawn once after a run of loads, not after each: each redraw of the whole island's shadow costs most of a frame */
   if (B3D.shDue && ST.t >= B3D.shDue && (!B3D.loading || ST.t > B3D.shDue + 6)) { B3D.shDue = 0; SH.farDirty = SH.nearDirty = true; }
-  if ((B3D.t -= dt) > 0 || !CITY.recs || !CITY.tex) return; B3D.t = .35;
+  /* (while a ride stands at its first stop waiting for the buildings round it, nothing moves that a hitch would spoil: the loading is done in larger
+     pieces and without its pauses, so that the wait is short) */
+  const rush = b3dRush(); B3D.slice = rush ? 22 : 6;
+  if ((B3D.t -= dt) > 0 && !rush || !CITY.recs || !CITY.tex) return; B3D.t = .35;
   if (B3D.index === null) { B3D.index = false; fetch(b3dURL('index.json')).then(r => r.ok ? r.json() : []).then(j => { B3D.index = j; }).catch(() => { B3D.index = []; }); return; }
   if (!B3D.index || !B3D.index.length || B3D.loading) return;
   const driving = DRIVE.on && DRIVE.car, cx = driving ? DRIVE.car.x : cam.tx, cz = driving ? DRIVE.car.z : cam.tz;
@@ -4948,7 +4963,7 @@ const AUTO_KMH = [150, 140, 110, 100, 90, 80, 65, 45, 40];   /* self-driving cru
    destination. It does not yield to traffic: anything in the way gets knocked flying. After arriving it stops and stays there */
 function autoPilot(car, e, plan, vmax, V, dt) {
   const BUS = DRIVE.bus, sp = car.v, LAT = BUS ? 2.6 : 8, DEC = BUS ? 2.4 : 7, cruise = BUS ? Math.min(vmax * .95, AUTO_KMH[e.c] / 3.6 * .62, 15) : Math.min(vmax * .95, AUTO_KMH[e.c] / 3.6); let vt = cruise;   /* (left to itself a ride keeps a bus's pace and takes its bends gently; the accelerator is the passenger's) */   /* (a bus takes its bends and its stops gently, and keeps a bus's pace) */
-  if (BUS && !DRIVE.nav && !DRIVE.autoStop) { if (BUS.legs && BUS.wait && ST.t > BUS.wait && BUS.li < BUS.legs.length) { BUS.wait = 0; busRun(BUS); } return { thr: 0, brk: 1 }; }
+  if (BUS && !DRIVE.nav && !DRIVE.autoStop) { if (BUS.legs && BUS.wait && ST.t > BUS.wait && BUS.li < BUS.legs.length) { if (BUS.board && ST.t < BUS.board + 12 && !b3dSettled(car.x, car.z)) return { thr: 0, brk: 1 };   /* (not before the buildings round the first stop are in, or twelve seconds) */ BUS.board = 0; BUS.wait = 0; busRun(BUS); } return { thr: 0, brk: 1 }; }
   if (DRIVE.autoStop) { if (sp < .5) { DRIVE.autoStop = false; if (BUS) { BUS.wait = BUS.held ? 1e12 : ST.t + (BUS.turning ? .8 : .3); return { thr: 0, brk: 1 }; }   /* (stopped because it was asked to: it waits to be told to go on) */ setAuto(false); return { thr: 0, brk: 0 }; } return { thr: 0, brk: sp > 4 ? 1 : 0 }; }   /* (arrived: the car stops and stays where it is, the wheel handed back. Nothing is chosen for you and no screen comes up: the pin button is there for the next place) */
   if (!DRIVE.nav) return { thr: 0, brk: 0 };
   /* bends on this road up to 90 m ahead: the speed each one allows (sideways grip LAT), less what there is room to brake off before it */
@@ -5394,20 +5409,23 @@ const HIT = { slots: new Array(HITN).fill(null), data: null, tex: null };
 const _frac = x => x - Math.floor(x);
 const TSZ = [[1.8, 1.5, 4.5], [1.8, 1.45, 4.3], [2.5, 4.4, 11.4], [2.05, 2.6, 7.0], [2.4, 3.2, 8.4]];
 function trafIndex(S) {
-  if (S.hash) return; const { A, data, W, rows } = S, cs = 256, H = new Map(), RI = [];
+  if (S.hash) return; const { A, data, W, rows } = S, cs = 256, H = new Map(), RI = [], RB = new Float32Array(rows * 4);   /* (RB: each stretch's box, so that the stretches nowhere near are passed over) */
   for (let j = 0; j < rows; j++) { let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9; for (let i = 0; i < W; i++) { const q = (j * W + i) * 4; x0 = Math.min(x0, data[q]); x1 = Math.max(x1, data[q]); z0 = Math.min(z0, data[q + 2]); z1 = Math.max(z1, data[q + 2]); }
-    for (let gx = Math.floor((x0 - 20) / cs); gx <= Math.floor((x1 + 20) / cs); gx++) for (let gz = Math.floor((z0 - 20) / cs); gz <= Math.floor((z1 + 20) / cs); gz++) { const k = gx * 65536 + gz; let a = H.get(k); if (!a) H.set(k, a = []); a.push(j); } RI.push([]); }
+    for (let gx = Math.floor((x0 - 20) / cs); gx <= Math.floor((x1 + 20) / cs); gx++) for (let gz = Math.floor((z0 - 20) / cs); gz <= Math.floor((z1 + 20) / cs); gz++) { const k = gx * 65536 + gz; let a = H.get(k); if (!a) H.set(k, a = []); a.push(j); } RI.push([]); RB[j * 4] = x0; RB[j * 4 + 1] = z0; RB[j * 4 + 2] = x1; RB[j * 4 + 3] = z1; }
   for (let k = 0; k < A.length / 4; k++) RI[A[k * 4]].push(k);
-  S.hash = H; S.rowInst = RI;
+  S.hash = H; S.rowInst = RI; S.rowBox = RB;
 }
 /* where vehicle k of set S is at time T (the vertex shader's own sums), or null when it is not on show (or is turning in or off at the end of its stretch) */
+/* (the answer is one object used again each time: in the middle of town the collision check asks this of two thousand vehicles a frame, and a new
+   object for each was a steady stream of rubbish to clear, which showed as a stutter. Read it before asking again) */
+const _trafP = { x: 0, y: 0, z: 0, fx: 0, fz: 0, type: 0 };
 function trafAt(S, k, T) {
   const { A, B, data, W } = S, o = k * 4, row = A[o], cnt = B[o + 3], dir = B[o + 2], type = Math.round(B[o]), L = cnt * 8, tt = A[o + 1] + T * A[o + 2];
   if (B[o + 1] >= DYN.uTraffic.value) return null;
   const ph = TAU * (_frac(tt) * L / 240 - T * .045 * dir + row * .37), t = _frac(tt + 8 / L * Math.sin(ph)), ez = 16 / L; if (t < ez || t > 1 - ez) return null;
   const tp = dir > 0 ? t : 1 - t, s = tp * (cnt - 1), i = Math.min(Math.floor(s), cnt - 2), f = s - i, q0 = (row * W + i) * 4, q1 = q0 + 4;
   let fx = (data[q1] - data[q0]) * dir, fz = (data[q1 + 2] - data[q0 + 2]) * dir; const l = Math.hypot(fx, fz) || 1; fx /= l; fz /= l;
-  const lat = A[o + 3]; return { x: lerp(data[q0], data[q1], f) + fz * lat, y: lerp(data[q0 + 1], data[q1 + 1], f), z: lerp(data[q0 + 2], data[q1 + 2], f) - fx * lat, fx, fz, type };
+  const lat = A[o + 3], P = _trafP; P.x = lerp(data[q0], data[q1], f) + fz * lat; P.y = lerp(data[q0 + 1], data[q1 + 1], f); P.z = lerp(data[q0 + 2], data[q1 + 2], f) - fx * lat; P.fx = fx; P.fz = fz; P.type = type; return P;
 }
 /* separating-axis test for two rectangles on the ground: centre, unit heading, half length, half width */
 function rectsHit(ax, az, ux, uz, al, aw, bx, bz, vx, vz, bl, bw) {
@@ -5464,7 +5482,7 @@ function crashStep() {
       if (d > 350 || (d > 110 && behind)) { const p = trafAt(s.S, s.k, T); if (!p || Math.hypot(p.x - car.x, p.z - car.z) > 320 || ((p.x - car.x) * fx + (p.z - car.z) * fz < -60)) hitFree(i); } }
     else if (!s.soft && s.gen < 3 && h.te > .15) fly.push({ x: h.x, z: h.z, y: h.y, vx: s.vx, vz: s.vz, gen: s.gen, s }); });
   for (const S of TRAFS) { trafIndex(S); const rows = S.hash.get(Math.floor(car.x / 256) * 65536 + Math.floor(car.z / 256)); if (!rows) continue;
-    for (const j of rows) for (const k of S.rowInst[j]) {
+    const RB = S.rowBox; for (const j of rows) { if (car.x < RB[j * 4] - 110 || car.x > RB[j * 4 + 2] + 110 || car.z < RB[j * 4 + 1] - 110 || car.z > RB[j * 4 + 3] + 110) continue; for (const k of S.rowInst[j]) {
       const si = S.aH.array[k], sl = si ? HIT.slots[si - 1] : null;
       let p; if (sl) { const h = hitState(sl, T); if (!h.landed) continue; p = { x: h.x, y: sl.yL, z: h.z, fx: Math.cos(sl.yaw), fz: Math.sin(sl.yaw), type: sl.type }; } else p = trafAt(S, k, T);
       if (!p) continue; const ddx = p.x - car.x, ddz = p.z - car.z; if (Math.abs(ddx) > 90 || Math.abs(ddz) > 90) continue;
@@ -5473,7 +5491,7 @@ function crashStep() {
         launchCar(S, k, p, w.vx / l, w.vz / l, l * .8, T, { gen: w.gen + 1, mult: .75 }); DRIVE.combo = (DRIVE.combo || 0) + 1; DRIVE.comboT = 2.6; DRIVE.hits = (DRIVE.hits || 0) + 1; DRIVE.best = Math.max(DRIVE.best || 0, DRIVE.combo); chained = true; break; }
       if (chained || Math.abs(ddx) > 16 || Math.abs(ddz) > 16 || Math.abs(p.y - cy) > 3.2) continue;
       const s = TSZ[p.type] || TSZ[1]; if (rectsHit(car.x, car.z, ux, uz, al, aw, p.x, p.z, p.fx, p.fz, s[2] / 2, s[0] / 2)) playerHit(S, k, p, car, V, T);
-    } }
+    } } }
 }
 /* the horn: vehicles ahead in your way hop aside and land on their wheels */
 function dHorn() {
